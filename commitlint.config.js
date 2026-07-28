@@ -1,6 +1,13 @@
 export default {
   extends: ["@commitlint/config-conventional"],
 
+  parserPreset: {
+    parserOpts: {
+      headerPattern: /^([a-z]+) - (\S.*)$/,
+      headerCorrespondence: ["type", "subject"],
+    },
+  },
+
   rules: {
     "type-enum": [
       2,
@@ -21,7 +28,7 @@ export default {
     ],
 
     "type-case": [2, "always", "lower-case"],
-    "scope-case": [2, "always", "lower-case"],
+    "type-empty": [2, "never"],
     "subject-empty": [2, "never"],
     "header-max-length": [2, "always", 100],
   },
