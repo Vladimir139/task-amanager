@@ -1,0 +1,71 @@
+{
+  "name": "task-manager-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm run check && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck",
+    "commitlint": "commitlint --edit",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
+    "@types/js-cookie": "^3.0.6",
+    "js-cookie": "^3.0.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-use": "^17"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@eslint/eslintrc": "^3",
+    "@eslint/js": "^10.0.1",
+    "@next/bundle-analyzer": "^14.0.0",
+    "@next/eslint-plugin-next": "^16.1.6",
+    "@types/i18next": "^13.0.0",
+    "@types/jsonwebtoken": "^9",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "eslint": "^9.18.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-next": "15.1.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "eslint-plugin-security": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}
