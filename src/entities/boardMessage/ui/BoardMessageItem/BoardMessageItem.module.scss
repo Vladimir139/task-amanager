@@ -1,0 +1,86 @@
+.messageRow {
+  display: flex;
+  max-width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ownMessageRow {
+  justify-content: flex-end;
+
+  .messageTime {
+    text-align: right;
+  }
+}
+
+.messageAvatar {
+  flex-shrink: 0;
+}
+
+.messageContainer {
+  min-width: 0;
+}
+
+.messageBubble {
+  max-width: 155px;
+  padding: 10px 11px;
+  color: #72809d;
+  background: #f3f4f7;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.ownMessageBubble {
+  color: #ffffff;
+  background: #5355ff;
+}
+
+.messageTime {
+  margin-top: 5px !important;
+  color: #a2aaba;
+  font-size: 8px !important;
+}
+
+.audioMessage {
+  display: flex;
+  height: 43px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  background: #f1f2f6;
+  border-radius: 7px;
+
+  button {
+    width: 28px;
+    height: 28px;
+    color: #ffffff;
+    background: #5355ff;
+
+    svg {
+      font-size: 15px;
+    }
+  }
+
+  > p {
+    color: #77829d;
+    font-size: 10px;
+  }
+}
+
+.audioWave {
+  display: flex;
+  height: 30px;
+  align-items: center;
+  gap: 2px;
+
+  span {
+    width: 1px;
+    background: #5355ff;
+    border-radius: 10px;
+
+    &:nth-child(n + 11) {
+      background: #c9cdd8;
+    }
+  }
+}

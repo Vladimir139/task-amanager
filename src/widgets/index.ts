@@ -18,4 +18,7 @@ export * from "./SettingsProfileHeader";
 export * from "./SidebarNavigation";
 export * from "./StorageOverview";
 export * from "./TaskAnalytics";
+export * from "./TaskBoardColumns";
+export * from "./TaskBoardHeader";
+export * from "./TaskBoardSidebar";
 export * from "./TaskList";

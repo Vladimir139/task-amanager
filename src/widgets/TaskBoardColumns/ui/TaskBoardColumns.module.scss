@@ -1,0 +1,55 @@
+$primary: #5355ff;
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(230px, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+
+.boardColumn {
+  min-width: 0;
+}
+
+.columnHeader {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 13px 0 17px;
+  border-radius: 11px !important;
+
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  button {
+    width: 31px;
+    height: 31px;
+    color: #7e89a5;
+
+    svg {
+      font-size: 20px;
+    }
+  }
+}
+
+.addTaskButton {
+  color: $primary !important;
+  background: #edf0ff !important;
+  border-radius: 8px !important;
+}
+
+.columnTasks {
+  display: flex;
+  margin-top: 13px;
+  flex-direction: column;
+  gap: 13px;
+}

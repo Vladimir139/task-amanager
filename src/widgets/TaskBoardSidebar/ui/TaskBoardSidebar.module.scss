@@ -1,0 +1,107 @@
+.chatSidebar {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  height: calc(100vh - 76px);
+  min-width: 0;
+  flex-direction: column;
+  padding: 21px 27px 25px;
+  background: #ffffff;
+
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+  }
+}
+
+.membersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  p,
+  button {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  p {
+    color: #21235f;
+
+    span {
+      color: #5355ff;
+    }
+  }
+
+  button {
+    color: #78839e;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+}
+
+.membersList {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 17px;
+}
+
+.chatSection {
+  min-height: 0;
+  margin-top: 29px;
+  flex: 1;
+
+  > h2 {
+    color: #161616;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+.messages {
+  display: flex;
+  margin-top: 18px;
+  flex-direction: column;
+  gap: 23px;
+}
+
+.messageInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 20px;
+
+  > button {
+    width: 32px;
+    height: 32px;
+    color: #7e89a5;
+
+    svg {
+      font-size: 19px;
+    }
+  }
+}
+
+.messageInput {
+  :global(.MuiOutlinedInput-root) {
+    height: 50px;
+    background: #f3f4f7;
+    border-radius: 11px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+  }
+
+  :global(.MuiInputBase-input) {
+    color: #21235f;
+    font-size: 11px;
+  }
+
+  :global(.MuiInputBase-input::placeholder) {
+    color: #a4abba;
+    opacity: 1;
+  }
+}

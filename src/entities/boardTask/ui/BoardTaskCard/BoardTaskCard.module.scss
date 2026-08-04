@@ -1,0 +1,115 @@
+$secondary-text: #7f8aa8;
+
+.taskCard {
+  padding: 15px;
+  border-radius: 12px !important;
+}
+
+.taskCategory {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  padding: 0 10px;
+  color: #ffffff;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.designCategory {
+  background: #5254f7;
+}
+
+.researchCategory {
+  background: #1ca7f6;
+}
+
+.planningCategory {
+  background: #f16e3e;
+}
+
+.contentCategory {
+  background: #f5a000;
+}
+
+.taskImage {
+  display: block;
+  width: 100%;
+  height: 110px;
+  margin-top: 14px;
+  object-fit: cover;
+  border-radius: 11px;
+}
+
+.taskTitle {
+  margin-top: 13px !important;
+  color: #30336d;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+}
+
+.taskDescription {
+  margin-top: 7px !important;
+  color: $secondary-text;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.taskDate {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 0 8px;
+  color: #383a70;
+  border: 1px solid #dcdfe8;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.taskFooter {
+  display: flex;
+  min-height: 29px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.taskMembers {
+  :global(.MuiAvatar-root) {
+    border: 2px solid #ffffff;
+  }
+}
+
+.taskMemberAvatar {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 7px !important;
+}
+
+.additionalAvatar {
+  font-size: 7px !important;
+}
+
+.taskStatistics {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-left: auto;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #78839e;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  svg {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,28 @@
+.avatar {
+  position: relative;
+  width: 30px !important;
+  height: 30px !important;
+  overflow: visible !important;
+  color: #21235f !important;
+  background: #dce1ff !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+}
+
+.small {
+  width: 21px !important;
+  height: 21px !important;
+  flex: 0 0 21px;
+  font-size: 6px !important;
+}
+
+.status {
+  position: absolute;
+  right: -1px;
+  bottom: 0;
+  width: 8px;
+  height: 8px;
+  background: #19bb59;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}

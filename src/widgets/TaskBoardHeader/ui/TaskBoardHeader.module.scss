@@ -1,0 +1,52 @@
+$primary: #5355ff;
+
+.boardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 8px 35px;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    color: #161616;
+    font-size: 29px;
+    font-weight: 700;
+
+    span {
+      font-size: 28px;
+    }
+  }
+}
+
+.boardMemberSummary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  > p {
+    color: #78839e;
+    font-size: 21px;
+    font-weight: 500;
+  }
+
+  > button {
+    width: 34px;
+    height: 34px;
+    color: $primary;
+    background: #eef0ff;
+  }
+}
+
+.boardMemberGroup {
+  :global(.MuiAvatar-root) {
+    border: 2px solid #ffffff;
+  }
+}
+
+.boardMemberAvatar {
+  width: 31px !important;
+  height: 31px !important;
+  font-size: 9px !important;
+}

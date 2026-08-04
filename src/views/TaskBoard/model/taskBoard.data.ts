@@ -1,6 +1,80 @@
-import type { BoardColumn, ChatMessage } from "./taskBoard.types.ts";
+import type { BoardMessage } from "@/entities/boardMessage";
+import type { BoardColumn } from "@/entities/boardTask";
 
 const commonDescription = "Create content for peceland App";
+
+const angela = {
+  id: 1,
+  initials: "AN",
+  isOnline: true,
+};
+
+const chris = {
+  id: 2,
+  initials: "CH",
+  isOnline: true,
+};
+
+const jason = {
+  id: 3,
+  initials: "JM",
+  isOnline: true,
+};
+
+const amanda = {
+  id: 4,
+  initials: "AM",
+  isOnline: true,
+};
+
+const ricky = {
+  id: 5,
+  initials: "RK",
+  isOnline: true,
+};
+
+const dina = {
+  id: 6,
+  initials: "DS",
+  isOnline: true,
+};
+
+const maria = {
+  id: 7,
+  initials: "MK",
+  isOnline: true,
+};
+
+const viktor = {
+  id: 8,
+  initials: "VL",
+  isOnline: true,
+};
+
+const aria = {
+  id: 9,
+  initials: "AR",
+  isOnline: true,
+};
+
+const kim = {
+  id: 10,
+  initials: "KS",
+  isOnline: true,
+};
+
+export const boardMembers = [angela, chris, jason, amanda, ricky, dina, maria, viktor, aria, kim];
+export const taskBoardTitle = "Task - Artyfact";
+export const taskBoardEmoji = "🔥";
+export const taskBoardExtraMembersCount = 6;
+export const taskBoardMembersCount = 25;
+
+const taskBoardWaveform = [
+  10, 20, 16, 27, 19, 31, 24, 15, 27, 20, 12, 18, 26, 11, 20, 14, 9, 18,
+].map((height, index) => ({
+  id: `wave-${index + 1}`,
+  height,
+}));
 
 export const boardColumns: BoardColumn[] = [
   {
@@ -16,7 +90,7 @@ export const boardColumns: BoardColumn[] = [
         image: "/images/tasks/task-blue.jpg",
         completed: 0,
         total: 8,
-        members: ["AN", "CH", "JM"],
+        members: [angela, chris, jason],
       },
       {
         id: 2,
@@ -26,7 +100,7 @@ export const boardColumns: BoardColumn[] = [
         date: "Aug 20, 2021",
         completed: 0,
         total: 8,
-        members: ["AN", "CH"],
+        members: [angela, chris],
       },
       {
         id: 3,
@@ -63,7 +137,7 @@ export const boardColumns: BoardColumn[] = [
         image: "/images/tasks/task-colorful.jpg",
         completed: 0,
         total: 8,
-        members: ["AN", "CH", "JM"],
+        members: [angela, chris, jason],
       },
       {
         id: 6,
@@ -73,7 +147,7 @@ export const boardColumns: BoardColumn[] = [
         date: "Aug 20, 2021",
         completed: 0,
         total: 8,
-        members: ["AN", "CH"],
+        members: [angela, chris],
       },
     ],
   },
@@ -99,7 +173,7 @@ export const boardColumns: BoardColumn[] = [
         date: "Aug 20, 2021",
         completed: 0,
         total: 8,
-        members: ["AN", "CH"],
+        members: [angela, chris],
       },
       {
         id: 9,
@@ -110,7 +184,7 @@ export const boardColumns: BoardColumn[] = [
         image: "/images/tasks/task-orange.jpg",
         completed: 0,
         total: 8,
-        members: ["AN", "CH", "JM"],
+        members: [angela, chris, jason],
       },
     ],
   },
@@ -127,7 +201,7 @@ export const boardColumns: BoardColumn[] = [
         image: "/images/tasks/task-waves.jpg",
         completed: 0,
         total: 8,
-        members: ["AN", "CH"],
+        members: [angela, chris],
       },
       {
         id: 11,
@@ -137,7 +211,7 @@ export const boardColumns: BoardColumn[] = [
         date: "Aug 20, 2021",
         completed: 0,
         total: 8,
-        members: ["AN", "CH"],
+        members: [angela, chris],
       },
       {
         id: 12,
@@ -153,20 +227,18 @@ export const boardColumns: BoardColumn[] = [
   },
 ];
 
-export const boardMembers = ["AN", "CH", "JM", "AM", "RK", "DS", "MK", "VL", "AR", "KS"];
-
-export const chatMessages: ChatMessage[] = [
+export const boardMessages: BoardMessage[] = [
   {
     id: 1,
     author: "Chris",
-    avatar: "CH",
+    avatar: chris,
     text: "Hello! 👋",
     time: "08:00 am",
   },
   {
     id: 2,
     author: "Me",
-    avatar: "AN",
+    avatar: angela,
     text: "Hi, Everyone 👋",
     time: "08:01 am",
     isOwn: true,
@@ -174,22 +246,25 @@ export const chatMessages: ChatMessage[] = [
   {
     id: 3,
     author: "Jason",
-    avatar: "JM",
+    avatar: jason,
     text: "How are you, What did you do everyone",
     time: "08:03 am",
   },
   {
     id: 4,
     author: "Chris",
-    avatar: "CH",
+    avatar: chris,
     text: "Good ✌",
     time: "08:05 am",
   },
   {
     id: 5,
     author: "Jason",
-    avatar: "JM",
+    avatar: jason,
     time: "08:08 am",
-    audio: true,
+    audio: {
+      duration: "1:25",
+      waveform: taskBoardWaveform,
+    },
   },
 ];
