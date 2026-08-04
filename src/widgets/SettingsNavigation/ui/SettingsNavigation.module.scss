@@ -1,0 +1,47 @@
+$primary: #5355ff;
+$title: #262864;
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+  margin-left: 58px;
+  overflow-x: auto;
+
+  button {
+    position: relative;
+    flex: 0 0 auto;
+    padding: 15px 0 14px;
+    color: #69728c;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+
+    &::after {
+      position: absolute;
+      right: 0;
+      bottom: 5px;
+      left: 0;
+      height: 2px;
+      background: transparent;
+      content: "";
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.activeTab {
+  color: $title !important;
+  font-weight: 600 !important;
+
+  &::after {
+    background: $primary !important;
+  }
+}
