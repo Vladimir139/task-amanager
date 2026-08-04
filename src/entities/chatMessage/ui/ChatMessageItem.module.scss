@@ -1,0 +1,115 @@
+$primary: #5355ff;
+
+.message {
+  display: flex;
+  max-width: 75%;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 27px;
+}
+
+.ownMessage {
+  max-width: 70%;
+  margin-left: auto;
+  justify-content: flex-end;
+
+  .messageInformation {
+    justify-content: flex-end;
+  }
+
+  .messageBubbles {
+    align-items: flex-end;
+  }
+
+  .messageBubble {
+    color: #ffffff;
+    background: $primary;
+
+    p {
+      color: #ffffff;
+    }
+
+    button {
+      right: auto;
+      left: -34px;
+      color: #68728d;
+    }
+  }
+}
+
+.messageAvatar {
+  width: 35px !important;
+  height: 35px !important;
+  flex: 0 0 35px;
+}
+
+.messageContent {
+  min-width: 0;
+}
+
+.messageInformation {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 8px;
+
+  p:first-child {
+    color: #202020;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    color: #8c95aa;
+    font-size: 11px;
+  }
+}
+
+.messageBubbles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.messageBubble {
+  position: relative;
+  max-width: 430px;
+  padding: 12px 16px;
+  background: #e9edfa;
+  border-radius: 9px;
+
+  p {
+    color: #73809d;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  button {
+    position: absolute;
+    top: 50%;
+    right: -34px;
+    width: 29px;
+    height: 29px;
+    color: #6e7995;
+    transform: translateY(-50%);
+
+    svg {
+      font-size: 18px;
+    }
+  }
+}
+
+.messageAttachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin-top: 11px;
+
+  img {
+    width: 158px;
+    height: 210px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+}

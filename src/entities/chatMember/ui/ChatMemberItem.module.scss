@@ -1,0 +1,16 @@
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  :global(.MuiAvatar-root) {
+    width: 31px;
+    height: 31px;
+  }
+
+  p {
+    color: #242424;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}

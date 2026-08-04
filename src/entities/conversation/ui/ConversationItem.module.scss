@@ -1,0 +1,128 @@
+.conversation {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 15px;
+  padding: 9px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: #fafaff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #5355ff;
+    outline-offset: 2px;
+  }
+}
+
+.activeConversation {
+  background: #f8f8ff;
+}
+
+.conversationAvatar {
+  position: relative;
+  flex: 0 0 auto;
+
+  :global(.MuiAvatar-root) {
+    width: 49px;
+    height: 49px;
+  }
+}
+
+.onlineIndicator {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+}
+
+.conversationContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.conversationHeader,
+.conversationPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.conversationHeader {
+  p:first-child {
+    overflow: hidden;
+    color: #202020;
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p:last-child {
+    flex: 0 0 auto;
+    color: #9299a9;
+    font-size: 11px;
+  }
+}
+
+.conversationPreview {
+  margin-top: 4px;
+
+  > p {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    color: #737b8d;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    svg {
+      font-size: 15px;
+    }
+  }
+}
+
+.typing {
+  color: #22aa72 !important;
+}
+
+.unreadBadge {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  place-items: center;
+  color: #ffffff;
+  background: #ef4444;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.readStatus {
+  display: flex;
+  color: #25c96f;
+
+  svg {
+    width: 10px;
+    height: 10px;
+
+    &:last-child {
+      margin-left: -6px;
+    }
+  }
+}

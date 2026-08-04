@@ -1,0 +1,136 @@
+$background: #f5f6fb;
+$primary: #5355ff;
+$title: #202154;
+$text: #7c87a3;
+
+.chat {
+  position: relative;
+  display: flex;
+  height: calc(100vh - 76px);
+  min-width: 0;
+  flex-direction: column;
+  background: $background;
+}
+
+.chatHeader {
+  display: flex;
+  min-height: 112px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px 32px;
+}
+
+.teamInformation {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 17px;
+
+  > :global(.MuiAvatar-root) {
+    width: 61px;
+    height: 61px;
+    flex: 0 0 61px;
+  }
+
+  > div:last-child {
+    min-width: 0;
+  }
+
+  h2 {
+    overflow: hidden;
+    color: #121212;
+    font-size: 29px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p {
+    margin-top: 2px;
+    color: $text;
+    font-size: 13px;
+  }
+}
+
+.teamMembers {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  :global(.MuiAvatar-root) {
+    width: 31px;
+    height: 31px;
+    border: 2px solid $background;
+  }
+}
+
+.addMemberButton {
+  width: 36px;
+  height: 36px;
+  color: $primary !important;
+  background: #f0f1ff !important;
+  border: 1px dashed #c8ccef !important;
+}
+
+.messages {
+  min-height: 0;
+  flex: 1;
+  padding: 24px 32px 110px;
+  overflow-y: auto;
+}
+
+.dateDivider {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 5px 0 28px;
+
+  span {
+    height: 1px;
+    flex: 1;
+    background: #e4e6ed;
+  }
+
+  p {
+    color: #75809d;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.messageComposer {
+  position: absolute;
+  right: 35px;
+  bottom: 15px;
+  left: 35px;
+  display: flex;
+  height: 51px;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px 0 20px;
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 5px 20px rgb(41 43 82 / 5%);
+
+  > svg {
+    color: #75809d;
+    font-size: 20px;
+  }
+
+  :global(.MuiOutlinedInput-root) {
+    height: 45px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+  }
+
+  :global(.MuiInputBase-input) {
+    color: $title;
+    font-size: 13px;
+  }
+
+  button {
+    color: #75809d;
+  }
+}

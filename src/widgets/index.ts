@@ -1,4 +1,7 @@
 export * from "./ActivityChart";
+export * from "./ChatInformationSidebar";
+export * from "./ChatWindow";
+export * from "./ConversationsSidebar";
 export * from "./DashboardStatistics";
 export * from "./FilesHeader";
 export * from "./FoldersList";

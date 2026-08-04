@@ -1,0 +1,53 @@
+.file {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileInformation {
+  min-width: 0;
+
+  p:first-child {
+    overflow: hidden;
+    color: #242424;
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p:last-child {
+    margin-top: 3px;
+    color: #a0a6b1;
+    font-size: 10px;
+  }
+}
+
+.fileIcon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  background: #f6f7fb;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.figmaFile {
+  color: #f24e1e;
+}
+
+.sketchFile {
+  color: #ffb800;
+}
+
+.xdFile {
+  color: #8f076d;
+}
+
+.svgFile {
+  color: #111111;
+}

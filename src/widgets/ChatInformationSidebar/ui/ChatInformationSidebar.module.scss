@@ -1,0 +1,102 @@
+$primary: #5355ff;
+$border: #e8eaf1;
+
+.informationSidebar {
+  height: calc(100vh - 76px);
+  padding: 45px 37px;
+  overflow-y: auto;
+  background: #ffffff;
+  border-left: 1px solid $border;
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  :global(.MuiAvatar-root) {
+    width: 94px;
+    height: 94px;
+  }
+
+  h2 {
+    margin-top: 18px;
+    color: #202020;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: 8px;
+    color: #75809d;
+    font-size: 11px;
+  }
+}
+
+.sidebarSection {
+  margin-top: 39px;
+}
+
+.sidebarSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    color: #333333;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  button {
+    color: #333333;
+  }
+}
+
+.files {
+  display: flex;
+  margin-top: 17px;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.viewAllButton {
+  margin-top: 20px;
+  padding: 0;
+  color: $primary;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.addMember {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 18px;
+  padding: 0;
+  color: $primary;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  span {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    background: #f4f5ff;
+    border-radius: 50%;
+  }
+}
+
+.members {
+  display: flex;
+  margin-top: 19px;
+  flex-direction: column;
+  gap: 18px;
+}
