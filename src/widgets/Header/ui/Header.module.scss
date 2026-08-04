@@ -1,0 +1,96 @@
+$page-background: #f4f5fb;
+$surface: #ffffff;
+$primary: #5355ff;
+$primary-dark: #21235f;
+$secondary-text: #7f8aa8;
+$border: #eceef5;
+$blue: #16a8ff;
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: end;
+
+  height: 76px;
+  padding: 0 38px;
+
+  background: #ffffff;
+}
+
+.searchField {
+  width: 290px;
+
+  :global(.MuiOutlinedInput-root) {
+    padding-right: 20px;
+    height: 44px;
+    background: #f3f7fa;
+    border-radius: 7px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+    padding: 0;
+  }
+
+  :global(.MuiInputBase-input) {
+    font-family: "DM Sans";
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 18px;
+    padding: 12px 20px;
+
+    color: #23235f;
+  }
+
+  :global(.MuiInputAdornment-root) {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  svg {
+    color: #94a2bc;
+  }
+}
+
+.profileActions {
+  display: flex;
+  align-items: center;
+
+  button {
+    color: #53618c;
+  }
+}
+
+.notificationButton {
+  position: relative !important;
+  margin-right: 30px !important;
+}
+
+.notificationCount {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  color: #ffffff;
+  background: $primary;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.profileAvatar {
+  width: 40px !important;
+  height: 40px !important;
+  color: $primary-dark !important;
+  background: #eeeeff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}

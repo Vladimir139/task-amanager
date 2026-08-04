@@ -6,10 +6,7 @@
     "includes": [
       "**",
       "!eslint.config.js",
-      "!next-i18next.config.js",
-      "!next-env.d.ts",
       "!text.ts",
-      "!!**/.next",
       "!!**/dist",
       "!!**/build",
       "!!**/out",
@@ -133,10 +130,7 @@
       "**",
       "!eslint.config.js",
       "!eslint.config.mjs",
-      "!next-i18next.config.js",
-      "!next-env.d.ts",
       "!text.ts",
-      "!.next/**",
       "!node_modules/**",
       "!dist/**",
       "!build/**",
@@ -145,17 +139,14 @@
       "**",
       "!eslint.config.js",
       "!eslint.config.mjs",
-      "!next-i18next.config.js",
-      "!next-env.d.ts",
       "!text.ts",
-      "!.next/**",
       "!node_modules/**",
       "!dist/**",
       "!build/**",
       "!out/**",
       "!coverage/**"
     ],
-    "domains": { "next": "all", "react": "recommended" }
+    "domains": { "react": "recommended" }
   },
   "javascript": {
     "parser": { "jsxEverywhere": true },

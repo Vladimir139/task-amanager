@@ -1,0 +1,88 @@
+$page-background: #f4f5fb;
+$surface: #ffffff;
+$primary: #5355ff;
+$primary-dark: #21235f;
+$secondary-text: #7f8aa8;
+$border: #eceef5;
+$blue: #16a8ff;
+
+.statisticCard {
+  width: 100%;
+  padding: 22px 20px 43px;
+  border-radius: 16px !important;
+
+  background: #ffffff;
+}
+
+.statisticHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statisticTitle {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+
+  p {
+    overflow: hidden;
+    color: #8791aa;
+    font-size: 15px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.statisticIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  color: #93a0be;
+  background: #f3f6fb;
+  border-radius: 50%;
+
+  svg {
+    font-size: 19px;
+  }
+}
+
+.statisticValue {
+  color: #222222;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+}
+
+.statisticDivider {
+  height: 1px;
+  margin: 23px 0 27px;
+  background: $border;
+}
+
+.statisticContent {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.statisticDescription {
+  padding-bottom: 4px;
+  text-align: right;
+  white-space: nowrap;
+
+  p {
+    color: #747f9c;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  strong {
+    color: #149719;
+    font-weight: 700;
+  }
+}

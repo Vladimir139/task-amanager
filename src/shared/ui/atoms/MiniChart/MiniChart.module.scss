@@ -1,0 +1,37 @@
+$page-background: #f4f5fb;
+$surface: #ffffff;
+$primary: #5355ff;
+$primary-dark: #21235f;
+$secondary-text: #7f8aa8;
+$border: #eceef5;
+$blue: #16a8ff;
+
+.miniChart {
+  width: 130px;
+  min-width: 90px;
+  color: $primary;
+  overflow: visible;
+}
+
+.miniChartLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.miniChartArea {
+  stroke: none;
+}
+
+.purple {
+  color: $primary;
+}
+
+.blue {
+  color: $blue;
+}
+
+.red {
+  color: #ff5a55;
+}

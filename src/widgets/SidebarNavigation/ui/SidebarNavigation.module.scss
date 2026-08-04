@@ -1,0 +1,44 @@
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 94px;
+  height: 100vh;
+  padding: 20px 15px;
+
+  background: #fbfaff;
+}
+
+.logo {
+  width: 64px;
+  height: 61px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navigation {
+  display: flex;
+  margin-top: 139px;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.navigationButton {
+  width: 46px;
+  height: 46px;
+  color: #5f6388 !important;
+  border-radius: 14px !important;
+}
+
+.activeNavigationButton {
+  color: #ffffff !important;
+  background: #5051f9 !important;
+  box-shadow: 0 10px 22px rgb(83 85 255 / 28%);
+}

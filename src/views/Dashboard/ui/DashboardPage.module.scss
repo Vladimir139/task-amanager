@@ -1,0 +1,323 @@
+$page-background: #f4f5fb;
+$surface: #ffffff;
+$primary: #5355ff;
+$primary-dark: #21235f;
+$secondary-text: #7f8aa8;
+$border: #eceef5;
+$blue: #16a8ff;
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  background: $page-background;
+  color: $primary-dark;
+}
+
+.pageContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+}
+
+.mainContent {
+  min-width: 0;
+  padding: 32px 40px 38px;
+}
+
+.statistics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.analyticsCard {
+  margin-top: 30px;
+  padding: 28px 25px 23px;
+  border-radius: 18px !important;
+}
+
+.analyticsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    font-size: 23px;
+    font-weight: 700;
+  }
+}
+
+.periodNavigation {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+
+  button {
+    position: relative;
+    padding: 4px 0 14px;
+    color: $primary-dark;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    &::after {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: transparent;
+      content: "";
+    }
+  }
+
+  .activePeriod {
+    color: $blue;
+
+    &::after {
+      background: $blue;
+    }
+  }
+}
+
+.mainChart {
+  position: relative;
+  height: 305px;
+  margin-top: 28px;
+  padding: 0 3px 24px 45px;
+
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  overflow: visible;
+}
+
+.tasksSection {
+  margin-top: 24px;
+
+  > h2 {
+    margin-bottom: 20px;
+    font-size: 23px;
+    font-weight: 700;
+  }
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.rightSidebar {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  height: calc(100vh - 76px);
+  min-width: 0;
+  flex-direction: column;
+  padding: 34px 39px;
+  background: $surface;
+
+  overflow-y: auto;
+
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+  }
+}
+
+.rightDivider {
+  height: 1px;
+  margin: 30px 0 23px;
+  background: $border;
+}
+
+.messagesSection {
+  h2 {
+    margin-bottom: 18px;
+  }
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.messageAvatar {
+  width: 49px !important;
+  height: 49px !important;
+  flex: 0 0 49px;
+  color: $primary-dark !important;
+  background: #f5f6fb !important;
+  border: 2px solid;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.messageContent {
+  min-width: 0;
+
+  p:first-child {
+    margin-bottom: 3px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    overflow: hidden;
+    color: #7c87a3;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.newTaskSection {
+  margin-top: 30px;
+}
+
+.newTaskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  button {
+    color: #ccd1dd;
+  }
+}
+
+.inputLabel {
+  margin-top: 18px !important;
+  margin-bottom: 9px !important;
+  color: #7c87a3;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.taskInput {
+  :global(.MuiOutlinedInput-root) {
+    height: 40px;
+    background: #edf1f5;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+  }
+
+  :global(.MuiInputBase-input) {
+    color: $primary-dark;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.emojiPicker {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+
+  > button {
+    width: 26px;
+    height: 32px;
+    padding: 0;
+    color: $primary;
+  }
+
+  svg {
+    font-size: 15px;
+  }
+}
+
+.emojis {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  justify-content: space-around;
+  gap: 2px;
+
+  button {
+    padding: 2px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 18px;
+    transition: transform 150ms ease;
+
+    &:hover {
+      transform: translateY(-2px) scale(1.1);
+    }
+  }
+}
+
+.newTaskDivider {
+  height: 1px;
+  margin-top: 13px;
+  background: $border;
+}
+
+.collaborators {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.collaboratorChips {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  :global(.MuiChip-root) {
+    height: 31px;
+    color: $primary;
+    background: #f1f2ff;
+    font-size: 11px;
+  }
+
+  :global(.MuiAvatar-root) {
+    width: 21px;
+    height: 21px;
+    font-size: 8px;
+  }
+
+  :global(.MuiChip-deleteIcon) {
+    color: #8893b2;
+    font-size: 15px;
+  }
+}
+
+.addCollaboratorButton {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  color: #7f8aa8 !important;
+  background: #f1f3f7 !important;
+
+  svg {
+    font-size: 18px;
+  }
+}
+
+.submitTaskButton {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  color: #ffffff !important;
+  background: $primary !important;
+  box-shadow: 0 8px 16px rgb(83 85 255 / 24%);
+
+  svg {
+    font-size: 20px;
+  }
+}

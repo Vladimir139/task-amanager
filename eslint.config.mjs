@@ -17,8 +17,6 @@ import unusedImports from "eslint-plugin-unused-imports";
 import importPlugin from "eslint-plugin-import";
 import security from "eslint-plugin-security";
 
-import pluginNext from "@next/eslint-plugin-next";
-
 import prettierConfig from "eslint-config-prettier";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,10 +46,7 @@ export default [
     ignores: [
       "eslint.config.js",
       "eslint.config.mjs",
-      "next-i18next.config.js",
-      "next-env.d.ts",
       "text.ts",
-      ".next/**",
       "node_modules/**",
       "dist/**",
       "build/**",
@@ -90,7 +85,6 @@ export default [
       react,
       "react-hooks": reactHooks,
       "jsx-a11y": jsxA11y,
-      "@next/next": pluginNext,
       "@typescript-eslint": typescriptPlugin,
       "simple-import-sort": simpleImportSort,
       "unused-imports": unusedImports,
@@ -99,9 +93,6 @@ export default [
     },
 
     rules: {
-      // Next
-      ...pluginNext.configs.recommended.rules,
-
       // TypeScript
       ...tsRecommended.rules,
       ...tsTypeChecked.rules,
