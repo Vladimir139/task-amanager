@@ -1,5 +1,12 @@
-import type { TaskItem } from "@/shared/lib/types";
+export interface Task {
+  id: number;
+  time: string;
+  title: string;
+  url: string;
+  comments: number;
+  progress: number;
+}
 
 export interface TaskCardProps {
-  task: TaskItem;
+  task: Task;
 }

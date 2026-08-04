@@ -2,15 +2,14 @@ import { ChatBubbleOutlined, Link, PlayArrow, TimerOutlined } from "@mui/icons-m
 import { Box, IconButton, LinearProgress, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import type { TaskCardProps } from "@/entities/task/model/types.ts";
-
+import type { TaskCardProps } from "../../model/types";
 import styles from "./TaskCard.module.scss";
 
 export const TaskCard: FC<TaskCardProps> = ({ task }) => {
   return (
     <Paper className={styles.taskCard} elevation={0}>
       <Box className={styles.taskStart}>
-        <IconButton className={styles.playButton}>
+        <IconButton className={styles.playButton} aria-label={`Start task ${task.title}`}>
           <PlayArrow />
         </IconButton>
 
@@ -49,6 +48,7 @@ export const TaskCard: FC<TaskCardProps> = ({ task }) => {
           variant="determinate"
           value={task.progress}
           className={styles.progressBar}
+          aria-label={`${task.progress}% complete`}
         />
       </Box>
 

@@ -1,15 +1,13 @@
-$page-background: #f4f5fb;
-$surface: #ffffff;
 $primary: #5355ff;
-$primary-dark: #21235f;
-$secondary-text: #7f8aa8;
-$border: #eceef5;
-$blue: #16a8ff;
 
 .taskCard {
   display: grid;
   min-height: 84px;
-  grid-template-columns: 180px minmax(220px, 1.5fr) minmax(150px, 0.8fr) auto;
+  grid-template-columns:
+    180px
+    minmax(220px, 1.5fr)
+    minmax(150px, 0.8fr)
+    auto;
   align-items: center;
   overflow: hidden;
   border-radius: 13px !important;

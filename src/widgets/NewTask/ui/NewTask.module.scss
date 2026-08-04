@@ -1,0 +1,158 @@
+$primary: #5355ff;
+$primary-dark: #21235f;
+$border: #eceef5;
+
+.newTaskSection {
+  margin-top: 30px;
+}
+
+.newTaskHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    color: $primary-dark;
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  button {
+    color: #ccd1dd;
+  }
+}
+
+.inputLabel {
+  margin-top: 18px !important;
+  margin-bottom: 9px !important;
+  color: #7c87a3;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.taskInput {
+  :global(.MuiOutlinedInput-root) {
+    height: 40px;
+    background: #edf1f5;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+  }
+
+  :global(.MuiInputBase-input) {
+    color: $primary-dark;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.emojiPicker {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+
+  > button {
+    width: 26px;
+    height: 32px;
+    padding: 0;
+    color: $primary;
+  }
+
+  svg {
+    font-size: 15px;
+  }
+}
+
+.emojis {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  justify-content: space-around;
+  gap: 2px;
+
+  button {
+    padding: 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease;
+
+    &:hover {
+      transform: translateY(-2px) scale(1.1);
+    }
+  }
+}
+
+.selectedEmoji {
+  background: #ededff !important;
+  transform: translateY(-2px) scale(1.1);
+}
+
+.newTaskDivider {
+  height: 1px;
+  margin-top: 13px;
+  background: $border;
+}
+
+.collaborators {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.collaboratorChips {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+
+  :global(.MuiChip-root) {
+    height: 31px;
+    color: $primary;
+    background: #f1f2ff;
+    font-size: 11px;
+  }
+
+  :global(.MuiAvatar-root) {
+    width: 21px;
+    height: 21px;
+    font-size: 8px;
+  }
+
+  :global(.MuiChip-deleteIcon) {
+    color: #8893b2;
+    font-size: 15px;
+  }
+}
+
+.addCollaboratorButton {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  color: #7f8aa8 !important;
+  background: #f1f3f7 !important;
+
+  svg {
+    font-size: 18px;
+  }
+}
+
+.submitTaskButton {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  color: #ffffff !important;
+  background: $primary !important;
+  box-shadow: 0 8px 16px rgb(83 85 255 / 24%);
+
+  svg {
+    font-size: 20px;
+  }
+}

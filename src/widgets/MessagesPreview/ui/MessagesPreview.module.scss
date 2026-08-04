@@ -1,0 +1,16 @@
+$primary-dark: #21235f;
+
+.messagesSection {
+  h2 {
+    margin-bottom: 18px;
+    color: $primary-dark;
+    font-size: 21px;
+    font-weight: 700;
+  }
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}

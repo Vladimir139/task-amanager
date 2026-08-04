@@ -1,17 +1,11 @@
-$page-background: #f4f5fb;
-$surface: #ffffff;
-$primary: #5355ff;
 $primary-dark: #21235f;
-$secondary-text: #7f8aa8;
 $border: #eceef5;
-$blue: #16a8ff;
 
 .statisticCard {
   width: 100%;
   padding: 22px 20px 43px;
-  border-radius: 16px !important;
-
   background: #ffffff;
+  border-radius: 16px !important;
 }
 
 .statisticHeader {

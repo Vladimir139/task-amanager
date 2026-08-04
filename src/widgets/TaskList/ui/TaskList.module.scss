@@ -1,0 +1,16 @@
+.tasksSection {
+  margin-top: 24px;
+
+  > h2 {
+    margin-bottom: 20px;
+    color: #21235f;
+    font-size: 23px;
+    font-weight: 700;
+  }
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}

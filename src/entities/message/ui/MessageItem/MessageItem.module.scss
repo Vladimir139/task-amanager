@@ -1,0 +1,37 @@
+$primary-dark: #21235f;
+
+.message {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.messageAvatar {
+  width: 49px !important;
+  height: 49px !important;
+  flex: 0 0 49px;
+  color: $primary-dark !important;
+  background: #f5f6fb !important;
+  border: 2px solid;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.messageContent {
+  min-width: 0;
+
+  p:first-child {
+    margin-bottom: 3px;
+    color: $primary-dark;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    overflow: hidden;
+    color: #7c87a3;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -2,19 +2,19 @@ import { CheckBoxOutlined, DescriptionOutlined, StarBorder } from "@mui/icons-ma
 import { Box, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import type { StatisticsCardProps } from "@/entities/statistic/model/types.ts";
 import { MiniChart } from "@/shared/ui/atoms";
 
+import type { Statistic, StatisticCardProps } from "../../model/types";
 import styles from "./StatisticCard.module.scss";
 
 const statisticIcons = {
   completed: StarBorder,
   "new-task": DescriptionOutlined,
   "project-done": CheckBoxOutlined,
-};
+} satisfies Record<Statistic["id"], typeof StarBorder>;
 
-export const StatisticsCard: FC<StatisticsCardProps> = ({ statistic }) => {
-  const Icon = statisticIcons[statistic.id as keyof typeof statisticIcons];
+export const StatisticCard: FC<StatisticCardProps> = ({ statistic }) => {
+  const Icon = statisticIcons[statistic.id];
 
   return (
     <Paper className={styles.statisticCard} elevation={0}>
