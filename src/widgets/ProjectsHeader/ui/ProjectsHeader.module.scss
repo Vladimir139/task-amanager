@@ -1,0 +1,38 @@
+$primary: #5355ff;
+$text: #7d87a3;
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  h1 {
+    color: #111111;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  > div > p {
+    margin-top: 8px;
+    color: $text;
+    font-size: 13px;
+  }
+}
+
+.createButton {
+  height: 45px;
+  padding: 0 23px !important;
+  color: #ffffff !important;
+  background: $primary !important;
+  border-radius: 10px !important;
+  text-transform: none !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 20px rgb(83 85 255 / 20%) !important;
+
+  &:hover {
+    background: #484ae5 !important;
+  }
+}

@@ -1,0 +1,284 @@
+$primary: #5355ff;
+$title: #25275f;
+$text: #7d87a3;
+$border: #e8eaf1;
+$blue: #1ca7f6;
+$green: #25b96b;
+$orange: #f5a524;
+$red: #ef5b5b;
+
+.projectCard {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid $border;
+  border-radius: 13px !important;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    border-color: #cfd2f4;
+    box-shadow: 0 10px 25px rgb(36 39 83 / 7%) !important;
+    transform: translateY(-2px);
+  }
+}
+
+.projectCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.projectIcon {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  color: #ffffff;
+  border-radius: 11px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.purple {
+  background: $primary;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $primary;
+  }
+}
+
+.blue {
+  background: $blue;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $blue;
+  }
+}
+
+.orange {
+  background: $orange;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $orange;
+  }
+}
+
+.green {
+  background: $green;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $green;
+  }
+}
+
+.red {
+  background: $red;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $red;
+  }
+}
+
+.projectMenuButton {
+  color: #9098aa !important;
+
+  svg {
+    font-size: 20px;
+  }
+}
+
+.projectTitle {
+  overflow: hidden;
+  margin-top: 17px !important;
+  color: $title;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectDescription {
+  display: -webkit-box;
+  min-height: 36px;
+  margin-top: 8px !important;
+  overflow: hidden;
+  color: $text;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.projectStatusContainer {
+  margin-top: 19px;
+}
+
+.projectStatusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  > p {
+    color: $title;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.projectStatus {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.activeStatus {
+  color: $primary;
+  background: #eeeeff;
+}
+
+.completedStatus {
+  color: #178b4e;
+  background: #e9f8ef;
+}
+
+.onHoldStatus {
+  color: #d0780b;
+  background: #fff4df;
+}
+
+.projectProgress {
+  height: 5px !important;
+  margin-top: 11px;
+  background: #e7e9f0 !important;
+  border-radius: 10px;
+
+  :global(.MuiLinearProgress-bar) {
+    border-radius: 10px;
+  }
+}
+
+.projectInformation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 17px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #eef0f4;
+
+  > div {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+    color: #7e89a3;
+
+    svg {
+      flex: 0 0 auto;
+      font-size: 17px;
+    }
+
+    p {
+      overflow: hidden;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.projectFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 17px;
+}
+
+.projectMembers {
+  :global(.MuiAvatar-root) {
+    width: 28px;
+    height: 28px;
+    color: $title;
+    background: #dfe3ff;
+    border: 2px solid #ffffff;
+    font-size: 8px;
+    font-weight: 700;
+
+    &:nth-child(2n) {
+      background: #dff2ff;
+    }
+
+    &:nth-child(3n) {
+      background: #ffe7dc;
+    }
+  }
+}
+
+.additionalMember {
+  font-size: 8px !important;
+}
+
+.openProjectButton {
+  padding: 0;
+  color: $primary;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.listProjectCard {
+  display: grid;
+  grid-template-columns:
+    55px
+    minmax(160px, 1fr)
+    minmax(190px, 1.3fr)
+    minmax(170px, 0.9fr)
+    minmax(190px, 1fr)
+    auto;
+  align-items: center;
+  gap: 18px;
+
+  .projectCardHeader {
+    display: block;
+  }
+
+  .projectMenuButton {
+    display: none;
+  }
+
+  .projectTitle,
+  .projectDescription,
+  .projectStatusContainer,
+  .projectInformation,
+  .projectFooter {
+    margin: 0 !important;
+  }
+
+  .projectDescription {
+    min-height: auto;
+  }
+
+  .projectStatusRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .projectInformation {
+    padding: 0;
+    border: 0;
+  }
+}

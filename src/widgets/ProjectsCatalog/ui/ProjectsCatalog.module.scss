@@ -1,0 +1,187 @@
+$primary: #5355ff;
+$title: #25275f;
+$border: #e8eaf1;
+
+.projectsSection {
+  margin-top: 24px;
+  padding: 25px;
+  border-radius: 15px !important;
+}
+
+.projectsToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.projectsToolbarTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  h2 {
+    color: #161616;
+    font-size: 21px;
+    font-weight: 700;
+  }
+
+  span {
+    display: grid;
+    min-width: 25px;
+    height: 25px;
+    place-items: center;
+    padding: 0 7px;
+    color: $primary;
+    background: #eeeeff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.searchField {
+  width: 235px;
+
+  :global(.MuiOutlinedInput-root) {
+    height: 40px;
+    background: #f7f8fb;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border-color: transparent;
+  }
+
+  :global(.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline) {
+    border-color: #dfe2eb;
+  }
+
+  :global(.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline) {
+    border-width: 1px;
+    border-color: $primary;
+  }
+
+  :global(.MuiInputBase-input) {
+    font-size: 12px;
+  }
+
+  svg {
+    color: #8c95aa;
+    font-size: 19px;
+  }
+}
+
+.filterSelect {
+  width: 165px;
+
+  :global(.MuiOutlinedInput-root) {
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border-color: $border;
+  }
+
+  :global(.MuiSelect-select) {
+    font-size: 12px;
+  }
+
+  svg {
+    color: #7e89a3;
+    font-size: 18px;
+  }
+}
+
+.sortSelect {
+  width: 185px;
+
+  :global(.MuiOutlinedInput-root) {
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border-color: $border;
+  }
+
+  :global(.MuiSelect-select) {
+    font-size: 12px;
+  }
+
+  svg {
+    color: #76819c;
+    font-size: 18px;
+  }
+}
+
+.viewSwitcher {
+  display: flex;
+  padding: 3px;
+  background: #f3f4f8;
+  border-radius: 9px;
+
+  button {
+    width: 34px;
+    height: 34px;
+    color: #8892a8;
+    border-radius: 7px;
+
+    svg {
+      font-size: 19px;
+    }
+  }
+}
+
+.activeViewButton {
+  color: $primary !important;
+  background: #ffffff !important;
+  box-shadow: 0 3px 8px rgb(36 39 83 / 8%);
+}
+
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 25px;
+}
+
+.projectsList {
+  display: flex;
+  margin-top: 25px;
+  overflow-x: auto;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.emptyState {
+  display: flex;
+  min-height: 350px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #969fb2;
+
+  > svg {
+    font-size: 42px;
+  }
+
+  h3 {
+    margin-top: 14px;
+    color: $title;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    margin-top: 7px;
+    font-size: 12px;
+  }
+}

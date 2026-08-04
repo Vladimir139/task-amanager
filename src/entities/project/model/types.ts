@@ -2,6 +2,8 @@ export type ProjectStatus = "active" | "completed" | "on-hold";
 
 export type ProjectColor = "purple" | "blue" | "orange" | "green" | "red";
 
+export type ProjectViewMode = "grid" | "list";
+
 export interface ProjectMember {
   id: number;
   name: string;
@@ -21,10 +23,8 @@ export interface Project {
   members: ProjectMember[];
 }
 
-export interface ProjectStatistic {
-  id: string;
-  title: string;
-  value: number;
-  difference: string;
-  type: "total" | "progress" | "completed" | "overdue";
+export interface ProjectCardProps {
+  project: Project;
+  viewMode?: ProjectViewMode;
+  onOpen?: (project: Project) => void;
 }
