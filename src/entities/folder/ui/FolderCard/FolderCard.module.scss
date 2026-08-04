@@ -1,0 +1,94 @@
+$primary: #5355ff;
+$title: #262864;
+$text: #7f8aa8;
+$border: #e3e6ee;
+$blue: #23a7f4;
+$red: #ff6752;
+$green: #35cc6d;
+
+.folderCard {
+  display: flex;
+  min-height: 141px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 23px;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid $border;
+  border-radius: 11px;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+
+  &:hover {
+    border-color: #c8cbed;
+    box-shadow: 0 8px 22px rgb(43 46 89 / 7%);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $primary;
+    outline-offset: 2px;
+  }
+}
+
+.folderCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.folderIcon {
+  font-size: 30px !important;
+}
+
+.blueFolder {
+  color: $blue;
+}
+
+.purpleFolder {
+  color: $primary;
+}
+
+.yellowFolder {
+  color: #f5aa00;
+}
+
+.greenFolder {
+  color: $green;
+}
+
+.redFolder {
+  color: $red;
+}
+
+.folderMembers {
+  :global(.MuiAvatar-root) {
+    width: 28px;
+    height: 28px;
+    color: #ffffff;
+    background: $primary;
+    border: 2px solid #ffffff;
+    font-size: 11px;
+
+    &:nth-child(2) {
+      background: $blue;
+    }
+  }
+}
+
+.folderInformation {
+  p:first-child {
+    color: $title;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    margin-top: 7px;
+    color: $text;
+    font-size: 12px;
+  }
+}

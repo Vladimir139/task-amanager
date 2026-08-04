@@ -2,7 +2,8 @@ import { ChatBubbleOutlined, Link, PlayArrow, TimerOutlined } from "@mui/icons-m
 import { Box, IconButton, LinearProgress, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import type { TaskCardProps } from "../../model/types";
+import type { TaskCardProps } from "@/entities/task";
+
 import styles from "./TaskCard.module.scss";
 
 export const TaskCard: FC<TaskCardProps> = ({ task }) => {

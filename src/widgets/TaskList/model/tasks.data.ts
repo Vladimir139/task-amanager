@@ -1,4 +1,4 @@
-import type { Task } from "@/entities/task/model";
+import type { Task } from "@/entities/task";
 
 export const tasks: Task[] = [
   {

@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import { TaskCard } from "@/entities/task/ui";
+import { TaskCard } from "@/entities/task";
 
 import { tasks } from "../model/tasks.data";
 import styles from "./TaskList.module.scss";

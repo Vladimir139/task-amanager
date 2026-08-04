@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import type { FC } from "react";
 
-import { StatisticCard } from "@/entities/statistic/ui";
+import { StatisticCard } from "@/entities/statistic";
 
 import { statistics } from "../model/statistics.data";
 import styles from "./DashboardStatistics.module.scss";

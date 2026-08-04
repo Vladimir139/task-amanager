@@ -1,0 +1,94 @@
+$primary: #5355ff;
+$title: #262864;
+$text: #7f8aa8;
+$blue: #23a7f4;
+$orange: #ffb53d;
+$red: #ff6752;
+
+.storageItem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.storageIcon {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  place-items: center;
+  border-radius: 8px;
+
+  svg {
+    font-size: 21px;
+  }
+}
+
+.storageInformation {
+  min-width: 0;
+  flex: 1;
+
+  > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    p:first-child {
+      color: $title;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    p:last-child {
+      color: $text;
+      font-size: 11px;
+    }
+  }
+}
+
+.storageProgress {
+  height: 4px !important;
+  margin-top: 8px;
+  background: #e3e5ea !important;
+  border-radius: 10px;
+
+  :global(.MuiLinearProgress-bar) {
+    border-radius: 10px;
+  }
+}
+
+.mediaStorage {
+  color: $primary;
+  background: #eeeefe;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $primary;
+  }
+}
+
+.documentsStorage {
+  color: $orange;
+  background: #fff6e8;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $orange;
+  }
+}
+
+.musicStorage {
+  color: $red;
+  background: #fff0ed;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $red;
+  }
+}
+
+.otherStorage {
+  color: $blue;
+  background: #edf8ff;
+
+  :global(.MuiLinearProgress-bar) {
+    background: $blue;
+  }
+}

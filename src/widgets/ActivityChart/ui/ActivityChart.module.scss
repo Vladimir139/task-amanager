@@ -1,0 +1,99 @@
+$primary: #5355ff;
+$title: #262864;
+$blue: #23a7f4;
+$red: #ff6752;
+
+.activityCard {
+  min-height: 363px;
+  padding: 34px 30px 24px;
+  border-radius: 15px !important;
+
+  h2 {
+    font-size: 25px;
+    font-weight: 500;
+  }
+}
+
+.chart {
+  position: relative;
+  height: 215px;
+  margin-top: 28px;
+}
+
+.chartGrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  span {
+    width: 100%;
+    border-top: 1px dashed #d7dae2;
+  }
+}
+
+.chartBars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 17px;
+}
+
+.chartBar {
+  width: 31px;
+  min-height: 20px;
+  border-radius: 7px 7px 0 0;
+}
+
+.mediaBar {
+  background: $primary;
+}
+
+.photosBar {
+  background: $blue;
+}
+
+.docsBar {
+  background: $red;
+}
+
+.chartLegend {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 22px;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: $title;
+    font-size: 10px;
+  }
+
+  span {
+    width: 7px;
+    height: 7px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px currentColor;
+  }
+}
+
+.mediaDot {
+  color: $primary;
+  background: $primary;
+}
+
+.photosDot {
+  color: $blue;
+  background: $blue;
+}
+
+.docsDot {
+  color: $red;
+  background: $red;
+}

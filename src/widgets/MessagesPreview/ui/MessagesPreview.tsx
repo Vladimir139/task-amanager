@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import { MessageItem } from "@/entities/message/ui";
+import { MessageItem } from "@/entities/message";
 
 import { messages } from "../model/messages.data";
 import styles from "./MessagesPreview.module.scss";

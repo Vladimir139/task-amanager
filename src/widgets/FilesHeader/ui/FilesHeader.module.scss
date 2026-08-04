@@ -1,0 +1,48 @@
+$primary: #5355ff;
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  h1 {
+    color: #111111;
+    font-size: 29px;
+    font-weight: 700;
+  }
+}
+
+.pageActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  button {
+    height: 46px;
+    padding: 0 28px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+  }
+}
+
+.createFolderButton {
+  color: #ffffff !important;
+  background: $primary !important;
+
+  svg {
+    font-size: 18px;
+  }
+}
+
+.uploadButton {
+  color: #404040 !important;
+  background: transparent !important;
+  border-color: #d5d8e1 !important;
+
+  svg {
+    font-size: 20px;
+  }
+}

@@ -1,4 +1,4 @@
-import type { Statistic } from "@/entities/statistic/model";
+import type { Statistic } from "@/entities/statistic";
 
 export const statistics: Statistic[] = [
   {

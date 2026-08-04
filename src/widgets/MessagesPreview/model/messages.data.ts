@@ -1,4 +1,4 @@
-import type { Message } from "@/entities/message/model";
+import type { Message } from "@/entities/message";
 
 export const messages: Message[] = [
   {

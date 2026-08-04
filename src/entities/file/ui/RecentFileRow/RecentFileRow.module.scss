@@ -1,0 +1,101 @@
+$title: #262864;
+$text: #7f8aa8;
+$primary: #5355ff;
+$blue: #23a7f4;
+$orange: #ffb53d;
+
+.fileRow {
+  display: grid;
+  grid-template-columns:
+    minmax(230px, 1.4fr)
+    minmax(90px, 0.8fr)
+    minmax(150px, 1fr)
+    minmax(155px, 1fr)
+    35px;
+  align-items: center;
+  gap: 14px;
+}
+
+.fileName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+
+  > p {
+    overflow: hidden;
+    color: $title;
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.fileIcon {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  place-items: center;
+  background: #f4f5f8;
+  border-radius: 8px;
+
+  svg {
+    font-size: 21px;
+  }
+}
+
+.documentFileIcon {
+  color: $orange;
+}
+
+.imageFileIcon {
+  color: $blue;
+}
+
+.figmaFileIcon {
+  color: #f24e1e;
+}
+
+.illustratorFileIcon {
+  color: #ff9a00;
+}
+
+.figmaIcon,
+.illustratorIcon {
+  font-weight: 800;
+}
+
+.illustratorIcon {
+  color: #ff9a00;
+  background: #2c0800;
+  font-size: 12px;
+}
+
+.fileSize,
+.fileModified {
+  color: $text;
+  font-size: 13px !important;
+}
+
+.fileMembers {
+  justify-content: flex-end;
+
+  :global(.MuiAvatar-root) {
+    width: 29px;
+    height: 29px;
+    color: $title;
+    background: #dde2ff;
+    border: 2px solid #ffffff;
+    font-size: 8px;
+  }
+}
+
+.fileActions {
+  color: #77829d !important;
+
+  svg {
+    font-size: 20px;
+  }
+}

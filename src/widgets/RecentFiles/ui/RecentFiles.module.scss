@@ -1,0 +1,67 @@
+$title: #262864;
+
+.recentSection {
+  padding: 31px 30px 27px;
+  border-radius: 15px !important;
+}
+
+.recentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    font-size: 27px;
+    font-weight: 500;
+  }
+
+  button {
+    padding: 0;
+    color: #159cff;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 13px;
+  }
+}
+
+.tableWrapper {
+  min-width: 850px;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns:
+    minmax(230px, 1.4fr)
+    minmax(90px, 0.8fr)
+    minmax(150px, 1fr)
+    minmax(155px, 1fr)
+    35px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 25px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    color: #7d88a3;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+
+    svg {
+      font-size: 16px;
+    }
+  }
+}
+
+.filesList {
+  display: flex;
+  margin-top: 18px;
+  flex-direction: column;
+  gap: 15px;
+}
