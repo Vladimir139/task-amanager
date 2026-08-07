@@ -1,20 +1,45 @@
 import type { FC } from "react";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 
-import { AppLayout } from "@/app/layout";
+import { AppLayout, AuthLayout } from "@/app/layout";
+import { GuestRoute, ProtectedRoute } from "@/app/router/guards";
 import {
   DashboardPage,
   FilesPage,
+  LoginPage,
   MessagesPage,
+  NotFoundPage,
   ProjectsPage,
+  RegisterPage,
   SettingsPage,
   TaskBoardPage,
 } from "@/views";
 
 const router = createBrowserRouter([
   {
+    element: (
+      <GuestRoute>
+        <AuthLayout />
+      </GuestRoute>
+    ),
+    children: [
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+      {
+        path: "/register",
+        element: <RegisterPage />,
+      },
+    ],
+  },
+  {
     path: "/",
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -45,6 +70,10 @@ const router = createBrowserRouter([
         element: <SettingsPage />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 

@@ -1,7 +1,12 @@
 import type { FC } from "react";
 
+import { AppProviders } from "@/app/providers";
 import { AppRouter } from "@/app/router";
 
 export const App: FC = () => {
-  return <AppRouter />;
+  return (
+    <AppProviders>
+      <AppRouter />
+    </AppProviders>
+  );
 };
