@@ -9,26 +9,14 @@ export interface GetProjectsQuery {
   status?: string;
 }
 
-export interface CreateProjectPayload {
-  title: string;
-  description?: string;
-  status?: string;
-  color?: string;
-  dueDate?: string;
-}
-
 const removeEmpty = (value: GetProjectsQuery) =>
   Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== ""));
 
 export const projectsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    createProject: build.mutation<ProjectRecord, CreateProjectPayload>({
-      invalidatesTags: ["Projects", "ProjectStats", "Board"],
-      query: (body) => ({
-        body,
-        method: "POST",
-        url: "/projects",
-      }),
+    getProjectById: build.query<ProjectRecord, string>({
+      providesTags: (_result, _error, projectId) => [{ id: projectId, type: "Projects" }],
+      query: (projectId) => `/projects/${projectId}`,
     }),
     getProjectStats: build.query<ProjectStatsResponse, void>({
       providesTags: ["ProjectStats"],
@@ -44,5 +32,4 @@ export const projectsApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useCreateProjectMutation, useGetProjectStatsQuery, useGetProjectsQuery } =
-  projectsApi;
+export const { useGetProjectByIdQuery, useGetProjectStatsQuery, useGetProjectsQuery } = projectsApi;

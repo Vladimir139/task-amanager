@@ -36,3 +36,11 @@ export const ROUTES = {
     page: "/settings",
   },
 } as const;
+
+export const getTasksRoute = (projectId?: string): string => {
+  if (!projectId) {
+    return ROUTES.tasks.page;
+  }
+
+  return `${ROUTES.tasks.page}?projectId=${encodeURIComponent(projectId)}`;
+};

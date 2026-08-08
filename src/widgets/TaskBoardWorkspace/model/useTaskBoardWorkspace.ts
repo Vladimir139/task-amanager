@@ -4,7 +4,7 @@ import { useGetBoardViewQuery } from "@/entities/board/api/boardsApi";
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
 import { useSendMessageMutation } from "@/entities/message";
-import { useGetProjectsQuery } from "@/entities/project";
+import { useActiveProject } from "@/entities/project";
 import { selectAuthUser } from "@/entities/user";
 import {
   formatDateLabel,
@@ -30,6 +30,7 @@ interface UseTaskBoardWorkspaceResult {
   }>;
   boardMembers: BoardMember[];
   hasBoard: boolean;
+  isError: boolean;
   isLoading: boolean;
   isSendingMessage: boolean;
   message: string;
@@ -44,17 +45,18 @@ interface UseTaskBoardWorkspaceResult {
 export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const currentUser = useAppSelector(selectAuthUser);
   const [message, setMessage] = useState("");
-  const { data: projects, isLoading: isProjectsLoading } = useGetProjectsQuery({
-    limit: 1,
-    page: 1,
+  const {
+    activeProjectId,
+    isError: isProjectError,
+    isLoading: isProjectLoading,
+  } = useActiveProject();
+  const {
+    data: boardView,
+    isError: isBoardError,
+    isLoading: isBoardLoading,
+  } = useGetBoardViewQuery(activeProjectId ?? "", {
+    skip: !activeProjectId,
   });
-  const activeProject = projects?.items[0];
-  const { data: boardView, isLoading: isBoardLoading } = useGetBoardViewQuery(
-    activeProject?._id ?? "",
-    {
-      skip: !activeProject?._id,
-    },
-  );
   const [sendBoardMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
 
   const boardMembers = useMemo<BoardMember[]>(() => {
@@ -171,7 +173,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     boardMessages,
     boardMembers,
     hasBoard: Boolean(boardView?.board),
-    isLoading: isProjectsLoading || isBoardLoading,
+    isError: isProjectError || isBoardError,
+    isLoading: isProjectLoading || isBoardLoading,
     isSendingMessage,
     message,
     sendMessage,

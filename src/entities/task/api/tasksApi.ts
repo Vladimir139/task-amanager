@@ -1,33 +1,31 @@
 import { baseApi } from "@/shared/api";
 import type { TaskRecord } from "@/shared/api/types";
 
-export interface CreateTaskPayload {
-  assigneeIds?: string[];
-  boardId: string;
-  category?: string;
-  columnId: string;
-  description?: string;
-  emoji?: string;
-  priority?: string;
-  projectId: string;
-  title: string;
+export interface GetTasksQuery {
+  assigneeId?: string;
+  boardId?: string;
+  columnId?: string;
+  projectId?: string;
+  search?: string;
 }
+
+const removeEmpty = (value: GetTasksQuery) =>
+  Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== ""));
 
 export const tasksApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    createTask: build.mutation<TaskRecord, CreateTaskPayload>({
-      invalidatesTags: (_result, _error, payload) => [
-        "Dashboard",
-        "Tasks",
-        { id: payload.projectId, type: "Board" },
-      ],
-      query: (body) => ({
-        body,
-        method: "POST",
+    getTaskById: build.query<TaskRecord, string>({
+      providesTags: (_result, _error, taskId) => [{ id: taskId, type: "Tasks" }],
+      query: (taskId) => `/tasks/${taskId}`,
+    }),
+    getTasks: build.query<TaskRecord[], GetTasksQuery | void>({
+      providesTags: ["Tasks"],
+      query: (params) => ({
+        params: removeEmpty(params ?? {}),
         url: "/tasks",
       }),
     }),
   }),
 });
 
-export const { useCreateTaskMutation } = tasksApi;
+export const { useGetTaskByIdQuery, useGetTasksQuery } = tasksApi;

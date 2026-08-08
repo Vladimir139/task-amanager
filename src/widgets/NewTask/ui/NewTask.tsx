@@ -1,66 +1,22 @@
 import { Add, ArrowBackIosNew, ArrowForward, ArrowForwardIos, MoreVert } from "@mui/icons-material";
 import { Avatar, Box, Chip, IconButton, TextField, Typography } from "@mui/material";
-import type { ChangeEvent, FC } from "react";
-import { useMemo, useState } from "react";
+import type { FC } from "react";
 
-import { useGetBoardViewQuery } from "@/entities/board/api/boardsApi";
-import { useGetProjectsQuery } from "@/entities/project";
-import { useCreateTaskMutation } from "@/entities/task";
-import { getInitials } from "@/shared/lib/formatters";
+import { taskEmojis, useQuickCreateTask } from "@/features/createTask";
 
-import { taskEmojis } from "../model/constants";
 import styles from "./NewTask.module.scss";
 
 export const NewTask: FC = () => {
-  const [taskTitle, setTaskTitle] = useState("Create new");
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
-  const { data: projects } = useGetProjectsQuery({ limit: 1, page: 1 });
-  const firstProject = projects?.items[0];
-  const { data: boardView } = useGetBoardViewQuery(firstProject?._id ?? "", {
-    skip: !firstProject?._id,
-  });
-  const [createTask, { isLoading }] = useCreateTaskMutation();
-
-  const collaborators = useMemo(() => {
-    return (boardView?.members ?? []).slice(0, 2).map((member) => ({
-      id: member._id,
-      initials: getInitials(member.firstName, member.lastName),
-      name: `${member.firstName} ${member.lastName}`.trim(),
-    }));
-  }, [boardView?.members]);
-
-  const handleTaskTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setTaskTitle(event.target.value);
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    setSelectedEmoji(emoji);
-  };
-
-  const handleCreateTask = async () => {
-    const normalizedTitle = taskTitle.trim();
-    const firstColumnId = boardView?.columns[0]?._id;
-    const boardId = boardView?.board._id;
-
-    if (!normalizedTitle || !firstProject?._id || !boardId || !firstColumnId) {
-      return;
-    }
-
-    await createTask({
-      assigneeIds: collaborators.map((collaborator) => String(collaborator.id)),
-      boardId,
-      category: "planning",
-      columnId: firstColumnId,
-      description: `Created from dashboard quick action for ${firstProject.title}`,
-      emoji: selectedEmoji ?? undefined,
-      priority: "medium",
-      projectId: firstProject._id,
-      title: normalizedTitle,
-    }).unwrap();
-
-    setTaskTitle("");
-    setSelectedEmoji(null);
-  };
+  const {
+    collaborators,
+    currentProjectTitle,
+    handleCreateTask,
+    handleEmojiSelect,
+    handleTaskTitleChange,
+    isLoading,
+    selectedEmoji,
+    taskTitle,
+  } = useQuickCreateTask();
 
   return (
     <section className={styles.newTaskSection}>
@@ -73,7 +29,7 @@ export const NewTask: FC = () => {
       </Box>
 
       <Typography className={styles.inputLabel}>
-        Task Title {firstProject ? `- ${firstProject.title}` : "- No project yet"}
+        Task Title {currentProjectTitle ? `- ${currentProjectTitle}` : "- No project yet"}
       </Typography>
 
       <TextField

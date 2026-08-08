@@ -8,104 +8,29 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { ChangeEvent, FC } from "react";
-import { useMemo, useState } from "react";
+import type { FC } from "react";
 
-import type { Project } from "@/entities/project";
-import { ProjectCard, useGetProjectsQuery } from "@/entities/project";
-import { useGetUsersQuery } from "@/entities/user";
-import { formatDateLabel, getInitials } from "@/shared/lib/formatters";
+import { ProjectCard } from "@/entities/project";
 
 import { projectFilterItems } from "../model/constants";
-import type { ProjectFilter, ProjectSort, ViewMode } from "../model/types";
+import { useProjectsCatalog } from "../model/useProjectsCatalog";
 import styles from "./ProjectsCatalog.module.scss";
 
-const mapProjectStatus = (status: string): Project["status"] => {
-  if (status === "completed") {
-    return "completed";
-  }
-
-  if (status === "on-hold" || status === "archived") {
-    return "on-hold";
-  }
-
-  return "active";
-};
-
-const mapProjectColor = (color: string): Project["color"] => {
-  if (["purple", "blue", "orange", "green", "red"].includes(color)) {
-    return color as Project["color"];
-  }
-
-  return "blue";
-};
-
 export const ProjectsCatalog: FC = () => {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<ProjectFilter>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [sort, setSort] = useState<ProjectSort>("default");
-
-  const { data, isError, isLoading } = useGetProjectsQuery({
-    limit: 24,
-    page: 1,
+  const {
+    handleOpenProject,
+    handleSearchChange,
+    handleSortChange,
+    handleStatusChange,
+    isError,
+    isLoading,
+    projects,
     search,
-    sort: sort === "default" ? undefined : sort,
-    status: status === "all" ? undefined : status,
-  });
-  const { data: users } = useGetUsersQuery();
-
-  const projects = useMemo(() => {
-    const userMap = new Map((users ?? []).map((user) => [user._id, user]));
-
-    return (data?.items ?? []).map((project) => {
-      const owner = userMap.get(project.ownerId);
-      const members = Array.from({ length: Math.min(project.memberCount, 4) }, (_, index) => {
-        if (owner && index === 0) {
-          return {
-            id: owner._id,
-            initials: getInitials(owner.firstName, owner.lastName),
-            name: `${owner.firstName} ${owner.lastName}`.trim(),
-          };
-        }
-
-        return {
-          id: `${project._id}-member-${index}`,
-          initials: `M${index + 1}`,
-          name: `Member ${index + 1}`,
-        };
-      });
-
-      return {
-        color: mapProjectColor(project.color),
-        description: project.description || "No description yet",
-        dueDate: formatDateLabel(project.dueDate),
-        id: project._id,
-        members,
-        progress: project.progressPercent,
-        status: mapProjectStatus(project.status),
-        tasksCompleted: project.completedTaskCount,
-        tasksTotal: Math.max(project.taskCount, project.completedTaskCount, 1),
-        title: project.title,
-      } satisfies Project;
-    });
-  }, [data?.items, users]);
-
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-  };
-
-  const handleStatusChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setStatus(event.target.value as ProjectFilter);
-  };
-
-  const handleSortChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSort(event.target.value as ProjectSort);
-  };
-
-  const handleOpenProject = (project: Project) => {
-    console.log("Open project:", project.id);
-  };
+    setViewMode,
+    sort,
+    status,
+    viewMode,
+  } = useProjectsCatalog();
 
   return (
     <Paper className={styles.projectsSection} elevation={0}>

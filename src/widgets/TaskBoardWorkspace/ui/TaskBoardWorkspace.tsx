@@ -14,6 +14,7 @@ export const TaskBoardWorkspace: FC = () => {
     boardMembers,
     boardMessages,
     hasBoard,
+    isError,
     isLoading,
     isSendingMessage,
     message,
@@ -27,6 +28,10 @@ export const TaskBoardWorkspace: FC = () => {
 
   if (isLoading) {
     return <Typography>Loading board...</Typography>;
+  }
+
+  if (isError) {
+    return <Typography>Unable to load board for the selected project.</Typography>;
   }
 
   if (!hasBoard) {
