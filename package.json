@@ -38,7 +38,8 @@
     "react-redux": "^9.3.0",
     "react-router": "^8.3.0",
     "react-router-dom": "^7.18.1",
-    "react-use": "^17"
+    "react-use": "^17",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.6",

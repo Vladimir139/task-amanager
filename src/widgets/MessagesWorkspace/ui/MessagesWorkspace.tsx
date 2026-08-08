@@ -28,6 +28,7 @@ export const MessagesWorkspace: FC = () => {
     statusMessage,
     statusTone,
     selectConversation,
+    typingText,
     setNewMessage,
     sharedFiles,
     submitMessage,
@@ -73,6 +74,7 @@ export const MessagesWorkspace: FC = () => {
         onUploadAudio={handleUploadAudio}
         isSubmitting={isMutating}
         isLoading={isLoading}
+        typingText={typingText}
       />
 
       <ChatInformationSidebar

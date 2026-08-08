@@ -23,6 +23,7 @@ interface ChatWindowProps {
   onMessageSubmit: () => void;
   onUploadAudio: (files: FileList | null) => void;
   title: string;
+  typingText?: string | null;
 }
 
 export const ChatWindow: FC<ChatWindowProps> = ({
@@ -41,6 +42,7 @@ export const ChatWindow: FC<ChatWindowProps> = ({
   onMessageSubmit,
   onUploadAudio,
   title,
+  typingText = null,
 }) => {
   const firstMessage = messages[0];
   const nextMessages = messages.slice(1);
@@ -59,6 +61,7 @@ export const ChatWindow: FC<ChatWindowProps> = ({
         {composerStatusMessage && composerStatusTone && (
           <Alert severity={composerStatusTone}>{composerStatusMessage}</Alert>
         )}
+        {typingText && <Typography className={styles.typingIndicator}>{typingText}</Typography>}
         {isLoading && <Typography>Loading messages...</Typography>}
         {!isLoading && messages.length === 0 && (
           <Typography>No messages yet. Start the conversation.</Typography>

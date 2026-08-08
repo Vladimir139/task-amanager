@@ -3,14 +3,29 @@
   align-items: center;
   gap: 12px;
 
-  :global(.MuiAvatar-root) {
-    width: 31px;
-    height: 31px;
-  }
-
   p {
     color: #242424;
     font-size: 13px;
     font-weight: 600;
   }
+}
+
+.avatarWrapper {
+  position: relative;
+
+  :global(.MuiAvatar-root) {
+    width: 31px;
+    height: 31px;
+  }
+}
+
+.status {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  background: #31c48d;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
 }

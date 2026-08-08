@@ -79,6 +79,13 @@ $text: #7c87a3;
   overflow-y: auto;
 }
 
+.typingIndicator {
+  margin-bottom: 14px;
+  color: $primary;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .dateDivider {
   display: flex;
   align-items: center;

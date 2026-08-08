@@ -45,6 +45,7 @@ export const TaskBoardWorkspace: FC = () => {
     taskBoardMembersCount,
     taskBoardTitle,
     tasksByColumn,
+    typingText,
   } = useTaskBoardWorkspace();
 
   if (!isProjectSelected) {
@@ -115,6 +116,7 @@ export const TaskBoardWorkspace: FC = () => {
         }}
         isError={isMessagesError}
         isSubmitting={isSendingMessage}
+        typingText={typingText}
       />
 
       {activeBoardId && projectId && (

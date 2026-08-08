@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { type ChatMember } from "@/entities/chatMember";
 import { type ChatMessage } from "@/entities/chatMessage";
 import {
+  type Conversation,
   useGetConversationDetailsQuery,
   useGetConversationFilesQuery,
   useGetConversationsQuery,
   useSelectedConversationId,
 } from "@/entities/conversation";
-import { type Conversation } from "@/entities/conversation";
 import { useUploadFileMutation } from "@/entities/file";
 import {
   useDeleteMessageMutation,
@@ -20,16 +20,19 @@ import {
 } from "@/entities/message";
 import { type SharedFile } from "@/entities/sharedFile";
 import { selectAuthUser } from "@/entities/user";
+import { selectAccessToken } from "@/features/auth/model/selectors";
 import { useMarkConversationReadMutation } from "@/features/markConversationRead";
-import type { ConversationRecord, UserRecord } from "@/shared/api";
+import { baseApi, type ConversationRecord, type UserRecord } from "@/shared/api";
 import { getMessagesRoute } from "@/shared/config/router";
 import { formatBytes, formatConversationTime, formatDateTimeLabel } from "@/shared/lib/formatters";
-import { useAppSelector } from "@/shared/libs/redux";
+import { useRealtimeSocket } from "@/shared/lib/realtime";
+import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 const getConversationDisplay = (
   conversation: ConversationRecord,
   currentUserId?: string,
   users?: UserRecord[],
+  presenceByUserId?: Record<string, boolean>,
 ): { avatar: string; name: string; subtitle: string } => {
   const members = users ?? conversation.members ?? [];
 
@@ -38,7 +41,10 @@ const getConversationDisplay = (
     const fullName = otherUser
       ? `${otherUser.firstName} ${otherUser.lastName}`.trim()
       : (conversation.title ?? "Direct chat");
-    const presenceLabel = otherUser?.presenceStatus === "online" ? "Online" : "Direct message";
+    const isOtherUserOnline = otherUser
+      ? (presenceByUserId?.[otherUser._id] ?? otherUser.presenceStatus === "online")
+      : false;
+    const presenceLabel = isOtherUserOnline ? "Online" : "Direct message";
 
     return {
       avatar: otherUser?.avatarUrl ?? conversation.avatarUrl ?? "",
@@ -116,17 +122,26 @@ interface UseMessagesWorkspaceResult {
   statusMessage: string | null;
   statusTone: "error" | "success" | null;
   submitMessage: () => Promise<void>;
+  typingText: string | null;
 }
 
 export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const accessToken = useAppSelector(selectAccessToken);
   const currentUser = useAppSelector(selectAuthUser);
   const selectedConversationId = useSelectedConversationId();
   const [newMessage, setNewMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState("");
+  const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+  const [typingUsersByConversationId, setTypingUsersByConversationId] = useState<
+    Record<string, string[]>
+  >({});
+  const typingTimeoutRef = useRef<number | null>(null);
+  const typingConversationIdRef = useRef<string | null>(null);
   const {
     data: conversationsData,
     isError: isConversationsError,
@@ -186,27 +201,254 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const [deleteMessage, { isLoading: isDeletingMessage }] = useDeleteMessageMutation();
   const [uploadAudioMessage, { isLoading: isUploadingAudio }] = useUploadAudioMessageMutation();
   const [uploadFile, { isLoading: isUploadingFiles }] = useUploadFileMutation();
+  const presenceSocket = useRealtimeSocket("/presence", accessToken, hasConversations);
+  const typingSocket = useRealtimeSocket("/typing", accessToken, hasConversations);
+  const chatSocket = useRealtimeSocket("/chat", accessToken, hasConversations);
 
   useEffect(() => {
     setEditingMessageId(null);
     setEditingMessageText("");
     setStatusMessage(null);
     setStatusTone(null);
+    setTypingUsersByConversationId((currentState) => {
+      if (!activeConversationId) {
+        return currentState;
+      }
+
+      const nextState = { ...currentState };
+      delete nextState[activeConversationId];
+      return nextState;
+    });
   }, [activeConversationId]);
+
+  const allConversationUserIds = useMemo(() => {
+    const ids = new Set<string>();
+
+    for (const conversation of conversationsData ?? []) {
+      for (const member of conversation.members ?? []) {
+        ids.add(member._id);
+      }
+    }
+
+    for (const user of conversationDetails?.users ?? []) {
+      ids.add(user._id);
+    }
+
+    return Array.from(ids);
+  }, [conversationDetails?.users, conversationsData]);
+
+  useEffect(() => {
+    if (!presenceSocket || allConversationUserIds.length === 0) {
+      return;
+    }
+
+    const subscribePresence = (): void => {
+      presenceSocket.emit("presence.subscribe", {
+        userIds: allConversationUserIds,
+      });
+    };
+
+    const handlePresenceChanged = (presence: Record<string, boolean>): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        ...presence,
+      }));
+    };
+
+    const handleOnline = ({ userId }: { userId: string }): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        [userId]: true,
+      }));
+    };
+
+    const handleOffline = ({ userId }: { userId: string }): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        [userId]: false,
+      }));
+    };
+
+    if (presenceSocket.connected) {
+      subscribePresence();
+    }
+
+    presenceSocket.on("connect", subscribePresence);
+    presenceSocket.on("presence.changed", handlePresenceChanged);
+    presenceSocket.on("presence.online", handleOnline);
+    presenceSocket.on("presence.offline", handleOffline);
+
+    return () => {
+      presenceSocket.off("connect", subscribePresence);
+      presenceSocket.off("presence.changed", handlePresenceChanged);
+      presenceSocket.off("presence.online", handleOnline);
+      presenceSocket.off("presence.offline", handleOffline);
+    };
+  }, [allConversationUserIds, presenceSocket]);
+
+  useEffect(() => {
+    if (!typingSocket || !conversationsData?.length) {
+      return;
+    }
+
+    const joinConversations = (): void => {
+      for (const conversation of conversationsData) {
+        typingSocket.emit("conversation.join", {
+          conversationId: conversation._id,
+        });
+      }
+    };
+
+    const updateTypingUsers = (
+      conversationId: string,
+      updater: (currentUsers: string[]) => string[],
+    ): void => {
+      setTypingUsersByConversationId((currentState) => {
+        const nextUsers = updater(currentState[conversationId] ?? []);
+        if (nextUsers.length === 0) {
+          const nextState = { ...currentState };
+          delete nextState[conversationId];
+          return nextState;
+        }
+
+        return {
+          ...currentState,
+          [conversationId]: nextUsers,
+        };
+      });
+    };
+
+    const handleTypingStart = ({
+      conversationId,
+      userId,
+    }: {
+      conversationId: string;
+      userId: string;
+    }): void => {
+      if (userId === currentUser?.id) {
+        return;
+      }
+
+      updateTypingUsers(conversationId, (currentUsers) =>
+        currentUsers.includes(userId) ? currentUsers : [...currentUsers, userId],
+      );
+    };
+
+    const handleTypingStop = ({
+      conversationId,
+      userId,
+    }: {
+      conversationId: string;
+      userId: string;
+    }): void => {
+      updateTypingUsers(conversationId, (currentUsers) =>
+        currentUsers.filter((currentUserId) => currentUserId !== userId),
+      );
+    };
+
+    if (typingSocket.connected) {
+      joinConversations();
+    }
+
+    typingSocket.on("connect", joinConversations);
+    typingSocket.on("typing.start", handleTypingStart);
+    typingSocket.on("typing.stop", handleTypingStop);
+
+    return () => {
+      typingSocket.off("connect", joinConversations);
+      typingSocket.off("typing.start", handleTypingStart);
+      typingSocket.off("typing.stop", handleTypingStop);
+    };
+  }, [conversationsData, currentUser?.id, typingSocket]);
+
+  useEffect(() => {
+    if (!chatSocket || !conversationsData?.length) {
+      return;
+    }
+
+    const joinConversations = (): void => {
+      for (const conversation of conversationsData) {
+        chatSocket.emit("conversation.join", {
+          conversationId: conversation._id,
+        });
+      }
+    };
+
+    const invalidateConversationData = (conversationId?: string): void => {
+      if (!conversationId) {
+        dispatch(baseApi.util.invalidateTags(["Conversations"]));
+        return;
+      }
+
+      dispatch(
+        baseApi.util.invalidateTags([
+          "Conversations",
+          { id: conversationId, type: "Conversations" },
+          { id: conversationId, type: "ConversationMessages" },
+          { id: conversationId, type: "ConversationFiles" },
+        ]),
+      );
+    };
+
+    const handleMessageCreated = ({ message }: { message?: { conversationId?: string } }): void => {
+      invalidateConversationData(message?.conversationId);
+    };
+
+    const handleMessageUpdated = ({ message }: { message?: { conversationId?: string } }): void => {
+      invalidateConversationData(message?.conversationId);
+    };
+
+    const handleMessageDeleted = (): void => {
+      invalidateConversationData(activeConversationId ?? undefined);
+    };
+
+    const handleMessageRead = (): void => {
+      dispatch(baseApi.util.invalidateTags(["Conversations"]));
+    };
+
+    if (chatSocket.connected) {
+      joinConversations();
+    }
+
+    chatSocket.on("connect", joinConversations);
+    chatSocket.on("message.created", handleMessageCreated);
+    chatSocket.on("message.updated", handleMessageUpdated);
+    chatSocket.on("message.deleted", handleMessageDeleted);
+    chatSocket.on("message.read", handleMessageRead);
+
+    return () => {
+      chatSocket.off("connect", joinConversations);
+      chatSocket.off("message.created", handleMessageCreated);
+      chatSocket.off("message.updated", handleMessageUpdated);
+      chatSocket.off("message.deleted", handleMessageDeleted);
+      chatSocket.off("message.read", handleMessageRead);
+    };
+  }, [activeConversationId, chatSocket, conversationsData, dispatch]);
 
   const conversations = useMemo<Conversation[]>(() => {
     return (
       conversationsData?.map((conversation) => {
-        const display = getConversationDisplay(conversation, currentUser?.id, conversation.members);
+        const typingUserIds =
+          typingUsersByConversationId[conversation._id] ?? conversation.typingUserIds ?? [];
+        const otherUser =
+          conversation.type === "direct"
+            ? (conversation.members ?? []).find((member) => member._id !== currentUser?.id)
+            : null;
+        const display = getConversationDisplay(
+          conversation,
+          currentUser?.id,
+          conversation.members,
+          presenceByUserId,
+        );
 
         return {
           avatar: display.avatar,
           id: conversation._id,
-          isOnline: conversation.isOnline,
+          isOnline: otherUser ? (presenceByUserId[otherUser._id] ?? conversation.isOnline) : false,
           isRead: (conversation.unreadCount ?? 0) === 0,
-          isTyping: conversation.isTyping,
+          isTyping: typingUserIds.some((userId) => userId !== currentUser?.id),
           name: display.name,
-          preview: conversation.isTyping
+          preview: typingUserIds.some((userId) => userId !== currentUser?.id)
             ? "Typing..."
             : (conversation.preview ?? "No messages yet"),
           time: formatConversationTime(conversation.lastMessageAt ?? conversation.updatedAt),
@@ -214,7 +456,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         };
       }) ?? []
     );
-  }, [conversationsData, currentUser?.id]);
+  }, [conversationsData, currentUser?.id, presenceByUserId, typingUsersByConversationId]);
 
   const selectedConversation = useMemo(
     () =>
@@ -248,16 +490,27 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     [conversationUsers],
   );
   const conversationDisplay = selectedConversation
-    ? getConversationDisplay(selectedConversation, currentUser?.id, conversationUsers)
+    ? getConversationDisplay(
+        selectedConversation,
+        currentUser?.id,
+        conversationUsers,
+        presenceByUserId,
+      )
     : { avatar: "", name: "Messages", subtitle: "" };
+
+  const getIsUserOnline = useCallback(
+    (user: UserRecord): boolean => presenceByUserId[user._id] ?? user.presenceStatus === "online",
+    [presenceByUserId],
+  );
 
   const chatMembers = useMemo<ChatMember[]>(() => {
     return conversationUsers.map((user) => ({
       avatar: user.avatarUrl ?? "",
       id: user._id,
+      isOnline: getIsUserOnline(user),
       name: `${user.firstName} ${user.lastName}`.trim(),
     }));
-  }, [conversationUsers]);
+  }, [conversationUsers, getIsUserOnline]);
 
   const sharedFiles = useMemo<SharedFile[]>(() => {
     return (
@@ -270,7 +523,20 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     );
   }, [conversationFiles]);
 
-  const onlineCount = conversationUsers.filter((user) => user.presenceStatus === "online").length;
+  const activeTypingUserIds =
+    (activeConversationId ? typingUsersByConversationId[activeConversationId] : undefined) ??
+    selectedConversation?.typingUserIds ??
+    [];
+  const typingUsers = conversationUsers.filter(
+    (user) => activeTypingUserIds.includes(user._id) && user._id !== currentUser?.id,
+  );
+  const typingText =
+    typingUsers.length === 0
+      ? null
+      : typingUsers.length === 1
+        ? `${typingUsers[0]?.firstName ?? "Someone"} is typing...`
+        : `${typingUsers.length} people are typing...`;
+  const onlineCount = conversationUsers.filter((user) => getIsUserOnline(user)).length;
   const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
   const isMutating =
     isSendingMessage ||
@@ -358,6 +624,76 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     [activeConversationId, deleteMessage, editingMessageId],
   );
 
+  const stopTyping = useCallback(
+    (conversationId?: string | null): void => {
+      const resolvedConversationId = conversationId ?? typingConversationIdRef.current;
+      if (!typingSocket || !resolvedConversationId) {
+        return;
+      }
+
+      typingSocket.emit("typing.stop", {
+        conversationId: resolvedConversationId,
+      });
+      typingConversationIdRef.current = null;
+
+      if (typingTimeoutRef.current !== null) {
+        window.clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    },
+    [typingSocket],
+  );
+
+  useEffect(() => {
+    return () => {
+      stopTyping(typingConversationIdRef.current);
+    };
+  }, [stopTyping]);
+
+  useEffect(() => {
+    if (
+      typingConversationIdRef.current &&
+      typingConversationIdRef.current !== activeConversationId
+    ) {
+      stopTyping(typingConversationIdRef.current);
+    }
+  }, [activeConversationId, stopTyping]);
+
+  useEffect(() => {
+    if (!typingSocket || !activeConversationId) {
+      return;
+    }
+
+    const normalizedMessage = newMessage.trim();
+
+    if (normalizedMessage === "") {
+      stopTyping(activeConversationId);
+      return;
+    }
+
+    if (typingConversationIdRef.current !== activeConversationId) {
+      typingSocket.emit("typing.start", {
+        conversationId: activeConversationId,
+      });
+      typingConversationIdRef.current = activeConversationId;
+    }
+
+    if (typingTimeoutRef.current !== null) {
+      window.clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = window.setTimeout(() => {
+      stopTyping(activeConversationId);
+    }, 1200);
+
+    return () => {
+      if (typingTimeoutRef.current !== null) {
+        window.clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, [activeConversationId, newMessage, stopTyping, typingSocket]);
+
   const handleAttachImages = (files: FileList | null): void => {
     const selectedFiles = Array.from(files ?? []);
     if (selectedFiles.length === 0) {
@@ -391,6 +727,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         }).unwrap();
 
         setNewMessage("");
+        stopTyping(activeConversationId);
         setStatusMessage("Images shared.");
         setStatusTone("success");
       } catch (error) {
@@ -431,6 +768,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
           kind: "audio",
         }).unwrap();
 
+        stopTyping(activeConversationId);
         setStatusMessage("Audio message sent.");
         setStatusTone("success");
       } catch (error) {
@@ -458,6 +796,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       }).unwrap();
 
       setNewMessage("");
+      stopTyping(activeConversationId);
     } catch (error) {
       setStatusMessage(getErrorMessage(error, "Unable to send the message."));
       setStatusTone("error");
@@ -541,5 +880,6 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     statusMessage,
     statusTone,
     submitMessage,
+    typingText,
   };
 };

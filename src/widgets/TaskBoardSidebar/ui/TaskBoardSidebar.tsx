@@ -18,6 +18,7 @@ interface TaskBoardSidebarProps {
   messages: BoardMessage[];
   onMessageChange: (value: string) => void;
   onMessageSubmit: () => void;
+  typingText?: string | null;
 }
 
 export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
@@ -29,6 +30,7 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
   message,
   onMessageChange,
   onMessageSubmit,
+  typingText = null,
 }) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onMessageChange(event.target.value);
@@ -61,6 +63,7 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
 
       <section className={styles.chatSection}>
         <Typography component="h2">Group Chat</Typography>
+        {typingText && <Typography className={styles.typingText}>{typingText}</Typography>}
 
         <Box className={styles.messages}>
           {isError ? (

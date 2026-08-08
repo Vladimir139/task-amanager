@@ -1,13 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useGetBoardsQuery, useGetBoardViewQuery, useSelectedBoardId } from "@/entities/board";
+import {
+  getBoardProjectTagId,
+  getBoardTagId,
+  useGetBoardsQuery,
+  useGetBoardViewQuery,
+  useSelectedBoardId,
+} from "@/entities/board";
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
 import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
 import { useSelectedProjectId } from "@/entities/project";
 import { useSelectedTaskId } from "@/entities/task";
 import { selectAuthUser } from "@/entities/user";
+import { selectAccessToken } from "@/features/auth/model/selectors";
+import { baseApi } from "@/shared/api";
 import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
 import { getTasksRoute } from "@/shared/config/router";
 import {
@@ -16,7 +24,8 @@ import {
   getInitials,
   normalizeCategoryLabel,
 } from "@/shared/lib/formatters";
-import { useAppSelector } from "@/shared/libs/redux";
+import { useRealtimeSocket } from "@/shared/lib/realtime";
+import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 interface UseTaskBoardWorkspaceResult {
   activeBoardId: string | null;
@@ -66,16 +75,23 @@ interface UseTaskBoardWorkspaceResult {
   taskBoardMembersCount: number;
   taskBoardTitle: string;
   tasksByColumn: Record<string, TaskRecord[]>;
+  typingText: string | null;
 }
 
 export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const accessToken = useAppSelector(selectAccessToken);
   const currentUser = useAppSelector(selectAuthUser);
   const projectId = useSelectedProjectId();
   const selectedBoardId = useSelectedBoardId();
   const selectedTaskId = useSelectedTaskId();
   const [message, setMessage] = useState("");
+  const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
+  const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [createTaskColumnId, setCreateTaskColumnId] = useState<string | null>(null);
+  const typingTimeoutRef = useRef<number | null>(null);
+  const typingConversationIdRef = useRef<string | null>(null);
   const {
     data: boards = [],
     isError: isBoardsError,
@@ -124,6 +140,281 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     },
   );
   const [sendBoardMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
+  const presenceSocket = useRealtimeSocket(
+    "/presence",
+    accessToken,
+    Boolean((boardView?.members.length ?? 0) > 0),
+  );
+  const typingSocket = useRealtimeSocket("/typing", accessToken, Boolean(conversationId));
+  const chatSocket = useRealtimeSocket("/chat", accessToken, Boolean(conversationId));
+  const boardsSocket = useRealtimeSocket("/boards", accessToken, Boolean(activeBoardId));
+
+  useEffect(() => {
+    setTypingUserIds([]);
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (!presenceSocket || (boardView?.members.length ?? 0) === 0) {
+      return;
+    }
+
+    const memberIds = boardView?.members.map((member) => member._id) ?? [];
+    const subscribePresence = (): void => {
+      presenceSocket.emit("presence.subscribe", {
+        userIds: memberIds,
+      });
+    };
+
+    const handlePresenceChanged = (presence: Record<string, boolean>): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        ...presence,
+      }));
+    };
+
+    const handleOnline = ({ userId }: { userId: string }): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        [userId]: true,
+      }));
+    };
+
+    const handleOffline = ({ userId }: { userId: string }): void => {
+      setPresenceByUserId((currentState) => ({
+        ...currentState,
+        [userId]: false,
+      }));
+    };
+
+    if (presenceSocket.connected) {
+      subscribePresence();
+    }
+
+    presenceSocket.on("connect", subscribePresence);
+    presenceSocket.on("presence.changed", handlePresenceChanged);
+    presenceSocket.on("presence.online", handleOnline);
+    presenceSocket.on("presence.offline", handleOffline);
+
+    return () => {
+      presenceSocket.off("connect", subscribePresence);
+      presenceSocket.off("presence.changed", handlePresenceChanged);
+      presenceSocket.off("presence.online", handleOnline);
+      presenceSocket.off("presence.offline", handleOffline);
+    };
+  }, [boardView?.members, presenceSocket]);
+
+  useEffect(() => {
+    if (!boardsSocket || !activeBoardId || !projectId) {
+      return;
+    }
+
+    const joinBoard = (): void => {
+      boardsSocket.emit("board.join", {
+        boardId: activeBoardId,
+      });
+    };
+
+    const invalidateBoardData = (): void => {
+      dispatch(
+        baseApi.util.invalidateTags([
+          "Tasks",
+          { id: getBoardProjectTagId(projectId), type: "Board" },
+          { id: getBoardTagId(activeBoardId), type: "Board" },
+        ]),
+      );
+    };
+
+    if (boardsSocket.connected) {
+      joinBoard();
+    }
+
+    boardsSocket.on("connect", joinBoard);
+    boardsSocket.on("task.updated", invalidateBoardData);
+    boardsSocket.on("task.moved", invalidateBoardData);
+    boardsSocket.on("column.created", invalidateBoardData);
+    boardsSocket.on("column.updated", invalidateBoardData);
+    boardsSocket.on("column.reordered", invalidateBoardData);
+    boardsSocket.on("column.deleted", invalidateBoardData);
+
+    return () => {
+      boardsSocket.off("connect", joinBoard);
+      boardsSocket.off("task.updated", invalidateBoardData);
+      boardsSocket.off("task.moved", invalidateBoardData);
+      boardsSocket.off("column.created", invalidateBoardData);
+      boardsSocket.off("column.updated", invalidateBoardData);
+      boardsSocket.off("column.reordered", invalidateBoardData);
+      boardsSocket.off("column.deleted", invalidateBoardData);
+    };
+  }, [activeBoardId, boardsSocket, dispatch, projectId]);
+
+  useEffect(() => {
+    if (!chatSocket || !conversationId) {
+      return;
+    }
+
+    const joinConversation = (): void => {
+      chatSocket.emit("conversation.join", {
+        conversationId,
+      });
+    };
+
+    const invalidateMessages = (): void => {
+      dispatch(
+        baseApi.util.invalidateTags([
+          { id: conversationId, type: "ConversationMessages" },
+          { id: conversationId, type: "ConversationFiles" },
+        ]),
+      );
+    };
+
+    if (chatSocket.connected) {
+      joinConversation();
+    }
+
+    chatSocket.on("connect", joinConversation);
+    chatSocket.on("message.created", invalidateMessages);
+    chatSocket.on("message.updated", invalidateMessages);
+    chatSocket.on("message.deleted", invalidateMessages);
+    chatSocket.on("message.read", invalidateMessages);
+
+    return () => {
+      chatSocket.off("connect", joinConversation);
+      chatSocket.off("message.created", invalidateMessages);
+      chatSocket.off("message.updated", invalidateMessages);
+      chatSocket.off("message.deleted", invalidateMessages);
+      chatSocket.off("message.read", invalidateMessages);
+    };
+  }, [chatSocket, conversationId, dispatch]);
+
+  useEffect(() => {
+    if (!typingSocket || !conversationId) {
+      return;
+    }
+
+    const joinConversation = (): void => {
+      typingSocket.emit("conversation.join", {
+        conversationId,
+      });
+    };
+
+    const handleTypingStart = ({
+      conversationId: nextConversationId,
+      userId,
+    }: {
+      conversationId: string;
+      userId: string;
+    }): void => {
+      if (nextConversationId !== conversationId || userId === currentUser?.id) {
+        return;
+      }
+
+      setTypingUserIds((currentState) =>
+        currentState.includes(userId) ? currentState : [...currentState, userId],
+      );
+    };
+
+    const handleTypingStop = ({
+      conversationId: nextConversationId,
+      userId,
+    }: {
+      conversationId: string;
+      userId: string;
+    }): void => {
+      if (nextConversationId !== conversationId) {
+        return;
+      }
+
+      setTypingUserIds((currentState) =>
+        currentState.filter((currentUserId) => currentUserId !== userId),
+      );
+    };
+
+    if (typingSocket.connected) {
+      joinConversation();
+    }
+
+    typingSocket.on("connect", joinConversation);
+    typingSocket.on("typing.start", handleTypingStart);
+    typingSocket.on("typing.stop", handleTypingStop);
+
+    return () => {
+      typingSocket.off("connect", joinConversation);
+      typingSocket.off("typing.start", handleTypingStart);
+      typingSocket.off("typing.stop", handleTypingStop);
+    };
+  }, [conversationId, currentUser?.id, typingSocket]);
+
+  const stopTyping = useCallback(
+    (targetConversationId?: string | null): void => {
+      const resolvedConversationId = targetConversationId ?? typingConversationIdRef.current;
+      if (!typingSocket || !resolvedConversationId) {
+        return;
+      }
+
+      typingSocket.emit("typing.stop", {
+        conversationId: resolvedConversationId,
+      });
+      typingConversationIdRef.current = null;
+
+      if (typingTimeoutRef.current !== null) {
+        window.clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    },
+    [typingSocket],
+  );
+
+  useEffect(() => {
+    return () => {
+      stopTyping(typingConversationIdRef.current);
+    };
+  }, [stopTyping]);
+
+  useEffect(() => {
+    if (typingConversationIdRef.current && typingConversationIdRef.current !== conversationId) {
+      stopTyping(typingConversationIdRef.current);
+    }
+  }, [conversationId, stopTyping]);
+
+  useEffect(() => {
+    if (!typingSocket || !conversationId) {
+      return;
+    }
+
+    const normalizedMessage = message.trim();
+    if (normalizedMessage === "") {
+      stopTyping(conversationId);
+      return;
+    }
+
+    if (typingConversationIdRef.current !== conversationId) {
+      typingSocket.emit("typing.start", {
+        conversationId,
+      });
+      typingConversationIdRef.current = conversationId;
+    }
+
+    if (typingTimeoutRef.current !== null) {
+      window.clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = window.setTimeout(() => {
+      stopTyping(conversationId);
+    }, 1200);
+
+    return () => {
+      if (typingTimeoutRef.current !== null) {
+        window.clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, [conversationId, message, stopTyping, typingSocket]);
+
+  const getIsMemberOnline = useCallback(
+    (memberId: string, fallbackOnline?: boolean): boolean =>
+      presenceByUserId[memberId] ?? fallbackOnline ?? false,
+    [presenceByUserId],
+  );
 
   const boardMembers = useMemo<BoardMember[]>(() => {
     return (
@@ -131,21 +422,21 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
         avatarUrl: member.avatarUrl ?? undefined,
         id: member._id,
         initials: getInitials(member.firstName, member.lastName),
-        isOnline: member.isOnline,
+        isOnline: getIsMemberOnline(member._id, member.isOnline),
       })) ?? []
     );
-  }, [boardView?.members]);
+  }, [boardView?.members, getIsMemberOnline]);
 
   const memberOptions = useMemo(() => {
     return (
       boardView?.members.map((member) => ({
         id: member._id,
         initials: getInitials(member.firstName, member.lastName),
-        isOnline: member.isOnline,
+        isOnline: getIsMemberOnline(member._id, member.isOnline),
         name: `${member.firstName} ${member.lastName}`.trim(),
       })) ?? []
     );
-  }, [boardView?.members]);
+  }, [boardView?.members, getIsMemberOnline]);
 
   const memberMap = useMemo(() => {
     return new Map(
@@ -155,12 +446,12 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
           avatarUrl: member.avatarUrl ?? undefined,
           id: member._id,
           initials: getInitials(member.firstName, member.lastName),
-          isOnline: member.isOnline,
+          isOnline: getIsMemberOnline(member._id, member.isOnline),
           name: `${member.firstName} ${member.lastName}`.trim(),
         },
       ]),
     );
-  }, [boardView?.members]);
+  }, [boardView?.members, getIsMemberOnline]);
 
   const boardColumns = useMemo<BoardColumn[]>(() => {
     if (!boardView) {
@@ -290,7 +581,18 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     }).unwrap();
 
     setMessage("");
+    stopTyping(conversationId);
   };
+
+  const typingMembers = (boardView?.members ?? []).filter(
+    (member) => typingUserIds.includes(member._id) && member._id !== currentUser?.id,
+  );
+  const typingText =
+    typingMembers.length === 0
+      ? null
+      : typingMembers.length === 1
+        ? `${typingMembers[0]?.firstName ?? "Someone"} is typing...`
+        : `${typingMembers.length} people are typing...`;
 
   return {
     activeBoardId,
@@ -325,5 +627,6 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     taskBoardMembersCount: boardMembers.length,
     taskBoardTitle: boardView?.board.title ?? "Task board",
     tasksByColumn: boardView?.tasksByColumn ?? {},
+    typingText,
   };
 };
