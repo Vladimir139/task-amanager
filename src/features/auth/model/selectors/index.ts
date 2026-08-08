@@ -1,4 +1,4 @@
-import type { RootState } from "@/app/store";
+import type { RootState } from "@/app/providers/store";
 
 export const selectAccessToken = (state: RootState): string | null => state.auth.accessToken;
 export const selectRefreshToken = (state: RootState): string | null => state.auth.refreshToken;

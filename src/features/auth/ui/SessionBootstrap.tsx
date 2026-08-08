@@ -1,8 +1,9 @@
 import type { JSX, PropsWithChildren } from "react";
 import { useEffect } from "react";
 
-import { useAppDispatch, useAppSelector } from "@/app/store";
 import { mapUserRecordToAuthUser, useGetCurrentUserQuery, userActions } from "@/entities/user";
+import { clearAuthSession } from "@/features/auth/lib/session";
+import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 import { selectAccessToken, selectAuthInitialized } from "../model/selectors";
 import { authActions } from "../model/slice/authSlice";
@@ -39,7 +40,7 @@ export const SessionBootstrap = ({ children }: PropsWithChildren): JSX.Element =
       return;
     }
 
-    dispatch(authActions.setInitialized(true));
+    clearAuthSession(dispatch);
   }, [accessToken, dispatch, isError, isLoading]);
 
   return <>{children}</>;

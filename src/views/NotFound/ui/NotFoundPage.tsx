@@ -2,6 +2,8 @@ import { Button, Stack, Typography } from "@mui/material";
 import type { FC } from "react";
 import { Link } from "react-router-dom";
 
+import { ROUTES } from "@/shared/config/router";
+
 import styles from "./NotFoundPage.module.scss";
 
 export const NotFoundPage: FC = () => {
@@ -18,10 +20,10 @@ export const NotFoundPage: FC = () => {
       </Typography>
 
       <Stack direction="row" spacing={2}>
-        <Button component={Link} to="/dashboard" variant="contained">
+        <Button component={Link} to={ROUTES.dashboard.page} variant="contained">
           Open dashboard
         </Button>
-        <Button component={Link} to="/login" variant="outlined">
+        <Button component={Link} to={ROUTES.auth.login.page} variant="outlined">
           Go to login
         </Button>
       </Stack>

@@ -1,4 +1,4 @@
-import type { RootState } from "@/app/store";
+import type { RootState } from "@/app/providers/store";
 
 import type { AuthUser } from "../types";
 

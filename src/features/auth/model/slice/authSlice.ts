@@ -9,17 +9,19 @@ interface AuthTokensPayload {
   refreshToken: string;
 }
 
-const storedTokens = getStoredAuthTokens();
+const getInitialAuthState = (): AuthSchema => {
+  const storedTokens = getStoredAuthTokens();
 
-const initialState: AuthSchema = {
-  accessToken: storedTokens.accessToken,
-  refreshToken: storedTokens.refreshToken,
-  isInitialized: false,
+  return {
+    accessToken: storedTokens.accessToken,
+    refreshToken: storedTokens.refreshToken,
+    isInitialized: false,
+  };
 };
 
 const authSlice = createSlice({
   name: "auth",
-  initialState,
+  initialState: getInitialAuthState,
   reducers: {
     clearAuth: (state) => {
       state.accessToken = null;

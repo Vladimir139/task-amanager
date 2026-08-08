@@ -10,37 +10,39 @@ import { Box, IconButton } from "@mui/material";
 import { type FC } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
+import { ROUTES } from "@/shared/config/router";
+
 import styles from "./SidebarNavigation.module.scss";
 
 const navigationItems = [
   {
     id: "dashboard",
-    path: "/dashboard",
+    path: ROUTES.dashboard.page,
     icon: DashboardOutlined,
   },
   {
     id: "projects",
-    path: "/projects",
+    path: ROUTES.projects.page,
     icon: FolderCopyOutlined,
   },
   {
     id: "tasks",
-    path: "/tasks",
+    path: ROUTES.tasks.page,
     icon: MenuBookOutlined,
   },
   {
     id: "settings",
-    path: "/settings",
+    path: ROUTES.settings.page,
     icon: SettingsOutlined,
   },
   {
     id: "messages",
-    path: "/messages",
+    path: ROUTES.messages.page,
     icon: SendOutlined,
   },
   {
     id: "files",
-    path: "/files",
+    path: ROUTES.files.page,
     icon: FolderOutlined,
   },
 ];
@@ -51,7 +53,7 @@ export const SidebarNavigation: FC = () => {
 
   return (
     <aside className={styles.sidebar}>
-      <NavLink to="/dashboard">
+      <NavLink to={ROUTES.dashboard.page}>
         <img src="/images/octom-logo.png" alt="octom logo" className={styles.logo} />
       </NavLink>
 

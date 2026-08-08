@@ -1,6 +1,8 @@
 import { baseApi } from "@/shared/api";
 import type { AuthResponse } from "@/shared/api/types";
 
+import { clearAuthSession } from "../lib/session";
+
 export interface LoginPayload {
   email: string;
   password: string;
@@ -26,6 +28,14 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         url: "/auth/logout",
       }),
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          clearAuthSession(dispatch);
+        } catch {
+          // handled by RTK Query error state
+        }
+      },
     }),
     register: build.mutation<AuthResponse, RegisterPayload>({
       query: (body) => ({
