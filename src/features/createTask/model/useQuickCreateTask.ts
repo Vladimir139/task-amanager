@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 
-import { useGetBoardViewQuery } from "@/entities/board/api/boardsApi";
+import { getPreferredBoardColumnId, useGetBoardViewQuery } from "@/entities/board";
 import { useActiveProject } from "@/entities/project";
 import { getInitials } from "@/shared/lib/formatters";
 
@@ -28,9 +28,12 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
   const [taskTitle, setTaskTitle] = useState("Create new");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const { activeProjectId, currentProjectTitle } = useActiveProject();
-  const { data: boardView } = useGetBoardViewQuery(activeProjectId ?? "", {
-    skip: !activeProjectId,
-  });
+  const { data: boardView } = useGetBoardViewQuery(
+    { projectId: activeProjectId ?? "" },
+    {
+      skip: !activeProjectId,
+    },
+  );
   const [createTask, { isLoading }] = useCreateTaskMutation();
 
   const collaborators = useMemo(() => {
@@ -51,10 +54,10 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
 
   const handleCreateTask = async (): Promise<void> => {
     const normalizedTitle = taskTitle.trim();
-    const firstColumnId = boardView?.columns[0]?._id;
     const boardId = boardView?.board._id;
+    const preferredColumnId = getPreferredBoardColumnId(boardView?.columns);
 
-    if (!normalizedTitle || !activeProjectId || !boardId || !firstColumnId) {
+    if (!normalizedTitle || !activeProjectId || !boardId) {
       return;
     }
 
@@ -62,7 +65,7 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
       assigneeIds: collaborators.map((collaborator) => String(collaborator.id)),
       boardId,
       category: "planning",
-      columnId: firstColumnId,
+      columnId: preferredColumnId ?? undefined,
       description: `Created from dashboard quick action for ${currentProjectTitle ?? "project"}`,
       emoji: selectedEmoji ?? undefined,
       priority: "medium",

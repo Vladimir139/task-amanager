@@ -161,7 +161,10 @@ export interface BoardRecord {
   emoji?: string | null;
   description?: string | null;
   isDefault?: boolean;
+  createdBy?: string;
   memberIds?: string[];
+  columnCount?: number;
+  taskCount?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -173,7 +176,13 @@ export interface BoardColumnRecord {
   title: string;
   color?: string | null;
   position: number;
-  kind: string;
+  kind: "custom" | "system";
+  isLocked?: boolean;
+  taskLimit?: number | null;
+  createdBy?: string;
+  archivedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ConversationRecord {

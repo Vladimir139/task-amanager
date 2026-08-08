@@ -5,6 +5,9 @@
 }
 
 .boardContent {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  gap: 24px;
   padding: 14px 28px 44px;
 }

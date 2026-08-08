@@ -1,10 +1,9 @@
-$primary: #5355ff;
-
 .boardTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 8px 35px;
+  gap: 24px;
+  padding: 7px 8px 0;
 
   h1 {
     display: flex;
@@ -20,6 +19,19 @@ $primary: #5355ff;
   }
 }
 
+.boardHeading {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.boardSelect {
+  min-width: 220px;
+}
+
 .boardMemberSummary {
   display: flex;
   align-items: center;
@@ -29,13 +41,6 @@ $primary: #5355ff;
     color: #78839e;
     font-size: 21px;
     font-weight: 500;
-  }
-
-  > button {
-    width: 34px;
-    height: 34px;
-    color: $primary;
-    background: #eef0ff;
   }
 }
 

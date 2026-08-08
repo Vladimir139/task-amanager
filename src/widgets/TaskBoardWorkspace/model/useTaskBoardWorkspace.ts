@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useGetBoardViewQuery } from "@/entities/board/api/boardsApi";
+import { useGetBoardsQuery, useGetBoardViewQuery, useSelectedBoardId } from "@/entities/board";
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
-import { useSendMessageMutation } from "@/entities/message";
-import { useActiveProject } from "@/entities/project";
+import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
+import { useSelectedProjectId } from "@/entities/project";
 import { selectAuthUser } from "@/entities/user";
+import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
+import { getTasksRoute } from "@/shared/config/router";
 import {
   formatDateLabel,
   formatTimeLabel,
@@ -15,6 +18,9 @@ import {
 import { useAppSelector } from "@/shared/libs/redux";
 
 interface UseTaskBoardWorkspaceResult {
+  activeBoardId: string | null;
+  board: BoardRecord | null;
+  boardColumnRecords: BoardColumnRecord[];
   boardColumns: BoardColumn[];
   boardMessages: Array<{
     audio?: {
@@ -29,34 +35,79 @@ interface UseTaskBoardWorkspaceResult {
     time: string;
   }>;
   boardMembers: BoardMember[];
+  boards: BoardRecord[];
+  canManageBoard: boolean;
   hasBoard: boolean;
   isError: boolean;
   isLoading: boolean;
+  isMessagesError: boolean;
+  isProjectSelected: boolean;
   isSendingMessage: boolean;
   message: string;
+  onBoardSelect: (boardId: string) => void;
+  projectId: string | null;
   sendMessage: () => Promise<void>;
   setMessage: (value: string) => void;
   taskBoardEmoji: string;
   taskBoardExtraMembersCount: number;
   taskBoardMembersCount: number;
   taskBoardTitle: string;
+  tasksByColumn: Record<string, TaskRecord[]>;
 }
 
 export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
+  const navigate = useNavigate();
   const currentUser = useAppSelector(selectAuthUser);
+  const projectId = useSelectedProjectId();
+  const selectedBoardId = useSelectedBoardId();
   const [message, setMessage] = useState("");
   const {
-    activeProjectId,
-    isError: isProjectError,
-    isLoading: isProjectLoading,
-  } = useActiveProject();
+    data: boards = [],
+    isError: isBoardsError,
+    isLoading: isBoardsLoading,
+  } = useGetBoardsQuery(projectId ?? "", {
+    skip: !projectId,
+  });
+  const activeBoardId = useMemo(() => {
+    if (!boards.length) {
+      return null;
+    }
+
+    if (selectedBoardId && boards.some((board) => board._id === selectedBoardId)) {
+      return selectedBoardId;
+    }
+
+    return boards.find((board) => board.isDefault)?._id ?? boards[0]?._id ?? null;
+  }, [boards, selectedBoardId]);
+
+  useEffect(() => {
+    if (!projectId || !activeBoardId || activeBoardId === selectedBoardId) {
+      return;
+    }
+
+    void navigate(getTasksRoute(projectId, activeBoardId), { replace: true });
+  }, [activeBoardId, navigate, projectId, selectedBoardId]);
+
   const {
     data: boardView,
     isError: isBoardError,
     isLoading: isBoardLoading,
-  } = useGetBoardViewQuery(activeProjectId ?? "", {
-    skip: !activeProjectId,
-  });
+  } = useGetBoardViewQuery(
+    {
+      boardId: activeBoardId ?? undefined,
+      projectId: projectId ?? "",
+    },
+    {
+      skip: !projectId || !activeBoardId,
+    },
+  );
+  const conversationId = boardView?.chatPreview?.conversationId;
+  const { data: conversationMessages, isError: isMessagesError } = useGetConversationMessagesQuery(
+    conversationId ?? "",
+    {
+      skip: !conversationId,
+    },
+  );
   const [sendBoardMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
 
   const boardMembers = useMemo<BoardMember[]>(() => {
@@ -117,8 +168,10 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   }, [boardView, memberMap]);
 
   const boardMessages = useMemo(() => {
+    const messages = conversationMessages ?? boardView?.chatPreview?.messages ?? [];
+
     return (
-      boardView?.chatPreview?.messages.map((item) => {
+      messages.slice(-10).map((item) => {
         const author = memberMap.get(item.authorId);
         const waveform = item.audio?.waveform?.map((barHeight, index) => ({
           height: Math.max(8, Math.round(barHeight)),
@@ -149,11 +202,25 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
         };
       }) ?? []
     );
-  }, [boardView?.chatPreview?.messages, currentUser?.id, memberMap]);
+  }, [boardView?.chatPreview?.messages, conversationMessages, currentUser?.id, memberMap]);
+
+  const canManageBoard = useMemo(() => {
+    const currentMemberRole =
+      boardView?.members.find((member) => member._id === currentUser?.id)?.memberRole ?? null;
+
+    return currentMemberRole === "owner" || currentMemberRole === "admin";
+  }, [boardView?.members, currentUser?.id]);
+
+  const handleBoardSelect = (boardId: string): void => {
+    if (!projectId) {
+      return;
+    }
+
+    void navigate(getTasksRoute(projectId, boardId));
+  };
 
   const sendMessage = async (): Promise<void> => {
     const normalizedMessage = message.trim();
-    const conversationId = boardView?.chatPreview?.conversationId;
 
     if (!normalizedMessage || !conversationId) {
       return;
@@ -169,19 +236,30 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   };
 
   return {
+    activeBoardId,
+    board: boardView?.board ?? null,
+    boardColumnRecords: boardView?.columns ?? [],
     boardColumns,
     boardMessages,
     boardMembers,
-    hasBoard: Boolean(boardView?.board),
-    isError: isProjectError || isBoardError,
-    isLoading: isProjectLoading || isBoardLoading,
+    boards,
+    canManageBoard,
+    hasBoard: boards.length > 0 && Boolean(boardView?.board),
+    isError: isBoardsError || isBoardError,
+    isLoading:
+      Boolean(projectId) && (isBoardsLoading || (Boolean(activeBoardId) && isBoardLoading)),
+    isMessagesError,
+    isProjectSelected: Boolean(projectId),
     isSendingMessage,
     message,
+    onBoardSelect: handleBoardSelect,
+    projectId,
     sendMessage,
     setMessage,
     taskBoardEmoji: boardView?.board.emoji ?? "🔥",
     taskBoardExtraMembersCount: Math.max(boardMembers.length - 5, 0),
     taskBoardMembersCount: boardMembers.length,
     taskBoardTitle: boardView?.board.title ?? "Task board",
+    tasksByColumn: boardView?.tasksByColumn ?? {},
   };
 };

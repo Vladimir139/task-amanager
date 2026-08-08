@@ -5,7 +5,7 @@ export interface CreateTaskPayload {
   assigneeIds?: string[];
   boardId: string;
   category?: string;
-  columnId: string;
+  columnId?: string;
   description?: string;
   emoji?: string;
   priority?: string;

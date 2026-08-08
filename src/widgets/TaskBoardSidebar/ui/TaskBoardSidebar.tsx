@@ -1,4 +1,4 @@
-import { MicNoneOutlined, MoreHoriz } from "@mui/icons-material";
+import { SendRounded } from "@mui/icons-material";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 
@@ -10,6 +10,7 @@ import { BoardMessageItem } from "@/entities/boardMessage";
 import styles from "./TaskBoardSidebar.module.scss";
 
 interface TaskBoardSidebarProps {
+  isError?: boolean;
   isSubmitting?: boolean;
   members: BoardMember[];
   membersCount: number;
@@ -20,6 +21,7 @@ interface TaskBoardSidebarProps {
 }
 
 export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
+  isError = false,
   isSubmitting = false,
   members,
   membersCount,
@@ -46,10 +48,8 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
       <Box>
         <Box className={styles.membersHeader}>
           <Typography>
-            Member <span>({membersCount})</span>
+            Members <span>({membersCount})</span>
           </Typography>
-
-          <button type="button">View All</button>
         </Box>
 
         <Box className={styles.membersList}>
@@ -63,9 +63,17 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
         <Typography component="h2">Group Chat</Typography>
 
         <Box className={styles.messages}>
-          {messages.map((chatMessage) => (
-            <BoardMessageItem key={chatMessage.id} message={chatMessage} />
-          ))}
+          {isError ? (
+            <Typography className={styles.emptyState}>Unable to load board messages.</Typography>
+          ) : messages.length > 0 ? (
+            messages.map((chatMessage) => (
+              <BoardMessageItem key={chatMessage.id} message={chatMessage} />
+            ))
+          ) : (
+            <Typography className={styles.emptyState}>
+              No messages yet. Start the conversation.
+            </Typography>
+          )}
         </Box>
       </section>
 
@@ -79,12 +87,8 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
           fullWidth
         />
 
-        <IconButton aria-label="Record voice message">
-          <MicNoneOutlined />
-        </IconButton>
-
         <IconButton aria-label="Send message" onClick={onMessageSubmit} disabled={isSubmitting}>
-          <MoreHoriz />
+          <SendRounded />
         </IconButton>
       </Box>
     </aside>
