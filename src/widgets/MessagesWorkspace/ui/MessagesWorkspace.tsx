@@ -11,20 +11,34 @@ import styles from "./MessagesWorkspace.module.scss";
 export const MessagesWorkspace: FC = () => {
   const {
     activeConversationId,
+    availableConversationUsers,
+    canManageConversation,
     chatMembers,
     chatMessages,
     conversationAvatar,
     conversationName,
     conversationSubtitle,
+    conversationTitleDraft,
+    conversationType,
     conversations,
+    handleAddConversationMember,
     handleAttachImages,
+    handleConversationRoleChange,
+    handleConversationTitleChange,
+    handleConversationTitleSave,
+    handleConversationUserChange,
     handleUploadAudio,
     hasConversations,
     isError,
     isLoading,
+    isManagingConversation,
     isMutating,
+    managementStatusMessage,
+    managementStatusTone,
+    newConversationMemberRole,
     newMessage,
     onlineCount,
+    selectedConversationUserId,
     statusMessage,
     statusTone,
     selectConversation,
@@ -78,10 +92,28 @@ export const MessagesWorkspace: FC = () => {
       />
 
       <ChatInformationSidebar
+        availableUsers={availableConversationUsers}
+        canManageConversation={canManageConversation}
+        conversationTitle={conversationTitleDraft}
+        conversationType={conversationType}
+        isMutatingConversation={isManagingConversation}
+        managementStatusMessage={managementStatusMessage}
+        managementStatusTone={managementStatusTone}
         members={chatMembers}
+        memberRole={newConversationMemberRole}
+        onAddMember={() => {
+          void handleAddConversationMember();
+        }}
+        onConversationTitleChange={handleConversationTitleChange}
+        onConversationTitleSave={() => {
+          void handleConversationTitleSave();
+        }}
+        onMemberRoleChange={handleConversationRoleChange}
+        onSelectedUserChange={handleConversationUserChange}
         profileAvatar={conversationAvatar}
         profileName={conversationName}
         profileSubtitle={conversationSubtitle}
+        selectedUserId={selectedConversationUserId}
         sharedFiles={sharedFiles}
       />
     </div>

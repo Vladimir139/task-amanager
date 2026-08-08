@@ -2,12 +2,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-
-  p {
-    color: #242424;
-    font-size: 13px;
-    font-weight: 600;
-  }
 }
 
 .avatarWrapper {
@@ -28,4 +22,27 @@
   background: #31c48d;
   border: 2px solid #ffffff;
   border-radius: 999px;
+}
+
+.memberContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.memberName {
+  color: #242424;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.memberSubtitle {
+  margin-top: 2px;
+  color: #75809d;
+  font-size: 11px !important;
+}
+
+.removeButton {
+  min-width: 0 !important;
+  padding: 0 !important;
+  text-transform: none !important;
 }

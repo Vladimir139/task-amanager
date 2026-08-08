@@ -19,9 +19,12 @@ import {
   useUploadAudioMessageMutation,
 } from "@/entities/message";
 import { type SharedFile } from "@/entities/sharedFile";
-import { selectAuthUser } from "@/entities/user";
+import { selectAuthUser, useGetUsersQuery } from "@/entities/user";
+import { useAddConversationMemberMutation } from "@/features/addConversationMember";
 import { selectAccessToken } from "@/features/auth/model/selectors";
 import { useMarkConversationReadMutation } from "@/features/markConversationRead";
+import { useRemoveConversationMemberMutation } from "@/features/removeConversationMember";
+import { useUpdateConversationMutation } from "@/features/updateConversation";
 import { baseApi, type ConversationRecord, type UserRecord } from "@/shared/api";
 import { getMessagesRoute } from "@/shared/config/router";
 import { formatBytes, formatConversationTime, formatDateTimeLabel } from "@/shared/lib/formatters";
@@ -102,21 +105,35 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 
 interface UseMessagesWorkspaceResult {
   activeConversationId: string | null;
+  availableConversationUsers: Array<{ id: string; label: string }>;
+  canManageConversation: boolean;
   chatMembers: ChatMember[];
   chatMessages: ChatMessage[];
   conversationAvatar: string;
   conversationName: string;
   conversationSubtitle: string;
+  conversationTitleDraft: string;
+  conversationType: string;
   conversations: Conversation[];
   handleAttachImages: (files: FileList | null) => void;
+  handleAddConversationMember: () => Promise<void>;
+  handleConversationRoleChange: (value: "admin" | "member") => void;
+  handleConversationTitleChange: (value: string) => void;
+  handleConversationTitleSave: () => Promise<void>;
+  handleConversationUserChange: (value: string) => void;
   handleUploadAudio: (files: FileList | null) => void;
   hasConversations: boolean;
   isError: boolean;
   isLoading: boolean;
+  isManagingConversation: boolean;
   isMutating: boolean;
+  managementStatusMessage: string | null;
+  managementStatusTone: "error" | "success" | null;
+  newConversationMemberRole: "admin" | "member";
   newMessage: string;
   onlineCount: number;
   selectConversation: (conversationId: string) => void;
+  selectedConversationUserId: string;
   setNewMessage: (value: string) => void;
   sharedFiles: SharedFile[];
   statusMessage: string | null;
@@ -134,7 +151,16 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const [newMessage, setNewMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState("");
+  const [conversationTitleDraft, setConversationTitleDraft] = useState("");
+  const [selectedConversationUserId, setSelectedConversationUserId] = useState("");
+  const [newConversationMemberRole, setNewConversationMemberRole] = useState<"admin" | "member">(
+    "member",
+  );
   const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
+  const [managementStatusMessage, setManagementStatusMessage] = useState<string | null>(null);
+  const [managementStatusTone, setManagementStatusTone] = useState<"error" | "success" | null>(
+    null,
+  );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const [typingUsersByConversationId, setTypingUsersByConversationId] = useState<
@@ -147,6 +173,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     isError: isConversationsError,
     isLoading: isConversationsLoading,
   } = useGetConversationsQuery();
+  const { data: users = [] } = useGetUsersQuery();
   const [markConversationRead] = useMarkConversationReadMutation();
 
   const hasConversations = (conversationsData?.length ?? 0) > 0;
@@ -201,6 +228,12 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const [deleteMessage, { isLoading: isDeletingMessage }] = useDeleteMessageMutation();
   const [uploadAudioMessage, { isLoading: isUploadingAudio }] = useUploadAudioMessageMutation();
   const [uploadFile, { isLoading: isUploadingFiles }] = useUploadFileMutation();
+  const [addConversationMember, { isLoading: isAddingConversationMember }] =
+    useAddConversationMemberMutation();
+  const [removeConversationMember, { isLoading: isRemovingConversationMember }] =
+    useRemoveConversationMemberMutation();
+  const [updateConversation, { isLoading: isUpdatingConversation }] =
+    useUpdateConversationMutation();
   const presenceSocket = useRealtimeSocket("/presence", accessToken, hasConversations);
   const typingSocket = useRealtimeSocket("/typing", accessToken, hasConversations);
   const chatSocket = useRealtimeSocket("/chat", accessToken, hasConversations);
@@ -208,6 +241,11 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   useEffect(() => {
     setEditingMessageId(null);
     setEditingMessageText("");
+    setConversationTitleDraft("");
+    setSelectedConversationUserId("");
+    setNewConversationMemberRole("member");
+    setManagementStatusMessage(null);
+    setManagementStatusTone(null);
     setStatusMessage(null);
     setStatusTone(null);
     setTypingUsersByConversationId((currentState) => {
@@ -463,6 +501,17 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       conversationsData?.find((conversation) => conversation._id === activeConversationId) ?? null,
     [activeConversationId, conversationsData],
   );
+  const selectedConversationType = selectedConversation?.type ?? null;
+  const selectedConversationTitle = selectedConversation?.title ?? "";
+
+  useEffect(() => {
+    if (!selectedConversationType || selectedConversationType === "direct") {
+      setConversationTitleDraft("");
+      return;
+    }
+
+    setConversationTitleDraft(selectedConversationTitle);
+  }, [activeConversationId, selectedConversationTitle, selectedConversationType]);
 
   useEffect(() => {
     if (
@@ -485,6 +534,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     () => conversationDetails?.users ?? selectedConversation?.members ?? [],
     [conversationDetails?.users, selectedConversation?.members],
   );
+  const conversationMemberships = useMemo(
+    () => new Map((conversationDetails?.members ?? []).map((member) => [member.userId, member])),
+    [conversationDetails?.members],
+  );
   const userMap = useMemo(
     () => new Map(conversationUsers.map((user) => [user._id, user])),
     [conversationUsers],
@@ -503,14 +556,33 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     [presenceByUserId],
   );
 
-  const chatMembers = useMemo<ChatMember[]>(() => {
-    return conversationUsers.map((user) => ({
-      avatar: user.avatarUrl ?? "",
-      id: user._id,
-      isOnline: getIsUserOnline(user),
-      name: `${user.firstName} ${user.lastName}`.trim(),
-    }));
-  }, [conversationUsers, getIsUserOnline]);
+  const currentConversationRole = useMemo(() => {
+    if (!currentUser?.id) {
+      return null;
+    }
+
+    return conversationMemberships.get(currentUser.id)?.role ?? null;
+  }, [conversationMemberships, currentUser?.id]);
+
+  const canManageConversation = Boolean(
+    selectedConversation?.type === "group" &&
+    (currentConversationRole === "owner" || currentConversationRole === "admin"),
+  );
+
+  const availableConversationUsers = useMemo(() => {
+    if (selectedConversation?.type !== "group") {
+      return [];
+    }
+
+    const existingUserIds = new Set(conversationUsers.map((user) => user._id));
+
+    return users
+      .filter((user) => !existingUserIds.has(user._id))
+      .map((user) => ({
+        id: user._id,
+        label: `${user.firstName} ${user.lastName}`.trim() || user.email,
+      }));
+  }, [conversationUsers, selectedConversation?.type, users]);
 
   const sharedFiles = useMemo<SharedFile[]>(() => {
     return (
@@ -538,6 +610,8 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         : `${typingUsers.length} people are typing...`;
   const onlineCount = conversationUsers.filter((user) => getIsUserOnline(user)).length;
   const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
+  const isManagingConversation =
+    isAddingConversationMember || isRemovingConversationMember || isUpdatingConversation;
   const isMutating =
     isSendingMessage ||
     isUpdatingMessage ||
@@ -548,6 +622,158 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const selectConversation = (conversationId: string): void => {
     void navigate(getMessagesRoute(conversationId));
   };
+
+  const handleConversationTitleChange = useCallback((value: string): void => {
+    setConversationTitleDraft(value);
+  }, []);
+
+  const handleConversationUserChange = useCallback((value: string): void => {
+    setSelectedConversationUserId(value);
+  }, []);
+
+  const handleConversationRoleChange = useCallback((value: "admin" | "member"): void => {
+    setNewConversationMemberRole(value);
+  }, []);
+
+  const handleConversationTitleSave = useCallback(async (): Promise<void> => {
+    if (!activeConversationId || selectedConversation?.type !== "group" || !canManageConversation) {
+      return;
+    }
+
+    const normalizedTitle = conversationTitleDraft.trim();
+    if (!normalizedTitle) {
+      setManagementStatusMessage("Conversation title is required.");
+      setManagementStatusTone("error");
+      return;
+    }
+
+    setManagementStatusMessage(null);
+    setManagementStatusTone(null);
+
+    try {
+      await updateConversation({
+        conversationId: activeConversationId,
+        title: normalizedTitle,
+      }).unwrap();
+
+      setManagementStatusMessage("Conversation title updated.");
+      setManagementStatusTone("success");
+    } catch (error) {
+      setManagementStatusMessage(getErrorMessage(error, "Unable to update the conversation."));
+      setManagementStatusTone("error");
+    }
+  }, [
+    activeConversationId,
+    canManageConversation,
+    conversationTitleDraft,
+    selectedConversation?.type,
+    updateConversation,
+  ]);
+
+  const handleAddConversationMember = useCallback(async (): Promise<void> => {
+    if (
+      !activeConversationId ||
+      selectedConversation?.type !== "group" ||
+      !canManageConversation ||
+      !selectedConversationUserId
+    ) {
+      return;
+    }
+
+    setManagementStatusMessage(null);
+    setManagementStatusTone(null);
+
+    try {
+      await addConversationMember({
+        conversationId: activeConversationId,
+        role: newConversationMemberRole,
+        userId: selectedConversationUserId,
+      }).unwrap();
+
+      setSelectedConversationUserId("");
+      setNewConversationMemberRole("member");
+      setManagementStatusMessage("Conversation member added.");
+      setManagementStatusTone("success");
+    } catch (error) {
+      setManagementStatusMessage(getErrorMessage(error, "Unable to add the conversation member."));
+      setManagementStatusTone("error");
+    }
+  }, [
+    activeConversationId,
+    addConversationMember,
+    canManageConversation,
+    newConversationMemberRole,
+    selectedConversation?.type,
+    selectedConversationUserId,
+  ]);
+
+  const handleRemoveConversationMember = useCallback(
+    async (memberUserId: string): Promise<void> => {
+      if (
+        !activeConversationId ||
+        selectedConversation?.type !== "group" ||
+        !canManageConversation
+      ) {
+        return;
+      }
+
+      setManagementStatusMessage(null);
+      setManagementStatusTone(null);
+
+      try {
+        await removeConversationMember({
+          conversationId: activeConversationId,
+          memberUserId,
+        }).unwrap();
+
+        setManagementStatusMessage("Conversation member removed.");
+        setManagementStatusTone("success");
+      } catch (error) {
+        setManagementStatusMessage(
+          getErrorMessage(error, "Unable to remove the conversation member."),
+        );
+        setManagementStatusTone("error");
+      }
+    },
+    [
+      activeConversationId,
+      canManageConversation,
+      removeConversationMember,
+      selectedConversation?.type,
+    ],
+  );
+
+  const chatMembers = useMemo<ChatMember[]>(() => {
+    return conversationUsers.map((user) => {
+      const role = conversationMemberships.get(user._id)?.role;
+
+      return {
+        avatar: user.avatarUrl ?? "",
+        canRemove: canManageConversation && role !== "owner" && user._id !== currentUser?.id,
+        id: user._id,
+        isOnline: getIsUserOnline(user),
+        isCurrentUser: user._id === currentUser?.id,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        onRemove: () => {
+          void handleRemoveConversationMember(user._id);
+        },
+        role,
+        subtitle: [
+          role ? `${role[0]?.toUpperCase() ?? ""}${role.slice(1)}` : null,
+          getIsUserOnline(user) ? "Online" : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      };
+    });
+  }, [
+    canManageConversation,
+    conversationMemberships,
+    conversationUsers,
+    currentUser?.id,
+    getIsUserOnline,
+    handleRemoveConversationMember,
+  ]);
 
   const handleStartEditMessage = useCallback((messageId: string, text: string): void => {
     setEditingMessageId(messageId);
@@ -860,21 +1086,35 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
 
   return {
     activeConversationId,
+    availableConversationUsers,
+    canManageConversation,
     chatMembers,
     chatMessages,
     conversationAvatar: conversationDisplay.avatar,
     conversationName: conversationDisplay.name,
     conversationSubtitle: conversationDisplay.subtitle,
+    conversationTitleDraft,
+    conversationType: selectedConversation?.type ?? "",
     conversations,
     handleAttachImages,
+    handleAddConversationMember,
+    handleConversationRoleChange,
+    handleConversationTitleChange,
+    handleConversationTitleSave,
+    handleConversationUserChange,
     handleUploadAudio,
     hasConversations,
     isError,
     isLoading: isConversationsLoading || isDetailsLoading || isMessagesLoading,
+    isManagingConversation,
     isMutating,
+    managementStatusMessage,
+    managementStatusTone,
+    newConversationMemberRole,
     newMessage,
     onlineCount,
     selectConversation,
+    selectedConversationUserId,
     setNewMessage,
     sharedFiles,
     statusMessage,

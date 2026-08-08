@@ -1,5 +1,4 @@
-import { Add } from "@mui/icons-material";
-import { Avatar, AvatarGroup, Box, IconButton, Typography } from "@mui/material";
+import { Avatar, AvatarGroup, Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
@@ -41,10 +40,6 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
             <Avatar key={member.id} src={member.avatar} alt={member.name} />
           ))}
         </AvatarGroup>
-
-        <IconButton className={styles.addMemberButton} aria-label="Add chat member">
-          <Add />
-        </IconButton>
       </Box>
     </header>
   );
