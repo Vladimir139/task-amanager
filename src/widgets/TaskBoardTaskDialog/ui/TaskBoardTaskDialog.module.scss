@@ -1,0 +1,67 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  color: #21235f;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fullWidthField {
+  grid-column: 1 / -1;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.helperText {
+  color: #667085;
+  font-size: 14px;
+}
+
+.attachmentPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e7ebf3;
+  border-radius: 16px !important;
+  background: #f8fafc;
+}
+
+.attachmentTitle {
+  color: #161616;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .formGrid,
+  .checkboxGrid {
+    grid-template-columns: 1fr;
+  }
+}

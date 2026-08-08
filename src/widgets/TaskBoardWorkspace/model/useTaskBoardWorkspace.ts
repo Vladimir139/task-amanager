@@ -6,6 +6,7 @@ import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
 import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
 import { useSelectedProjectId } from "@/entities/project";
+import { useSelectedTaskId } from "@/entities/task";
 import { selectAuthUser } from "@/entities/user";
 import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
 import { getTasksRoute } from "@/shared/config/router";
@@ -37,16 +38,28 @@ interface UseTaskBoardWorkspaceResult {
   boardMembers: BoardMember[];
   boards: BoardRecord[];
   canManageBoard: boolean;
+  closeCreateTask: () => void;
+  closeTask: () => void;
+  createTaskColumnId: string | null;
   hasBoard: boolean;
   isError: boolean;
   isLoading: boolean;
   isMessagesError: boolean;
   isProjectSelected: boolean;
   isSendingMessage: boolean;
+  memberOptions: Array<{
+    id: string;
+    initials: string;
+    isOnline?: boolean;
+    name: string;
+  }>;
   message: string;
   onBoardSelect: (boardId: string) => void;
+  onCreateTask: (columnId: string) => void;
+  onOpenTask: (taskId: string) => void;
   projectId: string | null;
   sendMessage: () => Promise<void>;
+  selectedTaskId: string | null;
   setMessage: (value: string) => void;
   taskBoardEmoji: string;
   taskBoardExtraMembersCount: number;
@@ -60,7 +73,9 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const currentUser = useAppSelector(selectAuthUser);
   const projectId = useSelectedProjectId();
   const selectedBoardId = useSelectedBoardId();
+  const selectedTaskId = useSelectedTaskId();
   const [message, setMessage] = useState("");
+  const [createTaskColumnId, setCreateTaskColumnId] = useState<string | null>(null);
   const {
     data: boards = [],
     isError: isBoardsError,
@@ -117,6 +132,17 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
         id: member._id,
         initials: getInitials(member.firstName, member.lastName),
         isOnline: member.isOnline,
+      })) ?? []
+    );
+  }, [boardView?.members]);
+
+  const memberOptions = useMemo(() => {
+    return (
+      boardView?.members.map((member) => ({
+        id: member._id,
+        initials: getInitials(member.firstName, member.lastName),
+        isOnline: member.isOnline,
+        name: `${member.firstName} ${member.lastName}`.trim(),
       })) ?? []
     );
   }, [boardView?.members]);
@@ -216,7 +242,38 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
       return;
     }
 
+    setCreateTaskColumnId(null);
     void navigate(getTasksRoute(projectId, boardId));
+  };
+
+  const handleOpenTask = (taskId: string): void => {
+    if (!projectId || !activeBoardId) {
+      return;
+    }
+
+    setCreateTaskColumnId(null);
+    void navigate(getTasksRoute(projectId, activeBoardId, taskId));
+  };
+
+  const handleCloseTask = (): void => {
+    if (!projectId || !activeBoardId) {
+      return;
+    }
+
+    void navigate(getTasksRoute(projectId, activeBoardId));
+  };
+
+  const handleCreateTask = (columnId: string): void => {
+    setCreateTaskColumnId(columnId);
+    if (!projectId || !activeBoardId) {
+      return;
+    }
+
+    void navigate(getTasksRoute(projectId, activeBoardId));
+  };
+
+  const handleCloseCreateTask = (): void => {
+    setCreateTaskColumnId(null);
   };
 
   const sendMessage = async (): Promise<void> => {
@@ -244,6 +301,9 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     boardMembers,
     boards,
     canManageBoard,
+    closeCreateTask: handleCloseCreateTask,
+    closeTask: handleCloseTask,
+    createTaskColumnId,
     hasBoard: boards.length > 0 && Boolean(boardView?.board),
     isError: isBoardsError || isBoardError,
     isLoading:
@@ -251,10 +311,14 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     isMessagesError,
     isProjectSelected: Boolean(projectId),
     isSendingMessage,
+    memberOptions,
     message,
     onBoardSelect: handleBoardSelect,
+    onCreateTask: handleCreateTask,
+    onOpenTask: handleOpenTask,
     projectId,
     sendMessage,
+    selectedTaskId,
     setMessage,
     taskBoardEmoji: boardView?.board.emoji ?? "🔥",
     taskBoardExtraMembersCount: Math.max(boardMembers.length - 5, 0),

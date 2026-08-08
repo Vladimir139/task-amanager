@@ -23,5 +23,6 @@ export interface BoardColumn {
 }
 
 export interface BoardTaskCardProps {
+  onClick?: () => void;
   task: BoardTask;
 }

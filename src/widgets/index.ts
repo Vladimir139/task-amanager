@@ -27,5 +27,6 @@ export * from "./TaskBoardColumns";
 export * from "./TaskBoardHeader";
 export * from "./TaskBoardManagementPanel";
 export * from "./TaskBoardSidebar";
+export * from "./TaskBoardTaskDialog";
 export * from "./TaskBoardWorkspace";
 export * from "./TaskList";

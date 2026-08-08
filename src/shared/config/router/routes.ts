@@ -37,8 +37,8 @@ export const ROUTES = {
   },
 } as const;
 
-export const getTasksRoute = (projectId?: string, boardId?: string): string => {
-  if (!projectId && !boardId) {
+export const getTasksRoute = (projectId?: string, boardId?: string, taskId?: string): string => {
+  if (!projectId && !boardId && !taskId) {
     return ROUTES.tasks.page;
   }
 
@@ -50,6 +50,10 @@ export const getTasksRoute = (projectId?: string, boardId?: string): string => {
 
   if (boardId) {
     params.set("boardId", boardId);
+  }
+
+  if (taskId) {
+    params.set("taskId", taskId);
   }
 
   return `${ROUTES.tasks.page}?${params.toString()}`;

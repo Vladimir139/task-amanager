@@ -13,6 +13,7 @@
   display: flex;
   min-height: 54px;
   align-items: center;
+  justify-content: space-between;
   padding: 0 17px;
   border-radius: 11px !important;
 
@@ -24,9 +25,9 @@
 
 .columnMeta {
   display: flex;
-  width: 100%;
+  min-width: 0;
+  flex: 1;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 
   p:last-child {
@@ -34,6 +35,12 @@
     font-size: 13px;
     font-weight: 600;
   }
+}
+
+.addTaskButton {
+  margin-left: 12px !important;
+  color: #5355ff !important;
+  background: #edf0ff !important;
 }
 
 .columnTasks {

@@ -1,4 +1,5 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Add } from "@mui/icons-material";
+import { Box, IconButton, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { BoardColumn } from "@/entities/boardTask";
@@ -8,9 +9,22 @@ import styles from "./TaskBoardColumns.module.scss";
 
 interface TaskBoardColumnsProps {
   columns: BoardColumn[];
+  onCreateTask: (columnId: string) => void;
+  onOpenTask: (taskId: string) => void;
 }
 
-function BoardColumnSection({ title, tasks }: BoardColumn) {
+interface BoardColumnSectionProps extends BoardColumn {
+  onCreateTask: (columnId: string) => void;
+  onOpenTask: (taskId: string) => void;
+}
+
+function BoardColumnSection({
+  id,
+  title,
+  tasks,
+  onCreateTask,
+  onOpenTask,
+}: BoardColumnSectionProps) {
   return (
     <section className={styles.boardColumn}>
       <Paper className={styles.columnHeader} elevation={0}>
@@ -18,11 +32,29 @@ function BoardColumnSection({ title, tasks }: BoardColumn) {
           <Typography component="h2">{title}</Typography>
           <Typography>{tasks.length} tasks</Typography>
         </Box>
+
+        <IconButton
+          aria-label={`Create task in ${title}`}
+          className={styles.addTaskButton}
+          onClick={() => {
+            onCreateTask(id);
+          }}
+        >
+          <Add />
+        </IconButton>
       </Paper>
 
       <Box className={styles.columnTasks}>
         {tasks.length > 0 ? (
-          tasks.map((task) => <BoardTaskCard key={task.id} task={task} />)
+          tasks.map((task) => (
+            <BoardTaskCard
+              key={task.id}
+              task={task}
+              onClick={() => {
+                onOpenTask(String(task.id));
+              }}
+            />
+          ))
         ) : (
           <Typography className={styles.emptyState}>No tasks in this column yet.</Typography>
         )}
@@ -31,11 +63,20 @@ function BoardColumnSection({ title, tasks }: BoardColumn) {
   );
 }
 
-export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({ columns }) => {
+export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
+  columns,
+  onCreateTask,
+  onOpenTask,
+}) => {
   return (
     <Box className={styles.board}>
       {columns.map((column) => (
-        <BoardColumnSection key={column.id} {...column} />
+        <BoardColumnSection
+          key={column.id}
+          {...column}
+          onCreateTask={onCreateTask}
+          onOpenTask={onOpenTask}
+        />
       ))}
     </Box>
   );

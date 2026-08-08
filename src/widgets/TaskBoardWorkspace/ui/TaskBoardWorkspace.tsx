@@ -7,6 +7,7 @@ import { TaskBoardColumns } from "@/widgets/TaskBoardColumns";
 import { TaskBoardHeader } from "@/widgets/TaskBoardHeader";
 import { TaskBoardManagementPanel } from "@/widgets/TaskBoardManagementPanel";
 import { TaskBoardSidebar } from "@/widgets/TaskBoardSidebar";
+import { TaskBoardTaskDialog } from "@/widgets/TaskBoardTaskDialog";
 
 import { useTaskBoardWorkspace } from "../model/useTaskBoardWorkspace";
 import styles from "./TaskBoardWorkspace.module.scss";
@@ -21,15 +22,22 @@ export const TaskBoardWorkspace: FC = () => {
     boardMessages,
     boards,
     canManageBoard,
+    closeCreateTask,
+    closeTask,
+    createTaskColumnId,
     hasBoard,
     isError,
     isLoading,
     isMessagesError,
     isProjectSelected,
     isSendingMessage,
+    memberOptions,
     message,
     onBoardSelect,
+    onCreateTask,
+    onOpenTask,
     projectId,
+    selectedTaskId,
     sendMessage,
     setMessage,
     taskBoardEmoji,
@@ -89,7 +97,11 @@ export const TaskBoardWorkspace: FC = () => {
           />
         )}
 
-        <TaskBoardColumns columns={boardColumns} />
+        <TaskBoardColumns
+          columns={boardColumns}
+          onCreateTask={onCreateTask}
+          onOpenTask={onOpenTask}
+        />
       </div>
 
       <TaskBoardSidebar
@@ -104,6 +116,27 @@ export const TaskBoardWorkspace: FC = () => {
         isError={isMessagesError}
         isSubmitting={isSendingMessage}
       />
+
+      {activeBoardId && projectId && (
+        <TaskBoardTaskDialog
+          boardId={activeBoardId}
+          canManageBoard={canManageBoard}
+          columns={boardColumnRecords}
+          createColumnId={createTaskColumnId}
+          memberOptions={memberOptions}
+          onClose={() => {
+            closeCreateTask();
+            closeTask();
+          }}
+          onTaskCreated={(taskId) => {
+            closeCreateTask();
+            onOpenTask(taskId);
+          }}
+          openTaskId={selectedTaskId}
+          projectId={projectId}
+          tasksByColumn={tasksByColumn}
+        />
+      )}
     </Box>
   );
 };

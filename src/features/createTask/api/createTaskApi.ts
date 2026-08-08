@@ -7,10 +7,13 @@ export interface CreateTaskPayload {
   category?: string;
   columnId?: string;
   description?: string;
+  dueDate?: string;
   emoji?: string;
   priority?: string;
   projectId: string;
+  startDate?: string;
   title: string;
+  workflowState?: string;
 }
 
 export const createTaskApi = baseApi.injectEndpoints({

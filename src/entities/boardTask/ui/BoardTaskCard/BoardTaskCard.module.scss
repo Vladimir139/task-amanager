@@ -5,6 +5,10 @@ $secondary-text: #7f8aa8;
   border-radius: 12px !important;
 }
 
+.clickableCard {
+  cursor: pointer;
+}
+
 .taskCategory {
   display: inline-flex;
   min-height: 23px;

@@ -19,7 +19,10 @@ export const tasksApi = baseApi.injectEndpoints({
       query: (taskId) => `/tasks/${taskId}`,
     }),
     getTasks: build.query<TaskRecord[], GetTasksQuery | void>({
-      providesTags: ["Tasks"],
+      providesTags: (result) => [
+        "Tasks",
+        ...(result ?? []).map((task) => ({ id: task._id, type: "Tasks" as const })),
+      ],
       query: (params) => ({
         params: removeEmpty(params ?? {}),
         url: "/tasks",

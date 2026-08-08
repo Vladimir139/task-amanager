@@ -16,9 +16,23 @@ const categoryClassNames: Record<TaskCategory, string> = {
   Research: styles.researchCategory,
 };
 
-export const BoardTaskCard: FC<BoardTaskCardProps> = ({ task }) => {
+export const BoardTaskCard: FC<BoardTaskCardProps> = ({ onClick, task }) => {
   return (
-    <Paper className={styles.taskCard} elevation={0}>
+    <Paper
+      className={`${styles.taskCard} ${onClick ? styles.clickableCard : ""}`}
+      elevation={0}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (!onClick || (event.key !== "Enter" && event.key !== " ")) {
+          return;
+        }
+
+        event.preventDefault();
+        onClick();
+      }}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <Box className={`${styles.taskCategory} ${categoryClassNames[task.category]}`}>
         {task.category}
       </Box>
