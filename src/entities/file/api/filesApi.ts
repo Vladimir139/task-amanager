@@ -1,6 +1,11 @@
 import { baseApi } from "@/shared/api";
 import type { ActivityRecord, FileRecord, StorageSummaryRecord } from "@/shared/api/types";
 
+export interface GetRecentFilesQuery {
+  order?: "asc" | "desc";
+  sort?: "lastModified" | "members" | "name" | "size";
+}
+
 export interface UploadFilePayload {
   conversationId?: string;
   file: File;
@@ -12,13 +17,27 @@ export interface UploadFilePayload {
 
 export const filesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    deleteFile: build.mutation<FileRecord, string>({
+      invalidatesTags: ["Files", "Storage", "Activity", "Folders", "ConversationFiles"],
+      query: (fileId) => ({
+        method: "DELETE",
+        url: `/files/${fileId}`,
+      }),
+    }),
     getFileActivity: build.query<ActivityRecord[], void>({
       providesTags: ["Activity"],
       query: () => "/files/activity",
     }),
-    getRecentFiles: build.query<FileRecord[], void>({
+    getFileById: build.query<FileRecord, string>({
+      providesTags: (_result, _error, fileId) => [{ id: fileId, type: "Files" }],
+      query: (fileId) => `/files/${fileId}`,
+    }),
+    getRecentFiles: build.query<FileRecord[], GetRecentFilesQuery | void>({
       providesTags: ["Files"],
-      query: () => "/files/recent",
+      query: (params) => ({
+        params: params ?? undefined,
+        url: "/files/recent",
+      }),
     }),
     getStorageSummary: build.query<StorageSummaryRecord[], void>({
       providesTags: ["Storage"],
@@ -61,7 +80,9 @@ export const filesApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useDeleteFileMutation,
   useGetFileActivityQuery,
+  useGetFileByIdQuery,
   useGetRecentFilesQuery,
   useGetStorageSummaryQuery,
   useUploadFileMutation,

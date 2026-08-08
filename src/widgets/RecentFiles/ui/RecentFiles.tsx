@@ -1,8 +1,13 @@
 import { Box, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import { type RecentFile, RecentFileRow, useGetRecentFilesQuery } from "@/entities/file";
+import {
+  type RecentFile,
+  RecentFileRow,
+  useDeleteFileMutation,
+  useGetRecentFilesQuery,
+} from "@/entities/file";
 import { useGetUsersQuery } from "@/entities/user";
 import { formatBytes, formatDateLabel, getInitials } from "@/shared/lib/formatters";
 
@@ -35,8 +40,30 @@ const mapFileType = (kind: string): RecentFile["type"] => {
 export const RecentFiles: FC = () => {
   const [sortField, setSortField] = useState<RecentFilesSortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const { data, isError, isLoading } = useGetRecentFilesQuery();
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  const { data, isError, isLoading } = useGetRecentFilesQuery(
+    sortField === "members"
+      ? undefined
+      : {
+          order: sortDirection,
+          sort: sortField,
+        },
+  );
   const { data: users } = useGetUsersQuery();
+  const [deleteFile] = useDeleteFileMutation();
+
+  const handleDeleteFile = useCallback(
+    async (fileId: string): Promise<void> => {
+      setDeletingFileId(fileId);
+
+      try {
+        await deleteFile(fileId).unwrap();
+      } finally {
+        setDeletingFileId(null);
+      }
+    },
+    [deleteFile],
+  );
 
   const recentFiles = useMemo(() => {
     const userMap = new Map((users ?? []).map((user) => [user._id, user]));
@@ -47,17 +74,26 @@ export const RecentFiles: FC = () => {
 
         return {
           id: file._id,
+          isDeleting: deletingFileId === file._id,
           lastModified: formatDateLabel(file.updatedAt ?? file.createdAt),
           members: uploader ? [getInitials(uploader.firstName, uploader.lastName)] : ["TM"],
           name: file.originalName,
+          onDelete: () => {
+            void handleDeleteFile(file._id);
+          },
+          openUrl: file.downloadUrl ?? file.previewUrl ?? undefined,
           size: formatBytes(file.size),
           type: mapFileType(file.kind),
         } satisfies RecentFile;
       }) ?? []
     );
-  }, [data, users]);
+  }, [data, deletingFileId, handleDeleteFile, users]);
 
   const sortedFiles = useMemo(() => {
+    if (sortField !== "members") {
+      return recentFiles;
+    }
+
     return [...recentFiles].sort((firstFile, secondFile) => {
       const firstValue = getSortValue(firstFile, sortField);
       const secondValue = getSortValue(secondFile, sortField);
@@ -87,11 +123,12 @@ export const RecentFiles: FC = () => {
       <Box className={styles.recentHeader}>
         <Typography component="h2">Recent File</Typography>
 
-        <button type="button">View All</button>
+        <Typography>{sortedFiles.length} items</Typography>
       </Box>
 
       {isError && <Typography>Unable to load files.</Typography>}
       {isLoading && <Typography>Loading files...</Typography>}
+      {!isLoading && !isError && sortedFiles.length === 0 && <Typography>No files yet.</Typography>}
 
       <Box className={styles.tableWrapper}>
         <Box className={styles.tableHeader}>

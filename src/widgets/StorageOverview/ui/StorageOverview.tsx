@@ -31,6 +31,7 @@ export const StorageOverview: FC = () => {
   const { data, isError, isLoading } = useGetStorageSummaryQuery();
 
   const totalSize = (data ?? []).reduce((sum, item) => sum + item.totalSize, 0);
+  const totalCount = (data ?? []).reduce((sum, item) => sum + item.totalCount, 0);
   const aggregated = (data ?? []).reduce<Record<StorageItem["type"], number>>(
     (result, item) => {
       const type = storageKinds[item._id] ?? "other";
@@ -55,7 +56,7 @@ export const StorageOverview: FC = () => {
     value: formatBytes(size),
   }));
 
-  const trackedGroups = storageItems.filter((item) => item.percentage > 0).length;
+  const storageGroups = storageItems.filter((item) => item.percentage > 0).length;
   const usedStoragePercentage = totalSize > 0 ? 100 : 0;
 
   return (
@@ -78,22 +79,25 @@ export const StorageOverview: FC = () => {
             thickness={5}
           />
 
-          <Typography>{trackedGroups}</Typography>
+          <Typography>{totalCount}</Typography>
         </Box>
 
         <Box>
-          <Typography>Tracked storage groups</Typography>
+          <Typography>Total uploaded files</Typography>
           <Typography>{formatBytes(totalSize)} total</Typography>
         </Box>
       </Box>
 
       {isError && <Typography>Unable to load storage summary.</Typography>}
       {isLoading && <Typography>Loading storage summary...</Typography>}
+      {!isLoading && !isError && totalCount === 0 && <Typography>No storage usage yet.</Typography>}
 
       <Box className={styles.storageList}>
-        {storageItems.map((item) => (
-          <StorageItemRow key={item.id} item={item} />
-        ))}
+        {storageItems
+          .filter((item) => item.percentage > 0 || storageGroups === 0)
+          .map((item) => (
+            <StorageItemRow key={item.id} item={item} />
+          ))}
       </Box>
     </Paper>
   );

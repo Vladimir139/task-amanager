@@ -42,6 +42,16 @@ $red: #ff6752;
   gap: 17px;
 }
 
+.chartColumn {
+  display: flex;
+  height: 100%;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .chartBar {
   width: 31px;
   min-height: 20px;
@@ -58,6 +68,11 @@ $red: #ff6752;
 
 .docsBar {
   background: $red;
+}
+
+.chartLabel {
+  color: $title;
+  font-size: 10px !important;
 }
 
 .chartLegend {

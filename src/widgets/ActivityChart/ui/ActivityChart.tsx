@@ -29,13 +29,42 @@ export const ActivityChart: FC = () => {
   const { data, isError, isLoading } = useGetFileActivityQuery();
 
   const activityItems = useMemo<ActivityItem[]>(() => {
-    const rawItems = (data ?? []).slice(-6);
-    const maxValue = Math.max(...rawItems.map((item) => item.value), 1);
+    const groupedByDay = new Map<
+      string,
+      {
+        dominantCount: number;
+        total: number;
+        type: ActivityType;
+      }
+    >();
 
-    return rawItems.map((item) => ({
-      id: `${item._id.day}-${item._id.kind}`,
-      type: mapActivityType(item._id.kind),
-      value: Math.round((item.value / maxValue) * 100),
+    for (const item of data ?? []) {
+      const type = mapActivityType(item._id.kind);
+      const currentDay = groupedByDay.get(item._id.day) ?? {
+        dominantCount: 0,
+        total: 0,
+        type,
+      };
+
+      currentDay.total += item.value;
+
+      if (item.value >= currentDay.dominantCount) {
+        currentDay.dominantCount = item.value;
+        currentDay.type = type;
+      }
+
+      groupedByDay.set(item._id.day, currentDay);
+    }
+
+    const rawItems = Array.from(groupedByDay.entries()).slice(-7);
+    const maxValue = Math.max(...rawItems.map(([, item]) => item.total), 1);
+
+    return rawItems.map(([day, item]) => ({
+      count: item.total,
+      id: day,
+      label: day.slice(5),
+      type: item.type,
+      value: Math.round((item.total / maxValue) * 100),
     }));
   }, [data]);
 
@@ -45,6 +74,9 @@ export const ActivityChart: FC = () => {
 
       {isError && <Typography>Unable to load activity.</Typography>}
       {isLoading && <Typography>Loading activity...</Typography>}
+      {!isLoading && !isError && activityItems.length === 0 && (
+        <Typography>No file activity yet.</Typography>
+      )}
 
       <Box className={styles.chart}>
         <Box className={styles.chartGrid}>
@@ -56,14 +88,16 @@ export const ActivityChart: FC = () => {
 
         <Box className={styles.chartBars}>
           {activityItems.map((item) => (
-            <Box
-              key={item.id}
-              className={`${styles.chartBar} ${activityClassNames[item.type]}`}
-              sx={{
-                height: `${item.value}%`,
-              }}
-              title={`${item.type}: ${item.value}%`}
-            />
+            <Box key={item.id} className={styles.chartColumn}>
+              <Box
+                className={`${styles.chartBar} ${activityClassNames[item.type]}`}
+                sx={{
+                  height: `${item.value}%`,
+                }}
+                title={`${item.count} uploads on ${item.label}`}
+              />
+              <Typography className={styles.chartLabel}>{item.label}</Typography>
+            </Box>
           ))}
         </Box>
       </Box>

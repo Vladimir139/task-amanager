@@ -12,7 +12,10 @@ export type FileType =
 
 export interface RecentFile {
   id: string | number;
+  isDeleting?: boolean;
   name: string;
+  onDelete?: () => void;
+  openUrl?: string;
   size: string;
   lastModified: string;
   type: FileType;

@@ -15,12 +15,8 @@ $title: #262864;
     font-weight: 500;
   }
 
-  button {
-    padding: 0;
+  p {
     color: #159cff;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
     font-size: 13px;
   }
 }
@@ -36,7 +32,7 @@ $title: #262864;
     minmax(90px, 0.8fr)
     minmax(150px, 1fr)
     minmax(155px, 1fr)
-    35px;
+    minmax(72px, auto);
   align-items: center;
   gap: 14px;
   margin-top: 25px;
@@ -57,6 +53,11 @@ $title: #262864;
       font-size: 16px;
     }
   }
+}
+
+.activeSort {
+  color: $title !important;
+  font-weight: 700;
 }
 
 .filesList {

@@ -11,7 +11,7 @@ $orange: #ffb53d;
     minmax(90px, 0.8fr)
     minmax(150px, 1fr)
     minmax(155px, 1fr)
-    35px;
+    minmax(72px, auto);
   align-items: center;
   gap: 14px;
 }
@@ -93,6 +93,12 @@ $orange: #ffb53d;
 }
 
 .fileActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.actionButton {
   color: #77829d !important;
 
   svg {

@@ -1,4 +1,4 @@
-import { MoreVert } from "@mui/icons-material";
+import { DeleteOutlined, OpenInNew } from "@mui/icons-material";
 import { Avatar, AvatarGroup, Box, IconButton, Typography } from "@mui/material";
 import type { FC } from "react";
 
@@ -7,10 +7,6 @@ import { FileIcon, type RecentFileRowProps } from "@/entities/file";
 import styles from "./RecentFileRow.module.scss";
 
 export const RecentFileRow: FC<RecentFileRowProps> = ({ file }) => {
-  const handleOpenActions = () => {
-    console.log("Open file actions:", file.id);
-  };
-
   return (
     <Box className={styles.fileRow}>
       <Box className={styles.fileName}>
@@ -28,13 +24,31 @@ export const RecentFileRow: FC<RecentFileRowProps> = ({ file }) => {
         ))}
       </AvatarGroup>
 
-      <IconButton
-        className={styles.fileActions}
-        aria-label={`Actions for ${file.name}`}
-        onClick={handleOpenActions}
-      >
-        <MoreVert />
-      </IconButton>
+      <Box className={styles.fileActions}>
+        {file.openUrl && (
+          <IconButton
+            className={styles.actionButton}
+            aria-label={`Open ${file.name}`}
+            component="a"
+            href={file.openUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <OpenInNew />
+          </IconButton>
+        )}
+
+        {file.onDelete && (
+          <IconButton
+            className={styles.actionButton}
+            aria-label={`Delete ${file.name}`}
+            onClick={file.onDelete}
+            disabled={file.isDeleting}
+          >
+            <DeleteOutlined />
+          </IconButton>
+        )}
+      </Box>
     </Box>
   );
 };
