@@ -88,6 +88,19 @@ export interface TaskRecord {
   updatedAt?: string;
 }
 
+export interface TaskCommentRecord {
+  _id: string;
+  taskId: string;
+  authorId: string;
+  text: string;
+  fileIds: string[];
+  isEdited: boolean;
+  editedAt?: string | null;
+  deletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface MessageAudioRecord {
   fileId?: string | null;
   durationMs?: number | null;

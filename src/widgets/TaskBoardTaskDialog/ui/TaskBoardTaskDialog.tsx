@@ -54,10 +54,22 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
     attachmentCount,
     availableFiles,
     canManageTask,
+    commentDraft,
+    commentLoadError,
+    commentStatusMessage,
+    commentStatusTone,
+    comments,
     dialogTitle,
+    editingCommentId,
+    editingCommentText,
     form,
     handleAttachExistingFiles,
+    handleCancelCommentEdit,
+    handleCommentDraftChange,
+    handleCreateComment,
     handleDeleteTask,
+    handleDeleteComment,
+    handleEditCommentTextChange,
     handleFieldChange,
     handleMovePlacementChange,
     handleMoveTask,
@@ -65,8 +77,12 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
     handleSaveTask,
     handleSaveWatchers,
     handleSelectedExistingFileToggle,
+    handleStartCommentEdit,
+    handleUpdateComment,
     handleUploadNewFiles,
     handleWatcherToggle,
+    isCommentMutating,
+    isCommentsLoading,
     isCreateMode,
     isLoading,
     isMutating,
@@ -466,6 +482,132 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                         />
                       </Button>
                     </Paper>
+                  </section>
+
+                  <section className={styles.section}>
+                    <Typography component="h3" className={styles.sectionTitle}>
+                      Comments ({comments.length})
+                    </Typography>
+
+                    {commentStatusMessage && commentStatusTone && (
+                      <Alert severity={commentStatusTone}>{commentStatusMessage}</Alert>
+                    )}
+
+                    <Paper className={styles.commentComposer} elevation={0}>
+                      <TextField
+                        label="Add comment"
+                        value={commentDraft}
+                        onChange={handleCommentDraftChange}
+                        multiline
+                        minRows={3}
+                        fullWidth
+                      />
+
+                      <Box className={styles.actionRow}>
+                        <Button
+                          variant="contained"
+                          onClick={() => {
+                            void handleCreateComment();
+                          }}
+                          disabled={isCommentMutating || !commentDraft.trim()}
+                        >
+                          Add comment
+                        </Button>
+                      </Box>
+                    </Paper>
+
+                    {commentLoadError ? (
+                      <Alert severity="error">Unable to load task comments.</Alert>
+                    ) : isCommentsLoading ? (
+                      <Typography>Loading comments...</Typography>
+                    ) : comments.length === 0 ? (
+                      <Typography className={styles.helperText}>
+                        No comments yet. Start the discussion for this task.
+                      </Typography>
+                    ) : (
+                      <Box className={styles.commentsList}>
+                        {comments.map((comment) => {
+                          const isEditing = editingCommentId === comment.id;
+
+                          return (
+                            <Paper key={comment.id} className={styles.commentCard} elevation={0}>
+                              <Box className={styles.commentHeader}>
+                                <Box className={styles.commentMeta}>
+                                  <Typography className={styles.commentAuthor}>
+                                    {comment.authorName}
+                                  </Typography>
+                                  <Typography className={styles.commentTimestamp}>
+                                    {comment.createdAtLabel}
+                                    {comment.editedAtLabel
+                                      ? ` · Edited ${comment.editedAtLabel}`
+                                      : ""}
+                                  </Typography>
+                                </Box>
+
+                                {comment.canManage && !isEditing && (
+                                  <Box className={styles.commentActions}>
+                                    <Button
+                                      size="small"
+                                      onClick={() => {
+                                        handleStartCommentEdit(comment.id, comment.text);
+                                      }}
+                                      disabled={isCommentMutating}
+                                    >
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      color="error"
+                                      onClick={() => {
+                                        void handleDeleteComment(comment.id);
+                                      }}
+                                      disabled={isCommentMutating}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </Box>
+                                )}
+                              </Box>
+
+                              {isEditing ? (
+                                <Box className={styles.commentEditForm}>
+                                  <TextField
+                                    value={editingCommentText}
+                                    onChange={handleEditCommentTextChange}
+                                    multiline
+                                    minRows={3}
+                                    fullWidth
+                                  />
+
+                                  <Box className={styles.actionRow}>
+                                    <Button
+                                      variant="contained"
+                                      onClick={() => {
+                                        void handleUpdateComment();
+                                      }}
+                                      disabled={isCommentMutating || !editingCommentText.trim()}
+                                    >
+                                      Save comment
+                                    </Button>
+                                    <Button
+                                      variant="text"
+                                      onClick={handleCancelCommentEdit}
+                                      disabled={isCommentMutating}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </Box>
+                                </Box>
+                              ) : (
+                                <Typography className={styles.commentText}>
+                                  {comment.text}
+                                </Typography>
+                              )}
+                            </Paper>
+                          );
+                        })}
+                      </Box>
+                    )}
                   </section>
                 </>
               )}

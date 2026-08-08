@@ -59,9 +59,70 @@
   font-weight: 700;
 }
 
+.commentComposer,
+.commentCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e7ebf3;
+  border-radius: 16px !important;
+  background: #f8fafc;
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.commentMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.commentAuthor {
+  color: #161616;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.commentTimestamp {
+  color: #667085;
+  font-size: 13px;
+}
+
+.commentText {
+  color: #1d2939;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.commentActions,
+.commentEditForm {
+  display: flex;
+  gap: 8px;
+}
+
+.commentEditForm {
+  flex-direction: column;
+}
+
 @media (max-width: 900px) {
   .formGrid,
   .checkboxGrid {
     grid-template-columns: 1fr;
+  }
+
+  .commentHeader {
+    flex-direction: column;
   }
 }

@@ -8,17 +8,22 @@ import {
   taskWorkflowStateOptions,
   useGetTaskByIdQuery,
 } from "@/entities/task";
+import { useGetTaskCommentsQuery } from "@/entities/taskComment";
 import { selectAuthUser } from "@/entities/user";
 import { useAttachTaskFilesMutation } from "@/features/attachTaskFiles";
 import { useCreateTaskMutation } from "@/features/createTask";
+import { useCreateTaskCommentMutation } from "@/features/createTaskComment";
 import { useDeleteTaskMutation } from "@/features/deleteTask";
+import { useDeleteTaskCommentMutation } from "@/features/deleteTaskComment";
 import { useMoveTaskMutation } from "@/features/moveTask";
 import {
   useUpdateTaskAssigneesMutation,
   useUpdateTaskWatchersMutation,
 } from "@/features/taskParticipants";
 import { useUpdateTaskMutation } from "@/features/updateTask";
+import { useUpdateTaskCommentMutation } from "@/features/updateTaskComment";
 import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
+import { formatDateTimeLabel } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
 
 type TaskMovePlacement = "top" | "bottom";
@@ -43,6 +48,15 @@ interface MemberOption {
   name: string;
 }
 
+interface TaskCommentItem {
+  authorName: string;
+  canManage: boolean;
+  createdAtLabel: string;
+  editedAtLabel?: string | null;
+  id: string;
+  text: string;
+}
+
 interface UseTaskBoardTaskDialogProps {
   boardId: string;
   canManageBoard: boolean;
@@ -60,10 +74,22 @@ interface UseTaskBoardTaskDialogResult {
   attachmentCount: number;
   availableFiles: Array<{ id: string; label: string }>;
   canManageTask: boolean;
+  commentDraft: string;
+  commentLoadError: boolean;
+  commentStatusMessage: string | null;
+  commentStatusTone: "error" | "success" | null;
+  comments: TaskCommentItem[];
   dialogTitle: string;
+  editingCommentId: string | null;
+  editingCommentText: string;
   form: TaskFormState;
   handleAttachExistingFiles: () => Promise<void>;
+  handleCancelCommentEdit: () => void;
+  handleCommentDraftChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleCreateComment: () => Promise<void>;
   handleDeleteTask: () => Promise<void>;
+  handleDeleteComment: (commentId: string) => Promise<void>;
+  handleEditCommentTextChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleFieldChange: (
     field: keyof TaskFormState,
   ) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -73,8 +99,12 @@ interface UseTaskBoardTaskDialogResult {
   handleSaveTask: () => Promise<void>;
   handleSaveWatchers: () => Promise<void>;
   handleSelectedExistingFileToggle: (fileId: string) => void;
+  handleStartCommentEdit: (commentId: string, text: string) => void;
+  handleUpdateComment: () => Promise<void>;
   handleUploadNewFiles: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleWatcherToggle: (userId: string) => void;
+  isCommentMutating: boolean;
+  isCommentsLoading: boolean;
   isCreateMode: boolean;
   isLoading: boolean;
   isMutating: boolean;
@@ -155,6 +185,11 @@ export const useTaskBoardTaskDialog = ({
   const [selectedExistingFileIds, setSelectedExistingFileIds] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
+  const [commentStatusMessage, setCommentStatusMessage] = useState<string | null>(null);
+  const [commentStatusTone, setCommentStatusTone] = useState<"error" | "success" | null>(null);
 
   const {
     data: task,
@@ -166,6 +201,13 @@ export const useTaskBoardTaskDialog = ({
   const { data: recentFiles = [], isError: recentFilesError } = useGetRecentFilesQuery(undefined, {
     skip: !isOpen || isCreateMode,
   });
+  const {
+    data: taskComments = [],
+    isError: isCommentsError,
+    isLoading: isCommentsLoading,
+  } = useGetTaskCommentsQuery(openTaskId ?? "", {
+    skip: !openTaskId || isCreateMode,
+  });
   const [createTask, { isLoading: isCreatingTask }] = useCreateTaskMutation();
   const [updateTask, { isLoading: isUpdatingTask }] = useUpdateTaskMutation();
   const [deleteTask, { isLoading: isDeletingTask }] = useDeleteTaskMutation();
@@ -174,6 +216,9 @@ export const useTaskBoardTaskDialog = ({
   const [updateTaskWatchers, { isLoading: isSavingWatchers }] = useUpdateTaskWatchersMutation();
   const [attachTaskFiles, { isLoading: isAttachingFiles }] = useAttachTaskFilesMutation();
   const [uploadFile, { isLoading: isUploadingFiles }] = useUploadFileMutation();
+  const [createTaskComment, { isLoading: isCreatingComment }] = useCreateTaskCommentMutation();
+  const [updateTaskComment, { isLoading: isUpdatingComment }] = useUpdateTaskCommentMutation();
+  const [deleteTaskComment, { isLoading: isDeletingComment }] = useDeleteTaskCommentMutation();
 
   useEffect(() => {
     if (!isOpen) {
@@ -218,6 +263,14 @@ export const useTaskBoardTaskDialog = ({
     setStatusTone(null);
   }, [columns, createColumnId, isCreateMode, isOpen, task]);
 
+  useEffect(() => {
+    setCommentDraft("");
+    setEditingCommentId(null);
+    setEditingCommentText("");
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+  }, [isCreateMode, isOpen, openTaskId]);
+
   const canManageTask = useMemo(() => {
     if (isCreateMode) {
       return true;
@@ -239,8 +292,29 @@ export const useTaskBoardTaskDialog = ({
       }));
   }, [projectId, recentFiles]);
 
+  const comments = useMemo<TaskCommentItem[]>(() => {
+    const currentUserFullName = authUser ? `${authUser.firstName} ${authUser.lastName}`.trim() : "";
+    const currentUserName = currentUserFullName === "" ? undefined : currentUserFullName;
+    const membersById = new Map(memberOptions.map((member) => [member.id, member]));
+
+    return taskComments.map((comment) => ({
+      authorName:
+        membersById.get(comment.authorId)?.name ??
+        (comment.authorId === authUser?.id ? currentUserName : undefined) ??
+        "Teammate",
+      canManage: canManageBoard || comment.authorId === authUser?.id,
+      createdAtLabel: formatDateTimeLabel(comment.createdAt),
+      editedAtLabel: comment.isEdited
+        ? formatDateTimeLabel(comment.editedAt ?? comment.updatedAt)
+        : null,
+      id: comment._id,
+      text: comment.text,
+    }));
+  }, [authUser, canManageBoard, memberOptions, taskComments]);
+
   const attachmentCount = task?.attachmentCount ?? 0;
   const dialogTitle = isCreateMode ? "Create task" : (task?.title ?? "Task details");
+  const isCommentMutating = isCreatingComment || isUpdatingComment || isDeletingComment;
 
   const isMutating =
     isCreatingTask ||
@@ -523,14 +597,147 @@ export const useTaskBoardTaskDialog = ({
     }
   };
 
+  const handleCommentDraftChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void => {
+    setCommentDraft(event.target.value);
+  };
+
+  const handleEditCommentTextChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void => {
+    setEditingCommentText(event.target.value);
+  };
+
+  const handleStartCommentEdit = (commentId: string, text: string): void => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(text);
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+  };
+
+  const handleCancelCommentEdit = (): void => {
+    setEditingCommentId(null);
+    setEditingCommentText("");
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+  };
+
+  const handleCreateComment = async (): Promise<void> => {
+    if (!task) {
+      return;
+    }
+
+    const normalizedText = commentDraft.trim();
+    if (!normalizedText) {
+      setCommentStatusMessage("Comment text is required.");
+      setCommentStatusTone("error");
+      return;
+    }
+
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+
+    try {
+      await createTaskComment({
+        boardId,
+        projectId,
+        taskId: task._id,
+        text: normalizedText,
+      }).unwrap();
+
+      setCommentDraft("");
+      setCommentStatusMessage("Comment added.");
+      setCommentStatusTone("success");
+    } catch (error) {
+      setCommentStatusMessage(getErrorMessage(error, "Unable to add the comment."));
+      setCommentStatusTone("error");
+    }
+  };
+
+  const handleUpdateComment = async (): Promise<void> => {
+    if (!task || !editingCommentId) {
+      return;
+    }
+
+    const normalizedText = editingCommentText.trim();
+    if (!normalizedText) {
+      setCommentStatusMessage("Comment text is required.");
+      setCommentStatusTone("error");
+      return;
+    }
+
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+
+    try {
+      await updateTaskComment({
+        boardId,
+        commentId: editingCommentId,
+        projectId,
+        taskId: task._id,
+        text: normalizedText,
+      }).unwrap();
+
+      setEditingCommentId(null);
+      setEditingCommentText("");
+      setCommentStatusMessage("Comment updated.");
+      setCommentStatusTone("success");
+    } catch (error) {
+      setCommentStatusMessage(getErrorMessage(error, "Unable to update the comment."));
+      setCommentStatusTone("error");
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string): Promise<void> => {
+    if (!task) {
+      return;
+    }
+
+    setCommentStatusMessage(null);
+    setCommentStatusTone(null);
+
+    try {
+      await deleteTaskComment({
+        boardId,
+        commentId,
+        projectId,
+        taskId: task._id,
+      }).unwrap();
+
+      if (editingCommentId === commentId) {
+        setEditingCommentId(null);
+        setEditingCommentText("");
+      }
+
+      setCommentStatusMessage("Comment deleted.");
+      setCommentStatusTone("success");
+    } catch (error) {
+      setCommentStatusMessage(getErrorMessage(error, "Unable to delete the comment."));
+      setCommentStatusTone("error");
+    }
+  };
+
   return {
     attachmentCount,
     availableFiles,
     canManageTask,
+    commentDraft,
+    commentLoadError: isCommentsError,
+    commentStatusMessage,
+    commentStatusTone,
+    comments,
     dialogTitle,
+    editingCommentId,
+    editingCommentText,
     form,
     handleAttachExistingFiles,
+    handleCancelCommentEdit,
+    handleCommentDraftChange,
+    handleCreateComment,
     handleDeleteTask,
+    handleDeleteComment,
+    handleEditCommentTextChange,
     handleFieldChange,
     handleMovePlacementChange,
     handleMoveTask,
@@ -538,8 +745,12 @@ export const useTaskBoardTaskDialog = ({
     handleSaveTask,
     handleSaveWatchers,
     handleSelectedExistingFileToggle,
+    handleStartCommentEdit,
+    handleUpdateComment,
     handleUploadNewFiles,
     handleWatcherToggle,
+    isCommentMutating,
+    isCommentsLoading,
     isCreateMode,
     isLoading: isTaskLoading,
     isMutating,
