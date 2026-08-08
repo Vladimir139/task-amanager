@@ -15,12 +15,14 @@ import styles from "./ProjectCard.module.scss";
 
 const statusLabels: Record<Project["status"], string> = {
   active: "In Progress",
+  archived: "Archived",
   completed: "Completed",
   "on-hold": "On Hold",
 };
 
 const statusClassNames: Record<Project["status"], string> = {
   active: styles.activeStatus,
+  archived: styles.archivedStatus,
   completed: styles.completedStatus,
   "on-hold": styles.onHoldStatus,
 };
@@ -31,9 +33,16 @@ const colorClassNames: Record<Project["color"], string> = {
   orange: styles.orange,
   green: styles.green,
   red: styles.red,
+  gray: styles.gray,
 };
 
-export const ProjectCard: FC<ProjectCardProps> = ({ project, viewMode = "grid", onOpen }) => {
+export const ProjectCard: FC<ProjectCardProps> = ({
+  isSelected = false,
+  onManage,
+  project,
+  viewMode = "grid",
+  onOpen,
+}) => {
   const colorClassName = colorClassNames[project.color];
   const statusClassName = statusClassNames[project.status];
 
@@ -41,9 +50,15 @@ export const ProjectCard: FC<ProjectCardProps> = ({ project, viewMode = "grid", 
     onOpen?.(project);
   };
 
+  const handleManage = () => {
+    onManage?.(project);
+  };
+
   return (
     <Paper
-      className={`${styles.projectCard} ${viewMode === "list" ? styles.listProjectCard : ""}`}
+      className={`${styles.projectCard} ${viewMode === "list" ? styles.listProjectCard : ""} ${
+        isSelected ? styles.selectedProjectCard : ""
+      }`}
       elevation={0}
     >
       <Box className={styles.projectCardHeader}>
@@ -114,9 +129,15 @@ export const ProjectCard: FC<ProjectCardProps> = ({ project, viewMode = "grid", 
           ))}
         </AvatarGroup>
 
-        <button type="button" className={styles.openProjectButton} onClick={handleOpen}>
-          Open Project
-        </button>
+        <Box className={styles.projectActions}>
+          <button type="button" className={styles.manageProjectButton} onClick={handleManage}>
+            Manage
+          </button>
+
+          <button type="button" className={styles.openProjectButton} onClick={handleOpen}>
+            Open board
+          </button>
+        </Box>
       </Box>
     </Paper>
   );

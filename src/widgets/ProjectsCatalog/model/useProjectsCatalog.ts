@@ -3,19 +3,23 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Project } from "@/entities/project";
-import { useGetProjectsQuery } from "@/entities/project";
+import { useGetProjectsQuery, useSelectedProjectId } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
-import { getTasksRoute } from "@/shared/config/router";
+import { getProjectsRoute, getTasksRoute } from "@/shared/config/router";
 import { formatDateLabel, getInitials } from "@/shared/lib/formatters";
 
 import type { ProjectFilter, ProjectSort, ViewMode } from "./types";
 
 const mapProjectStatus = (status: string): Project["status"] => {
+  if (status === "archived") {
+    return "archived";
+  }
+
   if (status === "completed") {
     return "completed";
   }
 
-  if (status === "on-hold" || status === "archived") {
+  if (status === "on-hold") {
     return "on-hold";
   }
 
@@ -23,7 +27,7 @@ const mapProjectStatus = (status: string): Project["status"] => {
 };
 
 const mapProjectColor = (color: string): Project["color"] => {
-  if (["purple", "blue", "orange", "green", "red"].includes(color)) {
+  if (["purple", "blue", "orange", "green", "red", "gray"].includes(color)) {
     return color as Project["color"];
   }
 
@@ -31,6 +35,7 @@ const mapProjectColor = (color: string): Project["color"] => {
 };
 
 interface UseProjectsCatalogResult {
+  handleManageProject: (project: Project) => void;
   handleOpenProject: (project: Project) => void;
   handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleSortChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -39,6 +44,7 @@ interface UseProjectsCatalogResult {
   isLoading: boolean;
   projects: Project[];
   search: string;
+  selectedProjectId: string | null;
   setViewMode: (mode: ViewMode) => void;
   sort: ProjectSort;
   status: ProjectFilter;
@@ -47,6 +53,7 @@ interface UseProjectsCatalogResult {
 
 export const useProjectsCatalog = (): UseProjectsCatalogResult => {
   const navigate = useNavigate();
+  const selectedProjectId = useSelectedProjectId();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ProjectFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -113,7 +120,12 @@ export const useProjectsCatalog = (): UseProjectsCatalogResult => {
     void navigate(getTasksRoute(String(project.id)));
   };
 
+  const handleManageProject = (project: Project): void => {
+    void navigate(getProjectsRoute(String(project.id)));
+  };
+
   return {
+    handleManageProject,
     handleOpenProject,
     handleSearchChange,
     handleSortChange,
@@ -122,6 +134,7 @@ export const useProjectsCatalog = (): UseProjectsCatalogResult => {
     isLoading,
     projects,
     search,
+    selectedProjectId,
     setViewMode,
     sort,
     status,

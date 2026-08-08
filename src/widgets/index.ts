@@ -11,6 +11,7 @@ export * from "./MessagesPreview";
 export * from "./MessagesWorkspace";
 export * from "./NewTask";
 export * from "./ProfileDetailsForm";
+export * from "./ProjectManagementPanel";
 export * from "./ProjectsCatalog";
 export * from "./ProjectsHeader";
 export * from "./ProjectStatistics";

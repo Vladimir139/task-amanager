@@ -1,6 +1,6 @@
-export type ProjectStatus = "active" | "completed" | "on-hold";
+export type ProjectStatus = "active" | "completed" | "on-hold" | "archived";
 
-export type ProjectColor = "purple" | "blue" | "orange" | "green" | "red";
+export type ProjectColor = "purple" | "blue" | "orange" | "green" | "red" | "gray";
 
 export type ProjectViewMode = "grid" | "list";
 
@@ -24,6 +24,8 @@ export interface Project {
 }
 
 export interface ProjectCardProps {
+  isSelected?: boolean;
+  onManage?: (project: Project) => void;
   project: Project;
   viewMode?: ProjectViewMode;
   onOpen?: (project: Project) => void;

@@ -17,4 +17,8 @@ export const projectFilterItems: ProjectFilterItem[] = [
     value: "on-hold",
     label: "On Hold",
   },
+  {
+    value: "archived",
+    label: "Archived",
+  },
 ];

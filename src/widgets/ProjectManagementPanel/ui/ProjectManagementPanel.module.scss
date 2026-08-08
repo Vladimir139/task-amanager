@@ -1,0 +1,154 @@
+$border: #e8eaf1;
+$title: #25275f;
+$text: #7d87a3;
+
+.panel {
+  margin-top: 24px;
+  padding: 25px;
+  border-radius: 15px !important;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  color: #161616;
+  font-size: 21px !important;
+  font-weight: 700 !important;
+}
+
+.subtitle {
+  margin-top: 8px !important;
+  color: $text;
+  font-size: 13px !important;
+}
+
+.helperText {
+  color: $text;
+  font-size: 14px !important;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.statusAlert {
+  margin-top: 18px;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.section {
+  padding: 20px;
+  border: 1px solid $border;
+  border-radius: 14px;
+}
+
+.sectionTitle {
+  color: $title;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.formGrid {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.descriptionField {
+  :global(.MuiInputBase-root) {
+    align-items: flex-start;
+  }
+}
+
+.addMemberRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr) auto;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.memberList {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #f8f9fc;
+  border-radius: 12px;
+}
+
+.memberInfo {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+
+  :global(.MuiAvatar-root) {
+    width: 38px;
+    height: 38px;
+    color: $title;
+    background: #dfe3ff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.memberName {
+  color: $title;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.memberMeta {
+  margin-top: 4px !important;
+  color: $text;
+  font-size: 12px !important;
+}
+
+.memberActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (width <= 1100px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (width <= 720px) {
+  .panelHeader,
+  .memberRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .addMemberRow {
+    grid-template-columns: 1fr;
+  }
+
+  .memberActions {
+    justify-content: flex-start;
+  }
+}

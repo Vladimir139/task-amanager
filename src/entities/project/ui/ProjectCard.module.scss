@@ -24,6 +24,11 @@ $red: #ef5b5b;
   }
 }
 
+.selectedProjectCard {
+  border-color: #cfd2f4;
+  box-shadow: 0 10px 25px rgb(36 39 83 / 7%) !important;
+}
+
 .projectCardHeader {
   display: flex;
   align-items: flex-start;
@@ -78,6 +83,14 @@ $red: #ef5b5b;
 
   :global(.MuiLinearProgress-bar) {
     background: $red;
+  }
+}
+
+.gray {
+  background: #98a0b3;
+
+  :global(.MuiLinearProgress-bar) {
+    background: #98a0b3;
   }
 }
 
@@ -152,6 +165,11 @@ $red: #ef5b5b;
   background: #fff4df;
 }
 
+.archivedStatus {
+  color: #667085;
+  background: #edf1f5;
+}
+
 .projectProgress {
   height: 5px !important;
   margin-top: 11px;
@@ -221,6 +239,26 @@ $red: #ef5b5b;
   }
 }
 
+.projectActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.manageProjectButton {
+  padding: 0;
+  color: #677189;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .additionalMember {
   font-size: 8px !important;
 }
@@ -280,5 +318,9 @@ $red: #ef5b5b;
   .projectInformation {
     padding: 0;
     border: 0;
+  }
+
+  .projectActions {
+    justify-content: flex-end;
   }
 }

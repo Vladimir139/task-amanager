@@ -2,11 +2,12 @@ import { baseApi } from "@/shared/api";
 import type { ProjectRecord } from "@/shared/api/types";
 
 export interface CreateProjectPayload {
-  title: string;
-  description?: string;
-  status?: string;
   color?: string;
+  description?: string;
   dueDate?: string;
+  startDate?: string;
+  status?: string;
+  title: string;
 }
 
 export const createProjectApi = baseApi.injectEndpoints({

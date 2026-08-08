@@ -44,3 +44,11 @@ export const getTasksRoute = (projectId?: string): string => {
 
   return `${ROUTES.tasks.page}?projectId=${encodeURIComponent(projectId)}`;
 };
+
+export const getProjectsRoute = (projectId?: string): string => {
+  if (!projectId) {
+    return ROUTES.projects.page;
+  }
+
+  return `${ROUTES.projects.page}?projectId=${encodeURIComponent(projectId)}`;
+};

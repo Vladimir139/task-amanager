@@ -1,5 +1,10 @@
 import { baseApi } from "@/shared/api";
-import type { ProjectListResponse, ProjectRecord, ProjectStatsResponse } from "@/shared/api/types";
+import type {
+  ProjectListResponse,
+  ProjectMemberRecord,
+  ProjectRecord,
+  ProjectStatsResponse,
+} from "@/shared/api/types";
 
 export interface GetProjectsQuery {
   limit?: number;
@@ -18,6 +23,10 @@ export const projectsApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, projectId) => [{ id: projectId, type: "Projects" }],
       query: (projectId) => `/projects/${projectId}`,
     }),
+    getProjectMembers: build.query<ProjectMemberRecord[], string>({
+      providesTags: (_result, _error, projectId) => [{ id: projectId, type: "ProjectMembers" }],
+      query: (projectId) => `/projects/${projectId}/members`,
+    }),
     getProjectStats: build.query<ProjectStatsResponse, void>({
       providesTags: ["ProjectStats"],
       query: () => "/projects/stats",
@@ -32,4 +41,9 @@ export const projectsApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetProjectByIdQuery, useGetProjectStatsQuery, useGetProjectsQuery } = projectsApi;
+export const {
+  useGetProjectByIdQuery,
+  useGetProjectMembersQuery,
+  useGetProjectStatsQuery,
+  useGetProjectsQuery,
+} = projectsApi;

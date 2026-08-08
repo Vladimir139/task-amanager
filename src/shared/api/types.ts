@@ -129,6 +129,17 @@ export interface ProjectRecord {
   updatedAt?: string;
 }
 
+export interface ProjectMemberRecord {
+  _id: string;
+  projectId: string;
+  userId: string;
+  role: "owner" | "admin" | "member" | "viewer";
+  joinedAt?: string;
+  invitedBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProjectListResponse {
   items: ProjectRecord[];
   total: number;

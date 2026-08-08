@@ -18,6 +18,7 @@ import styles from "./ProjectsCatalog.module.scss";
 
 export const ProjectsCatalog: FC = () => {
   const {
+    handleManageProject,
     handleOpenProject,
     handleSearchChange,
     handleSortChange,
@@ -26,6 +27,7 @@ export const ProjectsCatalog: FC = () => {
     isLoading,
     projects,
     search,
+    selectedProjectId,
     setViewMode,
     sort,
     status,
@@ -148,6 +150,8 @@ export const ProjectsCatalog: FC = () => {
           {projects.map((project) => (
             <ProjectCard
               key={project.id}
+              isSelected={selectedProjectId === String(project.id)}
+              onManage={handleManageProject}
               project={project}
               viewMode={viewMode}
               onOpen={handleOpenProject}
