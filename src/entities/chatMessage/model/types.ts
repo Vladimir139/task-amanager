@@ -1,10 +1,10 @@
 export interface MessageAttachment {
-  id: number;
+  id: string | number;
   image: string;
 }
 
 export interface ChatMessage {
-  id: number;
+  id: string | number;
   author: string;
   avatar: string;
   time: string;

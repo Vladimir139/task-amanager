@@ -1,9 +1,12 @@
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC, FormEvent } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { setSession, useAppDispatch } from "@/app/store";
+import { useAppDispatch } from "@/app/store";
+import { mapAuthPayloadToAuthUser, userActions } from "@/entities/user";
+import { authActions, useRegisterMutation } from "@/features/auth";
+import { saveStoredAuthTokens } from "@/shared/lib/auth/authStorage";
 
 import styles from "./RegisterPage.module.scss";
 
@@ -12,6 +15,7 @@ interface RegisterFormState {
   firstName: string;
   lastName: string;
   password: string;
+  roleTitle: string;
 }
 
 const initialFormState: RegisterFormState = {
@@ -19,12 +23,14 @@ const initialFormState: RegisterFormState = {
   firstName: "",
   lastName: "",
   password: "",
+  roleTitle: "Product Designer",
 };
 
 export const RegisterPage: FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [form, setForm] = useState<RegisterFormState>(initialFormState);
+  const [register, { error, isLoading }] = useRegisterMutation();
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
@@ -35,22 +41,29 @@ export const RegisterPage: FC = () => {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    dispatch(
-      setSession({
-        accessToken: "frontend-demo-access-token",
-        refreshToken: "frontend-demo-refresh-token",
-        user: {
-          email: form.email,
-          firstName: form.firstName,
-          lastName: form.lastName,
-        },
-      }),
-    );
+    try {
+      const session = await register(form).unwrap();
 
-    void navigate("/dashboard", { replace: true });
+      dispatch(
+        authActions.setTokens({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+        }),
+      );
+      dispatch(userActions.setAuthData(mapAuthPayloadToAuthUser(session.user)));
+      dispatch(authActions.setInitialized(true));
+      saveStoredAuthTokens({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
+
+      await navigate("/dashboard", { replace: true });
+    } catch {
+      // handled by RTK Query error state
+    }
   };
 
   return (
@@ -92,6 +105,16 @@ export const RegisterPage: FC = () => {
 
           <TextField
             required
+            label="Role"
+            name="roleTitle"
+            value={form.roleTitle}
+            onChange={handleChange}
+            placeholder="Your role"
+            fullWidth
+          />
+
+          <TextField
+            required
             label="Email"
             name="email"
             type="email"
@@ -111,12 +134,21 @@ export const RegisterPage: FC = () => {
             onChange={handleChange}
             autoComplete="new-password"
             placeholder="Password"
+            helperText="At least 8 characters"
             fullWidth
           />
+
+          {error && <Alert severity="error">Unable to create account. Check the form data.</Alert>}
         </Stack>
 
-        <Button type="submit" variant="contained" size="large" className={styles.submitButton}>
-          Register
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          className={styles.submitButton}
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating account..." : "Register"}
         </Button>
       </form>
 

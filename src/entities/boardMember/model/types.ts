@@ -1,6 +1,7 @@
 export interface BoardMember {
-  id: number;
+  id: string | number;
   initials: string;
+  avatarUrl?: string;
   isOnline?: boolean;
 }
 

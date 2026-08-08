@@ -1,30 +1,61 @@
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 
-import type { UserProfile, UserProfileField } from "@/entities/user";
+import { useAppDispatch } from "@/app/store";
+import {
+  mapUserRecordToAuthUser,
+  mapUserRecordToProfile,
+  useGetCurrentUserQuery,
+  userActions,
+  type UserProfile,
+  type UserProfileField,
+  useUpdateCurrentUserMutation,
+  useUploadAvatarMutation,
+} from "@/entities/user";
 import type { SettingsTab } from "@/widgets";
-
-import { initialUserProfile } from "./constants";
 
 interface UseSettingsPageResult {
   activeTab: SettingsTab;
-  profile: UserProfile;
   avatarPreview: string;
-  handleTabChange: (tab: SettingsTab) => void;
-  handleFieldChange: (field: UserProfileField) => (event: ChangeEvent<HTMLInputElement>) => void;
   handleAvatarChange: (file: File) => void;
   handleCancel: () => void;
-  handleSave: () => void;
+  handleFieldChange: (field: UserProfileField) => (event: ChangeEvent<HTMLInputElement>) => void;
+  handleSave: () => Promise<void>;
+  handleTabChange: (tab: SettingsTab) => void;
+  isLoading: boolean;
+  isSaving: boolean;
+  profile: UserProfile;
 }
 
+const emptyProfile: UserProfile = {
+  avatar: "",
+  email: "",
+  firstName: "",
+  lastName: "",
+  role: "",
+};
+
 export const useSettingsPage = (): UseSettingsPageResult => {
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState<SettingsTab>("My details");
-
-  const [profile, setProfile] = useState<UserProfile>(initialUserProfile);
-
-  const [avatarPreview, setAvatarPreview] = useState(initialUserProfile.avatar);
-
+  const [profile, setProfile] = useState<UserProfile>(emptyProfile);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const { data: user, isLoading } = useGetCurrentUserQuery();
+  const [updateCurrentUser, { isLoading: isUpdatingProfile }] = useUpdateCurrentUserMutation();
+  const [uploadAvatar, { isLoading: isUploadingAvatar }] = useUploadAvatarMutation();
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const nextProfile = mapUserRecordToProfile(user);
+    setProfile(nextProfile);
+    setAvatarPreview(nextProfile.avatar);
+    setAvatarFile(null);
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -53,36 +84,61 @@ export const useSettingsPage = (): UseSettingsPageResult => {
     const previewUrl = URL.createObjectURL(file);
 
     objectUrlRef.current = previewUrl;
+    setAvatarFile(file);
     setAvatarPreview(previewUrl);
   };
 
-  const handleCancel = () => {
+  const resetFromUser = () => {
+    if (!user) {
+      return;
+    }
+
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
     }
 
-    setProfile(initialUserProfile);
-    setAvatarPreview(initialUserProfile.avatar);
+    const nextProfile = mapUserRecordToProfile(user);
+    setProfile(nextProfile);
+    setAvatarPreview(nextProfile.avatar);
+    setAvatarFile(null);
   };
 
-  const handleSave = () => {
-    const updatedProfile: UserProfile = {
-      ...profile,
-      avatar: avatarPreview,
-    };
+  const handleCancel = () => {
+    resetFromUser();
+  };
 
-    console.log("Settings saved:", updatedProfile);
+  const handleSave = async () => {
+    let latestUser = user;
+
+    if (avatarFile) {
+      latestUser = await uploadAvatar(avatarFile).unwrap();
+    }
+
+    const updatedUser = await updateCurrentUser({
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      roleTitle: profile.role,
+    }).unwrap();
+
+    dispatch(userActions.setAuthData(mapUserRecordToAuthUser(updatedUser)));
+    const nextProfile = mapUserRecordToProfile(updatedUser);
+    setProfile(nextProfile);
+    setAvatarPreview(latestUser?.avatarUrl ?? nextProfile.avatar);
+    setAvatarFile(null);
   };
 
   return {
     activeTab,
-    profile,
     avatarPreview,
-    handleTabChange,
-    handleFieldChange,
     handleAvatarChange,
     handleCancel,
+    handleFieldChange,
     handleSave,
+    handleTabChange,
+    isLoading,
+    isSaving: isUpdatingProfile || isUploadingAvatar,
+    profile,
   };
 };

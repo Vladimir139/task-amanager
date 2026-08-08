@@ -12,28 +12,15 @@ export const Header: FC = () => {
 
   return (
     <header className={styles.header}>
-      {/*<TextField*/}
-      {/*  placeholder="Search anything..."*/}
-      {/*  size="small"*/}
-      {/*  className={styles.searchField}*/}
-      {/*  slotProps={{*/}
-      {/*    input: {*/}
-      {/*      endAdornment: (*/}
-      {/*        <InputAdornment position="end">*/}
-      {/*          <Search />*/}
-      {/*        </InputAdornment>*/}
-      {/*      ),*/}
-      {/*    },*/}
-      {/*  }}*/}
-      {/*/>*/}
-
       <Box className={styles.profileActions}>
         <IconButton className={styles.notificationButton}>
           <NotificationsNoneOutlined />
           <span className={styles.notificationCount}>2</span>
         </IconButton>
 
-        <Avatar className={styles.profileAvatar}>{initials}</Avatar>
+        <Avatar src={user?.avatarUrl ?? undefined} className={styles.profileAvatar}>
+          {initials}
+        </Avatar>
 
         <IconButton>
           <KeyboardArrowDown />

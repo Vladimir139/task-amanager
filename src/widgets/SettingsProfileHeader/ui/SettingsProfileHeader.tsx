@@ -4,9 +4,10 @@ import type { FC } from "react";
 import styles from "./SettingsProfileHeader.module.scss";
 
 interface SettingsProfileHeaderProps {
-  firstName: string;
-  lastName: string;
   avatar: string;
+  firstName: string;
+  isSaving?: boolean;
+  lastName: string;
   onCancel: () => void;
   onSave: () => void;
 }
@@ -17,6 +18,7 @@ export const SettingsProfileHeader: FC<SettingsProfileHeaderProps> = ({
   avatar,
   onCancel,
   onSave,
+  isSaving = false,
 }) => {
   const fullName = `${firstName} ${lastName}`.trim();
 
@@ -41,8 +43,9 @@ export const SettingsProfileHeader: FC<SettingsProfileHeaderProps> = ({
             disableElevation
             className={styles.saveButton}
             onClick={onSave}
+            disabled={isSaving}
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </Box>
       </Box>

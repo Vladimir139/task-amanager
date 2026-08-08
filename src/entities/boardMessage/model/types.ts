@@ -9,7 +9,7 @@ export interface BoardAudioMessage {
 }
 
 export interface BoardMessage {
-  id: number;
+  id: string | number;
   author: string;
   avatar: BoardMember;
   text?: string;

@@ -1,3 +1,4 @@
+import { Typography } from "@mui/material";
 import type { FC } from "react";
 
 import { useSettingsPage } from "@/views/Settings/model/useSettingsPage.ts";
@@ -15,7 +16,13 @@ export const SettingsPage: FC = () => {
     handleAvatarChange,
     handleCancel,
     handleSave,
+    isLoading,
+    isSaving,
   } = useSettingsPage();
+
+  if (isLoading) {
+    return <Typography>Loading profile...</Typography>;
+  }
 
   return (
     <main className={styles.content}>
@@ -24,7 +31,10 @@ export const SettingsPage: FC = () => {
         lastName={profile.lastName}
         avatar={avatarPreview}
         onCancel={handleCancel}
-        onSave={handleSave}
+        onSave={() => {
+          void handleSave();
+        }}
+        isSaving={isSaving}
       />
 
       <SettingsNavigation activeTab={activeTab} onTabChange={handleTabChange} />

@@ -1,7 +1,7 @@
 export type ActivityType = "media" | "photos" | "docs";
 
 export interface ActivityItem {
-  id: number;
+  id: string | number;
   value: number;
   type: ActivityType;
 }

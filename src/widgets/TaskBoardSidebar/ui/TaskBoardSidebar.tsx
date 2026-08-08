@@ -1,6 +1,6 @@
 import { MicNoneOutlined, MoreHoriz } from "@mui/icons-material";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
-import type { ChangeEvent, FC } from "react";
+import type { ChangeEvent, FC, KeyboardEvent } from "react";
 
 import type { BoardMember } from "@/entities/boardMember";
 import { BoardMemberAvatar } from "@/entities/boardMember";
@@ -10,22 +10,35 @@ import { BoardMessageItem } from "@/entities/boardMessage";
 import styles from "./TaskBoardSidebar.module.scss";
 
 interface TaskBoardSidebarProps {
+  isSubmitting?: boolean;
   members: BoardMember[];
   membersCount: number;
-  messages: BoardMessage[];
   message: string;
+  messages: BoardMessage[];
   onMessageChange: (value: string) => void;
+  onMessageSubmit: () => void;
 }
 
 export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
+  isSubmitting = false,
   members,
   membersCount,
   messages,
   message,
   onMessageChange,
+  onMessageSubmit,
 }) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onMessageChange(event.target.value);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    onMessageSubmit();
   };
 
   return (
@@ -60,6 +73,7 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
         <TextField
           value={message}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder="write here..."
           className={styles.messageInput}
           fullWidth
@@ -69,7 +83,7 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
           <MicNoneOutlined />
         </IconButton>
 
-        <IconButton aria-label="More message options">
+        <IconButton aria-label="Send message" onClick={onMessageSubmit} disabled={isSubmitting}>
           <MoreHoriz />
         </IconButton>
       </Box>

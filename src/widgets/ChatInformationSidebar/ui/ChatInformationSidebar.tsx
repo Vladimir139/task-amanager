@@ -2,34 +2,36 @@ import { Add, ExpandMore } from "@mui/icons-material";
 import { Avatar, Box, IconButton, Typography } from "@mui/material";
 import type { FC } from "react";
 
+import type { ChatMember } from "@/entities/chatMember";
 import { ChatMemberItem } from "@/entities/chatMember";
+import type { SharedFile } from "@/entities/sharedFile";
 import { SharedFileItem } from "@/entities/sharedFile";
-import { sharedFiles } from "@/widgets";
 
-import { chatMembers } from "../model/sidebar.data.ts";
 import styles from "./ChatInformationSidebar.module.scss";
 
 interface ChatInformationSidebarProps {
-  conversationId: number;
+  members: ChatMember[];
+  profileAvatar: string;
+  profileName: string;
+  profileSubtitle: string;
+  sharedFiles: SharedFile[];
 }
 
-export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({ conversationId }) => {
-  const handleAddMember = () => {
-    console.log("Add member to conversation:", conversationId);
-  };
-
-  const handleViewAllFiles = () => {
-    console.log("View all files for conversation:", conversationId);
-  };
-
+export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({
+  members,
+  profileAvatar,
+  profileName,
+  profileSubtitle,
+  sharedFiles,
+}) => {
   return (
     <aside className={styles.informationSidebar}>
       <Box className={styles.profile}>
-        <Avatar src="/images/users/ahmed.jpg" alt="Killan James" />
+        <Avatar src={profileAvatar} alt={profileName} />
 
-        <Typography component="h2">Killan James</Typography>
+        <Typography component="h2">{profileName}</Typography>
 
-        <Typography>@killan james</Typography>
+        <Typography>{profileSubtitle}</Typography>
       </Box>
 
       <section className={styles.sidebarSection}>
@@ -46,10 +48,6 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({ conver
             <SharedFileItem key={file.id} file={file} />
           ))}
         </Box>
-
-        <button type="button" className={styles.viewAllButton} onClick={handleViewAllFiles}>
-          View all
-        </button>
       </section>
 
       <section className={styles.sidebarSection}>
@@ -61,7 +59,7 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({ conver
           </IconButton>
         </Box>
 
-        <button type="button" className={styles.addMember} onClick={handleAddMember}>
+        <button type="button" className={styles.addMember}>
           <span>
             <Add />
           </span>
@@ -69,7 +67,7 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({ conver
         </button>
 
         <Box className={styles.members}>
-          {chatMembers.map((member) => (
+          {members.map((member) => (
             <ChatMemberItem key={member.id} member={member} />
           ))}
         </Box>

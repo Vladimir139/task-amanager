@@ -1,5 +1,5 @@
 export interface ChatMember {
-  id: number;
+  id: string | number;
   name: string;
   avatar: string;
 }

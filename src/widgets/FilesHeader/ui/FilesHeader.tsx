@@ -3,27 +3,44 @@ import { Box, Button, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useRef } from "react";
 
+import { useUploadFileMutation } from "@/entities/file";
+import { useCreateFolderMutation } from "@/entities/folder";
+
 import styles from "./FilesHeader.module.scss";
 
 export const FilesHeader: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [createFolder, { isLoading: isCreatingFolder }] = useCreateFolderMutation();
+  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
 
-  const handleCreateFolder = () => {
-    console.log("Create folder");
+  const handleCreateFolder = async () => {
+    const name = window.prompt("Folder name");
+
+    if (!name?.trim()) {
+      return;
+    }
+
+    await createFolder({ color: "blue", name: name.trim() });
   };
 
   const handleUploadButtonClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files ?? []);
 
     if (selectedFiles.length === 0) {
       return;
     }
 
-    console.log("Uploaded files:", selectedFiles);
+    await Promise.all(
+      selectedFiles.map(async (file) =>
+        uploadFile({
+          file,
+        }).unwrap(),
+      ),
+    );
 
     event.target.value = "";
   };
@@ -38,20 +55,30 @@ export const FilesHeader: FC = () => {
           disableElevation
           startIcon={<Add />}
           className={styles.createFolderButton}
-          onClick={handleCreateFolder}
+          onClick={() => {
+            void handleCreateFolder();
+          }}
+          disabled={isCreatingFolder}
         >
-          Create New Folder
+          {isCreatingFolder ? "Creating..." : "Create New Folder"}
         </Button>
 
-        <input ref={fileInputRef} type="file" hidden multiple onChange={handleUpload} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          hidden
+          multiple
+          onChange={(event) => void handleUpload(event)}
+        />
 
         <Button
           variant="outlined"
           startIcon={<Link />}
           className={styles.uploadButton}
           onClick={handleUploadButtonClick}
+          disabled={isUploading}
         >
-          Upload
+          {isUploading ? "Uploading..." : "Upload"}
         </Button>
       </Box>
     </Box>

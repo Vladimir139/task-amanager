@@ -5,17 +5,29 @@ import type { SharedFileItemProps, SharedFileType } from "../model/types";
 import styles from "./SharedFileItem.module.scss";
 
 const fileIcons: Record<SharedFileType, ReactNode> = {
+  audio: <span>Au</span>,
+  document: <span>Doc</span>,
   figma: <span>Fg</span>,
+  illustrator: <span>Ai</span>,
+  image: <span>Img</span>,
+  other: <span>File</span>,
   sketch: <span>◆</span>,
-  xd: <span>Xd</span>,
   svg: <span>SVG</span>,
+  video: <span>Vid</span>,
+  xd: <span>Xd</span>,
 };
 
 const fileClassNames: Record<SharedFileType, string> = {
+  audio: styles.svgFile,
+  document: styles.sketchFile,
   figma: styles.figmaFile,
+  illustrator: styles.xdFile,
+  image: styles.figmaFile,
+  other: styles.sketchFile,
   sketch: styles.sketchFile,
-  xd: styles.xdFile,
   svg: styles.svgFile,
+  video: styles.xdFile,
+  xd: styles.xdFile,
 };
 
 export const SharedFileItem: FC<SharedFileItemProps> = ({ file }) => {

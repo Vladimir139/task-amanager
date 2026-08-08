@@ -1,7 +1,7 @@
 export type FolderColor = "blue" | "purple" | "yellow" | "green" | "red";
 
 export interface Folder {
-  id: number;
+  id: string | number;
   name: string;
   filesCount: number;
   color: FolderColor;

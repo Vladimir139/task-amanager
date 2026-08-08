@@ -12,6 +12,7 @@ export const BoardMemberAvatar: FC<BoardMemberAvatarProps> = ({
 }) => {
   return (
     <Avatar
+      src={member.avatarUrl}
       className={`${styles.avatar} ${size === "small" ? styles.small : ""} ${className ?? ""}`}
     >
       {member.initials}

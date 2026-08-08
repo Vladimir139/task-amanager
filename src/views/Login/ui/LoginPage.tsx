@@ -1,9 +1,12 @@
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC, FormEvent } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { setSession, useAppDispatch } from "@/app/store";
+import { useAppDispatch } from "@/app/store";
+import { mapAuthPayloadToAuthUser, userActions } from "@/entities/user";
+import { authActions, useLoginMutation } from "@/features/auth";
+import { saveStoredAuthTokens } from "@/shared/lib/auth/authStorage";
 
 import styles from "./LoginPage.module.scss";
 
@@ -21,6 +24,7 @@ export const LoginPage: FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [form, setForm] = useState<LoginFormState>(initialFormState);
+  const [login, { error, isLoading }] = useLoginMutation();
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
@@ -31,22 +35,29 @@ export const LoginPage: FC = () => {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
-    dispatch(
-      setSession({
-        accessToken: "frontend-demo-access-token",
-        refreshToken: "frontend-demo-refresh-token",
-        user: {
-          email: form.email,
-          firstName: "Demo",
-          lastName: "User",
-        },
-      }),
-    );
+    try {
+      const session = await login(form).unwrap();
 
-    void navigate("/dashboard", { replace: true });
+      dispatch(
+        authActions.setTokens({
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken,
+        }),
+      );
+      dispatch(userActions.setAuthData(mapAuthPayloadToAuthUser(session.user)));
+      dispatch(authActions.setInitialized(true));
+      saveStoredAuthTokens({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      });
+
+      await navigate("/dashboard", { replace: true });
+    } catch {
+      // handled by RTK Query error state
+    }
   };
 
   return (
@@ -85,10 +96,18 @@ export const LoginPage: FC = () => {
             placeholder="Password"
             fullWidth
           />
+
+          {error && <Alert severity="error">Unable to sign in. Check your credentials.</Alert>}
         </Stack>
 
-        <Button type="submit" variant="contained" size="large" className={styles.submitButton}>
-          Login
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          className={styles.submitButton}
+          disabled={isLoading}
+        >
+          {isLoading ? "Signing in..." : "Login"}
         </Button>
       </form>
 

@@ -1,7 +1,7 @@
 export type StorageType = "media" | "documents" | "music" | "other";
 
 export interface StorageItem {
-  id: number;
+  id: string | number;
   title: string;
   value: string;
   percentage: number;

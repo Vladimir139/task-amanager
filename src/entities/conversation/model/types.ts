@@ -1,5 +1,5 @@
 export interface Conversation {
-  id: number;
+  id: string | number;
   name: string;
   preview: string;
   time: string;

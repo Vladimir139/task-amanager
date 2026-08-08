@@ -6,16 +6,19 @@ import { useMemo, useState } from "react";
 import type { Conversation } from "@/entities/conversation";
 import { ConversationItem } from "@/entities/conversation";
 
-import { conversations } from "../model/conversations.data";
 import styles from "./ConversationsSidebar.module.scss";
 
 interface ConversationsSidebarProps {
-  activeConversationId: number;
-  onConversationSelect: (conversationId: number) => void;
+  activeConversationId: string | null;
+  conversations: Conversation[];
+  isLoading?: boolean;
+  onConversationSelect: (conversationId: string) => void;
 }
 
 export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
   activeConversationId,
+  conversations,
+  isLoading = false,
   onConversationSelect,
 }) => {
   const [search, setSearch] = useState("");
@@ -30,7 +33,7 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
     return conversations.filter((conversation) =>
       conversation.name.toLowerCase().includes(normalizedSearch),
     );
-  }, [search]);
+  }, [conversations, search]);
 
   const pinnedConversations = filteredConversations.slice(0, 3);
   const otherConversations = filteredConversations.slice(3);
@@ -40,7 +43,7 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
   };
 
   const handleConversationClick = (conversation: Conversation) => {
-    onConversationSelect(conversation.id);
+    onConversationSelect(String(conversation.id));
   };
 
   return (
@@ -67,12 +70,14 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
         }}
       />
 
+      {isLoading && <Typography>Loading conversations...</Typography>}
+
       <Box className={styles.conversationList}>
         {pinnedConversations.map((conversation) => (
           <ConversationItem
             key={conversation.id}
             conversation={conversation}
-            isActive={activeConversationId === conversation.id}
+            isActive={activeConversationId === String(conversation.id)}
             onClick={handleConversationClick}
           />
         ))}
@@ -87,7 +92,7 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
           <ConversationItem
             key={conversation.id}
             conversation={conversation}
-            isActive={activeConversationId === conversation.id}
+            isActive={activeConversationId === String(conversation.id)}
             onClick={handleConversationClick}
           />
         ))}

@@ -11,12 +11,18 @@ import type { ChangeEvent, FC, KeyboardEvent } from "react";
 import styles from "../ChatWindow/ChatWindow.module.scss";
 
 interface MessageComposerProps {
+  isSubmitting?: boolean;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
 }
 
-export const MessageComposer: FC<MessageComposerProps> = ({ value, onChange, onSubmit }) => {
+export const MessageComposer: FC<MessageComposerProps> = ({
+  isSubmitting = false,
+  value,
+  onChange,
+  onSubmit,
+}) => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value);
   };
@@ -55,7 +61,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({ value, onChange, onS
         <SentimentSatisfiedAlt />
       </IconButton>
 
-      <IconButton aria-label="Send message" onClick={onSubmit}>
+      <IconButton aria-label="Send message" onClick={onSubmit} disabled={isSubmitting}>
         <SendOutlined />
       </IconButton>
 

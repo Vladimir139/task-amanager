@@ -1,9 +1,9 @@
 import type { BoardMember } from "@/entities/boardMember";
 
-export type TaskCategory = "Design" | "Research" | "Planning" | "Content";
+export type TaskCategory = "Design" | "Research" | "Planning" | "Content" | "Development" | "Other";
 
 export interface BoardTask {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   category: TaskCategory;

@@ -12,67 +12,84 @@ import type { ChangeEvent, FC } from "react";
 import { useMemo, useState } from "react";
 
 import type { Project } from "@/entities/project";
-import { ProjectCard } from "@/entities/project";
+import { ProjectCard, useGetProjectsQuery } from "@/entities/project";
+import { useGetUsersQuery } from "@/entities/user";
+import { formatDateLabel, getInitials } from "@/shared/lib/formatters";
 
 import { projectFilterItems } from "../model/constants";
-import { projects } from "../model/projects.data";
 import type { ProjectFilter, ProjectSort, ViewMode } from "../model/types";
 import styles from "./ProjectsCatalog.module.scss";
 
-const sortProjects = (projectItems: Project[], sort: ProjectSort): Project[] => {
-  const sortedProjects = [...projectItems];
-
-  switch (sort) {
-    case "title":
-      return sortedProjects.sort((firstProject, secondProject) =>
-        firstProject.title.localeCompare(secondProject.title),
-      );
-
-    case "progress-asc":
-      return sortedProjects.sort(
-        (firstProject, secondProject) => firstProject.progress - secondProject.progress,
-      );
-
-    case "progress-desc":
-      return sortedProjects.sort(
-        (firstProject, secondProject) => secondProject.progress - firstProject.progress,
-      );
-
-    case "due-date":
-      return sortedProjects.sort(
-        (firstProject, secondProject) =>
-          new Date(firstProject.dueDate).getTime() - new Date(secondProject.dueDate).getTime(),
-      );
-
-    case "default":
-      return sortedProjects;
+const mapProjectStatus = (status: string): Project["status"] => {
+  if (status === "completed") {
+    return "completed";
   }
+
+  if (status === "on-hold" || status === "archived") {
+    return "on-hold";
+  }
+
+  return "active";
+};
+
+const mapProjectColor = (color: string): Project["color"] => {
+  if (["purple", "blue", "orange", "green", "red"].includes(color)) {
+    return color as Project["color"];
+  }
+
+  return "blue";
 };
 
 export const ProjectsCatalog: FC = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ProjectFilter>("all");
-
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-
   const [sort, setSort] = useState<ProjectSort>("default");
 
-  const filteredProjects = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+  const { data, isError, isLoading } = useGetProjectsQuery({
+    limit: 24,
+    page: 1,
+    search,
+    sort: sort === "default" ? undefined : sort,
+    status: status === "all" ? undefined : status,
+  });
+  const { data: users } = useGetUsersQuery();
 
-    const matchingProjects = projects.filter((project) => {
-      const matchesStatus = status === "all" || project.status === status;
+  const projects = useMemo(() => {
+    const userMap = new Map((users ?? []).map((user) => [user._id, user]));
 
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        project.title.toLowerCase().includes(normalizedSearch) ||
-        project.description.toLowerCase().includes(normalizedSearch);
+    return (data?.items ?? []).map((project) => {
+      const owner = userMap.get(project.ownerId);
+      const members = Array.from({ length: Math.min(project.memberCount, 4) }, (_, index) => {
+        if (owner && index === 0) {
+          return {
+            id: owner._id,
+            initials: getInitials(owner.firstName, owner.lastName),
+            name: `${owner.firstName} ${owner.lastName}`.trim(),
+          };
+        }
 
-      return matchesStatus && matchesSearch;
+        return {
+          id: `${project._id}-member-${index}`,
+          initials: `M${index + 1}`,
+          name: `Member ${index + 1}`,
+        };
+      });
+
+      return {
+        color: mapProjectColor(project.color),
+        description: project.description || "No description yet",
+        dueDate: formatDateLabel(project.dueDate),
+        id: project._id,
+        members,
+        progress: project.progressPercent,
+        status: mapProjectStatus(project.status),
+        tasksCompleted: project.completedTaskCount,
+        tasksTotal: Math.max(project.taskCount, project.completedTaskCount, 1),
+        title: project.title,
+      } satisfies Project;
     });
-
-    return sortProjects(matchingProjects, sort);
-  }, [search, sort, status]);
+  }, [data?.items, users]);
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -96,7 +113,7 @@ export const ProjectsCatalog: FC = () => {
         <Box className={styles.projectsToolbarTitle}>
           <Typography component="h2">All Projects</Typography>
 
-          <span>{filteredProjects.length}</span>
+          <span>{projects.length}</span>
         </Box>
 
         <Box className={styles.toolbarActions}>
@@ -198,9 +215,12 @@ export const ProjectsCatalog: FC = () => {
         </Box>
       </Box>
 
-      {filteredProjects.length > 0 ? (
+      {isError && <Typography>Unable to load projects.</Typography>}
+      {isLoading && <Typography>Loading projects...</Typography>}
+
+      {projects.length > 0 ? (
         <Box className={viewMode === "grid" ? styles.projectsGrid : styles.projectsList}>
-          {filteredProjects.map((project) => (
+          {projects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}

@@ -1,7 +1,12 @@
 import { Add, ArrowBackIosNew, ArrowForward, ArrowForwardIos, MoreVert } from "@mui/icons-material";
 import { Avatar, Box, Chip, IconButton, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+import { useGetBoardViewQuery } from "@/entities/board/api/boardsApi";
+import { useGetProjectsQuery } from "@/entities/project";
+import { useCreateTaskMutation } from "@/entities/task";
+import { getInitials } from "@/shared/lib/formatters";
 
 import { taskEmojis } from "../model/constants";
 import styles from "./NewTask.module.scss";
@@ -9,6 +14,20 @@ import styles from "./NewTask.module.scss";
 export const NewTask: FC = () => {
   const [taskTitle, setTaskTitle] = useState("Create new");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const { data: projects } = useGetProjectsQuery({ limit: 1, page: 1 });
+  const firstProject = projects?.items[0];
+  const { data: boardView } = useGetBoardViewQuery(firstProject?._id ?? "", {
+    skip: !firstProject?._id,
+  });
+  const [createTask, { isLoading }] = useCreateTaskMutation();
+
+  const collaborators = useMemo(() => {
+    return (boardView?.members ?? []).slice(0, 2).map((member) => ({
+      id: member._id,
+      initials: getInitials(member.firstName, member.lastName),
+      name: `${member.firstName} ${member.lastName}`.trim(),
+    }));
+  }, [boardView?.members]);
 
   const handleTaskTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTaskTitle(event.target.value);
@@ -18,20 +37,29 @@ export const NewTask: FC = () => {
     setSelectedEmoji(emoji);
   };
 
-  const handleCreateTask = () => {
+  const handleCreateTask = async () => {
     const normalizedTitle = taskTitle.trim();
+    const firstColumnId = boardView?.columns[0]?._id;
+    const boardId = boardView?.board._id;
 
-    if (!normalizedTitle) {
+    if (!normalizedTitle || !firstProject?._id || !boardId || !firstColumnId) {
       return;
     }
 
-    const newTask = {
+    await createTask({
+      assigneeIds: collaborators.map((collaborator) => String(collaborator.id)),
+      boardId,
+      category: "planning",
+      columnId: firstColumnId,
+      description: `Created from dashboard quick action for ${firstProject.title}`,
+      emoji: selectedEmoji ?? undefined,
+      priority: "medium",
+      projectId: firstProject._id,
       title: normalizedTitle,
-      emoji: selectedEmoji,
-      collaboratorIds: [1, 2],
-    };
+    }).unwrap();
 
-    console.log("Create task:", newTask);
+    setTaskTitle("");
+    setSelectedEmoji(null);
   };
 
   return (
@@ -44,7 +72,9 @@ export const NewTask: FC = () => {
         </IconButton>
       </Box>
 
-      <Typography className={styles.inputLabel}>Task Title - Artyfact (Project)</Typography>
+      <Typography className={styles.inputLabel}>
+        Task Title {firstProject ? `- ${firstProject.title}` : "- No project yet"}
+      </Typography>
 
       <TextField
         fullWidth
@@ -95,9 +125,14 @@ export const NewTask: FC = () => {
 
       <Box className={styles.collaborators}>
         <Box className={styles.collaboratorChips}>
-          <Chip avatar={<Avatar>AN</Avatar>} label="Angela" onDelete={() => undefined} />
-
-          <Chip avatar={<Avatar>CH</Avatar>} label="Chris" onDelete={() => undefined} />
+          {collaborators.map((collaborator) => (
+            <Chip
+              key={collaborator.id}
+              avatar={<Avatar>{collaborator.initials}</Avatar>}
+              label={collaborator.name}
+              onDelete={() => undefined}
+            />
+          ))}
 
           <IconButton className={styles.addCollaboratorButton} aria-label="Add collaborator">
             <Add />
@@ -107,7 +142,10 @@ export const NewTask: FC = () => {
         <IconButton
           className={styles.submitTaskButton}
           aria-label="Create task"
-          onClick={handleCreateTask}
+          onClick={() => {
+            void handleCreateTask();
+          }}
+          disabled={isLoading}
         >
           <ArrowForward />
         </IconButton>

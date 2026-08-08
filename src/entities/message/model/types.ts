@@ -1,5 +1,5 @@
 export interface Message {
-  id: number;
+  id: string | number;
   name: string;
   message: string;
   avatar: string;

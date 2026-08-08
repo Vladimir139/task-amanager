@@ -8,10 +8,12 @@ import type { BoardTaskCardProps, TaskCategory } from "../../model/types.ts";
 import styles from "./BoardTaskCard.module.scss";
 
 const categoryClassNames: Record<TaskCategory, string> = {
-  Design: styles.designCategory,
-  Research: styles.researchCategory,
-  Planning: styles.planningCategory,
   Content: styles.contentCategory,
+  Design: styles.designCategory,
+  Development: styles.planningCategory,
+  Other: styles.researchCategory,
+  Planning: styles.planningCategory,
+  Research: styles.researchCategory,
 };
 
 export const BoardTaskCard: FC<BoardTaskCardProps> = ({ task }) => {

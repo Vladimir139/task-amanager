@@ -1,61 +1,76 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
-import { useState } from "react";
 
-import { ChatMessageItem } from "@/entities/chatMessage";
-import { CHAT_DATE_LABEL, ChatHeader, chatMembers, chatMessages, MessageComposer } from "@/widgets";
+import type { ChatMember } from "@/entities/chatMember";
+import { type ChatMessage, ChatMessageItem } from "@/entities/chatMessage";
+import { ChatHeader, MessageComposer } from "@/widgets";
 
 import styles from "./ChatWindow.module.scss";
 
 interface ChatWindowProps {
-  conversationId: number;
+  avatar: string;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
+  members: ChatMember[];
+  membersCount: number;
+  messages: ChatMessage[];
+  newMessage: string;
+  onlineCount: number;
+  onMessageChange: (value: string) => void;
+  onMessageSubmit: () => void;
+  title: string;
 }
 
-export const ChatWindow: FC<ChatWindowProps> = ({ conversationId }) => {
-  const [newMessage, setNewMessage] = useState("");
-
-  const handleSubmit = () => {
-    const normalizedMessage = newMessage.trim();
-
-    if (!normalizedMessage) {
-      return;
-    }
-
-    console.log("Send message:", {
-      conversationId,
-      text: normalizedMessage,
-    });
-
-    setNewMessage("");
-  };
+export const ChatWindow: FC<ChatWindowProps> = ({
+  avatar,
+  isLoading = false,
+  isSubmitting = false,
+  members,
+  membersCount,
+  messages,
+  newMessage,
+  onlineCount,
+  onMessageChange,
+  onMessageSubmit,
+  title,
+}) => {
+  const firstMessage = messages[0];
+  const nextMessages = messages.slice(1);
 
   return (
     <section className={styles.chat}>
       <ChatHeader
-        title="Design Team"
-        avatar="/images/users/design-team.jpg"
-        members={chatMembers}
-        membersCount={60}
-        onlineCount={10}
+        title={title}
+        avatar={avatar}
+        members={members}
+        membersCount={membersCount}
+        onlineCount={onlineCount}
       />
 
       <Box className={styles.messages}>
-        {chatMessages.slice(0, 1).map((message) => (
-          <ChatMessageItem key={message.id} message={message} />
-        ))}
+        {isLoading && <Typography>Loading messages...</Typography>}
 
-        <Box className={styles.dateDivider}>
-          <span />
-          <Typography>{CHAT_DATE_LABEL}</Typography>
-          <span />
-        </Box>
+        {firstMessage && <ChatMessageItem key={firstMessage.id} message={firstMessage} />}
 
-        {chatMessages.slice(1).map((message) => (
+        {messages.length > 1 && (
+          <Box className={styles.dateDivider}>
+            <span />
+            <Typography>Conversation</Typography>
+            <span />
+          </Box>
+        )}
+
+        {nextMessages.map((message) => (
           <ChatMessageItem key={message.id} message={message} />
         ))}
       </Box>
 
-      <MessageComposer value={newMessage} onChange={setNewMessage} onSubmit={handleSubmit} />
+      <MessageComposer
+        value={newMessage}
+        onChange={onMessageChange}
+        onSubmit={onMessageSubmit}
+        isSubmitting={isSubmitting}
+      />
     </section>
   );
 };

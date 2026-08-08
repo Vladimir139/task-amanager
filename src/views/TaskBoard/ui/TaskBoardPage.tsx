@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import { TaskBoardColumns, TaskBoardHeader, TaskBoardSidebar } from "@/widgets";
@@ -11,13 +11,25 @@ export const TaskBoardPage: FC = () => {
     boardColumns,
     boardMembers,
     boardMessages,
+    hasBoard,
+    isLoading,
+    isSendingMessage,
     message,
+    sendMessage,
     setMessage,
     taskBoardEmoji,
     taskBoardExtraMembersCount,
     taskBoardMembersCount,
     taskBoardTitle,
   } = useTaskBoardPage();
+
+  if (isLoading) {
+    return <Typography>Loading board...</Typography>;
+  }
+
+  if (!hasBoard) {
+    return <Typography>No board available yet. Create a project first.</Typography>;
+  }
 
   return (
     <Box className={styles.page}>
@@ -38,6 +50,10 @@ export const TaskBoardPage: FC = () => {
         messages={boardMessages}
         message={message}
         onMessageChange={setMessage}
+        onMessageSubmit={() => {
+          void sendMessage();
+        }}
+        isSubmitting={isSendingMessage}
       />
     </Box>
   );

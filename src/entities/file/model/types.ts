@@ -1,7 +1,17 @@
-export type FileType = "document" | "image" | "figma" | "illustrator";
+export type FileType =
+  | "document"
+  | "image"
+  | "figma"
+  | "illustrator"
+  | "audio"
+  | "video"
+  | "sketch"
+  | "xd"
+  | "svg"
+  | "other";
 
 export interface RecentFile {
-  id: number;
+  id: string | number;
   name: string;
   size: string;
   lastModified: string;
