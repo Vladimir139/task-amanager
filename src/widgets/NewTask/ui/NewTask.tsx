@@ -1,5 +1,5 @@
-import { Add, ArrowBackIosNew, ArrowForward, ArrowForwardIos, MoreVert } from "@mui/icons-material";
-import { Avatar, Box, Chip, IconButton, TextField, Typography } from "@mui/material";
+import { ArrowForward } from "@mui/icons-material";
+import { Alert, Avatar, Box, Chip, IconButton, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import { taskEmojis, useQuickCreateTask } from "@/features/createTask";
@@ -8,13 +8,20 @@ import styles from "./NewTask.module.scss";
 
 export const NewTask: FC = () => {
   const {
+    canCreateTask,
     collaborators,
     currentProjectTitle,
     handleCreateTask,
+    handleCollaboratorToggle,
     handleEmojiSelect,
     handleTaskTitleChange,
+    helperMessage,
     isLoading,
+    isProjectReady,
     selectedEmoji,
+    selectedCollaboratorIds,
+    statusMessage,
+    statusTone,
     taskTitle,
   } = useQuickCreateTask();
 
@@ -22,21 +29,21 @@ export const NewTask: FC = () => {
     <section className={styles.newTaskSection}>
       <Box className={styles.newTaskHeader}>
         <Typography component="h2">New Task</Typography>
-
-        <IconButton aria-label="Task menu">
-          <MoreVert />
-        </IconButton>
       </Box>
 
       <Typography className={styles.inputLabel}>
         Task Title {currentProjectTitle ? `- ${currentProjectTitle}` : "- No project yet"}
       </Typography>
 
+      {statusMessage && statusTone && <Alert severity={statusTone}>{statusMessage}</Alert>}
+
       <TextField
         fullWidth
         value={taskTitle}
         onChange={handleTaskTitleChange}
         className={styles.taskInput}
+        placeholder="Enter task title"
+        disabled={!isProjectReady || isLoading}
         slotProps={{
           htmlInput: {
             "aria-label": "Task title",
@@ -45,10 +52,6 @@ export const NewTask: FC = () => {
       />
 
       <Box className={styles.emojiPicker}>
-        <IconButton aria-label="Previous emojis">
-          <ArrowBackIosNew />
-        </IconButton>
-
         <Box className={styles.emojis}>
           {taskEmojis.map((emoji) => {
             const isSelected = selectedEmoji === emoji;
@@ -69,30 +72,35 @@ export const NewTask: FC = () => {
             );
           })}
         </Box>
-
-        <IconButton aria-label="Next emojis">
-          <ArrowForwardIos />
-        </IconButton>
       </Box>
 
       <Box className={styles.newTaskDivider} />
 
-      <Typography className={styles.inputLabel}>Add Collaborators</Typography>
+      <Typography className={styles.inputLabel}>Collaborators</Typography>
+      <Typography className={styles.helperText}>{helperMessage}</Typography>
 
       <Box className={styles.collaborators}>
         <Box className={styles.collaboratorChips}>
-          {collaborators.map((collaborator) => (
-            <Chip
-              key={collaborator.id}
-              avatar={<Avatar>{collaborator.initials}</Avatar>}
-              label={collaborator.name}
-              onDelete={() => undefined}
-            />
-          ))}
+          {collaborators.length === 0 ? (
+            <Typography className={styles.helperText}>No collaborators available.</Typography>
+          ) : (
+            collaborators.map((collaborator) => {
+              const isSelected = selectedCollaboratorIds.includes(collaborator.id);
 
-          <IconButton className={styles.addCollaboratorButton} aria-label="Add collaborator">
-            <Add />
-          </IconButton>
+              return (
+                <Chip
+                  key={collaborator.id}
+                  avatar={<Avatar>{collaborator.initials}</Avatar>}
+                  label={collaborator.name}
+                  variant={isSelected ? "filled" : "outlined"}
+                  className={isSelected ? styles.selectedCollaboratorChip : undefined}
+                  onClick={() => {
+                    handleCollaboratorToggle(collaborator.id);
+                  }}
+                />
+              );
+            })
+          )}
         </Box>
 
         <IconButton
@@ -101,7 +109,7 @@ export const NewTask: FC = () => {
           onClick={() => {
             void handleCreateTask();
           }}
-          disabled={isLoading}
+          disabled={!canCreateTask || isLoading}
         >
           <ArrowForward />
         </IconButton>

@@ -8,5 +8,6 @@ export interface Task {
 }
 
 export interface TaskCardProps {
+  onOpen?: () => void;
   task: Task;
 }

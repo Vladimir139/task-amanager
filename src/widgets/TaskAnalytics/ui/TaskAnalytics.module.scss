@@ -56,6 +56,31 @@ $track: #eef2ff;
   }
 }
 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 18px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  :global(.MuiTypography-root) {
+    color: $primary-dark;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
 .chart {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
@@ -84,11 +109,18 @@ $track: #eef2ff;
   border-radius: 20px;
 }
 
-.chartBarValue {
+.chartBarStack {
+  display: flex;
+  flex-direction: column-reverse;
   width: 100%;
   min-height: 12px;
-  background: linear-gradient(180deg, #5bc0ff 0%, $blue 100%);
+  overflow: hidden;
   border-radius: 14px;
+}
+
+.chartBarValue {
+  width: 100%;
+  min-height: 8px;
 }
 
 .chartLabel,

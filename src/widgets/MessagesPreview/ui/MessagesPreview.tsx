@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import { useGetDashboardMessagesPreviewQuery } from "@/entities/dashboard/api/dashboardApi";
+import { useGetDashboardMessagesPreviewQuery } from "@/entities/dashboard";
 import { MessageItem } from "@/entities/message";
 import { useGetUsersQuery } from "@/entities/user";
 import { getInitials } from "@/shared/lib/formatters";
@@ -12,7 +12,9 @@ const colors = ["#f5a623", "#ff7285", "#5ac8e8", "#8e72d8", "#3ad29f"];
 
 export const MessagesPreview: FC = () => {
   const { data, isError, isLoading } = useGetDashboardMessagesPreviewQuery();
-  const { data: users } = useGetUsersQuery();
+  const { data: users } = useGetUsersQuery(undefined, {
+    skip: !data?.length,
+  });
 
   const userMap = new Map((users ?? []).map((user) => [user._id, user]));
   const messages =
@@ -35,6 +37,9 @@ export const MessagesPreview: FC = () => {
 
       {isError && <Typography>Unable to load messages.</Typography>}
       {isLoading && <Typography>Loading messages...</Typography>}
+      {!isLoading && !isError && messages.length === 0 && (
+        <Typography>No recent messages yet.</Typography>
+      )}
 
       <Box className={styles.messagesList}>
         {messages.map((message) => (

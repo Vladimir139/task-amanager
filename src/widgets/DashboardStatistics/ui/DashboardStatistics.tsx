@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import { useGetDashboardSummaryQuery } from "@/entities/dashboard/api/dashboardApi";
+import { useGetDashboardSummaryQuery } from "@/entities/dashboard";
 import { type Statistic, StatisticCard } from "@/entities/statistic";
 
 import styles from "./DashboardStatistics.module.scss";
@@ -37,12 +37,15 @@ export const DashboardStatistics: FC = () => {
     return <Typography>Unable to load dashboard statistics.</Typography>;
   }
 
+  if (isLoading && !data) {
+    return <Typography>Loading dashboard statistics...</Typography>;
+  }
+
   return (
     <Box className={styles.statistics}>
       {statistics.map((statistic) => (
         <StatisticCard key={statistic.id} statistic={statistic} />
       ))}
-      {isLoading && <Typography>Loading statistics...</Typography>}
     </Box>
   );
 };

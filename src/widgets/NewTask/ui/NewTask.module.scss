@@ -9,16 +9,12 @@ $border: #eceef5;
 .newTaskHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
 
   h2 {
     color: $primary-dark;
     font-size: 21px;
     font-weight: 700;
-  }
-
-  button {
-    color: #ccd1dd;
   }
 }
 
@@ -28,6 +24,11 @@ $border: #eceef5;
   color: #7c87a3;
   font-size: 12px !important;
   font-weight: 500 !important;
+}
+
+.helperText {
+  color: #667085;
+  font-size: 12px !important;
 }
 
 .taskInput {
@@ -52,17 +53,6 @@ $border: #eceef5;
   display: flex;
   align-items: center;
   margin-top: 10px;
-
-  > button {
-    width: 26px;
-    height: 32px;
-    padding: 0;
-    color: $primary;
-  }
-
-  svg {
-    font-size: 15px;
-  }
 }
 
 .emojis {
@@ -109,6 +99,7 @@ $border: #eceef5;
 
 .collaboratorChips {
   display: flex;
+  flex-wrap: wrap;
   min-width: 0;
   align-items: center;
   gap: 8px;
@@ -118,6 +109,7 @@ $border: #eceef5;
     color: $primary;
     background: #f1f2ff;
     font-size: 11px;
+    cursor: pointer;
   }
 
   :global(.MuiAvatar-root) {
@@ -132,15 +124,16 @@ $border: #eceef5;
   }
 }
 
-.addCollaboratorButton {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  color: #7f8aa8 !important;
-  background: #f1f3f7 !important;
+.selectedCollaboratorChip {
+  :global(.MuiChip-root),
+  & {
+    color: #ffffff;
+    background: $primary !important;
+  }
 
-  svg {
-    font-size: 18px;
+  :global(.MuiAvatar-root) {
+    color: $primary;
+    background: #ffffff;
   }
 }
 

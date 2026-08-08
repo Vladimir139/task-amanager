@@ -6,11 +6,16 @@ import type { TaskCardProps } from "@/entities/task";
 
 import styles from "./TaskCard.module.scss";
 
-export const TaskCard: FC<TaskCardProps> = ({ task }) => {
+export const TaskCard: FC<TaskCardProps> = ({ onOpen, task }) => {
   return (
     <Paper className={styles.taskCard} elevation={0}>
       <Box className={styles.taskStart}>
-        <IconButton className={styles.playButton} aria-label={`Start task ${task.title}`}>
+        <IconButton
+          className={styles.playButton}
+          aria-label={`Open task ${task.title}`}
+          onClick={onOpen}
+          disabled={!onOpen}
+        >
           <PlayArrow />
         </IconButton>
 
@@ -53,9 +58,9 @@ export const TaskCard: FC<TaskCardProps> = ({ task }) => {
         />
       </Box>
 
-      <button type="button" className={styles.reminderButton}>
+      <button type="button" className={styles.reminderButton} onClick={onOpen} disabled={!onOpen}>
         <TimerOutlined />
-        Reminder
+        Open task
       </button>
     </Paper>
   );
