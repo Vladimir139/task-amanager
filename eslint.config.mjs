@@ -52,6 +52,7 @@ export default [
       "build/**",
       "out/**",
       "coverage/**",
+      "steiger.config.ts",
     ],
   },
 
@@ -219,9 +220,8 @@ export default [
       },
 
       "import/resolver": {
-        alias: {
-          map: [["@", path.resolve(__dirname, "src")]],
-          extensions: [".ts", ".js", ".jsx", ".json", ".tsx"],
+        typescript: {
+          project: ["./tsconfig.app.json", "./tsconfig.node.json"],
         },
       },
     },
