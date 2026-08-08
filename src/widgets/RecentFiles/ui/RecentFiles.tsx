@@ -8,7 +8,7 @@ import {
   useDeleteFileMutation,
   useGetRecentFilesQuery,
 } from "@/entities/file";
-import { useGetFolderByIdQuery, useSelectedFolderId } from "@/entities/folder";
+import { useSelectedFolder } from "@/entities/folder";
 import { useSelectedProjectId } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
 import { formatBytes, formatDateLabel, getInitials } from "@/shared/lib/formatters";
@@ -41,7 +41,7 @@ const mapFileType = (kind: string): RecentFile["type"] => {
 
 export const RecentFiles: FC = () => {
   const selectedProjectId = useSelectedProjectId();
-  const selectedFolderId = useSelectedFolderId();
+  const { selectedFolder, selectedFolderId } = useSelectedFolder();
   const [sortField, setSortField] = useState<RecentFilesSortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
@@ -55,9 +55,6 @@ export const RecentFiles: FC = () => {
   );
   const { data: users } = useGetUsersQuery();
   const [deleteFile] = useDeleteFileMutation();
-  const { data: selectedFolder } = useGetFolderByIdQuery(selectedFolderId ?? "", {
-    skip: !selectedFolderId,
-  });
 
   const handleDeleteFile = useCallback(
     async (fileId: string): Promise<void> => {

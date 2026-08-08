@@ -27,8 +27,9 @@ import { useRemoveConversationMemberMutation } from "@/features/removeConversati
 import { useUpdateConversationMutation } from "@/features/updateConversation";
 import { baseApi, type ConversationRecord, type UserRecord } from "@/shared/api";
 import { getMessagesRoute } from "@/shared/config/router";
+import { getApiErrorMessage } from "@/shared/lib/api";
 import { formatBytes, formatConversationTime, formatDateTimeLabel } from "@/shared/lib/formatters";
-import { useRealtimeSocket } from "@/shared/lib/realtime";
+import { mergePresenceState, setPresenceState, useRealtimeSocket } from "@/shared/lib/realtime";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 const getConversationDisplay = (
@@ -88,19 +89,6 @@ const mapSharedType = (kind: string): SharedFile["type"] => {
   }
 
   return "other";
-};
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (!error || typeof error !== "object" || !("data" in error)) {
-    return fallback;
-  }
-
-  const data = error.data as { message?: string | string[] };
-  if (Array.isArray(data.message)) {
-    return data.message[0] ?? fallback;
-  }
-
-  return data.message ?? fallback;
 };
 
 interface UseMessagesWorkspaceResult {
@@ -287,24 +275,15 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     };
 
     const handlePresenceChanged = (presence: Record<string, boolean>): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        ...presence,
-      }));
+      setPresenceByUserId((currentState) => mergePresenceState(currentState, presence));
     };
 
     const handleOnline = ({ userId }: { userId: string }): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        [userId]: true,
-      }));
+      setPresenceByUserId((currentState) => setPresenceState(currentState, userId, true));
     };
 
     const handleOffline = ({ userId }: { userId: string }): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        [userId]: false,
-      }));
+      setPresenceByUserId((currentState) => setPresenceState(currentState, userId, false));
     };
 
     if (presenceSocket.connected) {
@@ -594,6 +573,24 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       })) ?? []
     );
   }, [conversationFiles]);
+  const attachmentsByMessageId = useMemo(() => {
+    const nextState = new Map<string, Array<{ id: string; image: string }>>();
+
+    for (const file of conversationFiles ?? []) {
+      if (!file.messageId || !file.previewUrl) {
+        continue;
+      }
+
+      const attachments = nextState.get(file.messageId) ?? [];
+      attachments.push({
+        id: file._id,
+        image: file.previewUrl ?? file.downloadUrl ?? "",
+      });
+      nextState.set(file.messageId, attachments);
+    }
+
+    return nextState;
+  }, [conversationFiles]);
 
   const activeTypingUserIds =
     (activeConversationId ? typingUsersByConversationId[activeConversationId] : undefined) ??
@@ -647,6 +644,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       return;
     }
 
+    if (normalizedTitle === selectedConversationTitle) {
+      return;
+    }
+
     setManagementStatusMessage(null);
     setManagementStatusTone(null);
 
@@ -659,13 +660,14 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       setManagementStatusMessage("Conversation title updated.");
       setManagementStatusTone("success");
     } catch (error) {
-      setManagementStatusMessage(getErrorMessage(error, "Unable to update the conversation."));
+      setManagementStatusMessage(getApiErrorMessage(error, "Unable to update the conversation."));
       setManagementStatusTone("error");
     }
   }, [
     activeConversationId,
     canManageConversation,
     conversationTitleDraft,
+    selectedConversationTitle,
     selectedConversation?.type,
     updateConversation,
   ]);
@@ -695,7 +697,9 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       setManagementStatusMessage("Conversation member added.");
       setManagementStatusTone("success");
     } catch (error) {
-      setManagementStatusMessage(getErrorMessage(error, "Unable to add the conversation member."));
+      setManagementStatusMessage(
+        getApiErrorMessage(error, "Unable to add the conversation member."),
+      );
       setManagementStatusTone("error");
     }
   }, [
@@ -730,7 +734,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         setManagementStatusTone("success");
       } catch (error) {
         setManagementStatusMessage(
-          getErrorMessage(error, "Unable to remove the conversation member."),
+          getApiErrorMessage(error, "Unable to remove the conversation member."),
         );
         setManagementStatusTone("error");
       }
@@ -815,7 +819,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       setStatusMessage("Message updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the message."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the message."));
       setStatusTone("error");
     }
   }, [editingMessageId, editingMessageText, updateMessage]);
@@ -843,7 +847,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         setStatusMessage("Message deleted.");
         setStatusTone("success");
       } catch (error) {
-        setStatusMessage(getErrorMessage(error, "Unable to delete the message."));
+        setStatusMessage(getApiErrorMessage(error, "Unable to delete the message."));
         setStatusTone("error");
       }
     },
@@ -957,7 +961,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         setStatusMessage("Images shared.");
         setStatusTone("success");
       } catch (error) {
-        setStatusMessage(getErrorMessage(error, "Unable to share the selected images."));
+        setStatusMessage(getApiErrorMessage(error, "Unable to share the selected images."));
         setStatusTone("error");
       }
     })();
@@ -998,7 +1002,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         setStatusMessage("Audio message sent.");
         setStatusTone("success");
       } catch (error) {
-        setStatusMessage(getErrorMessage(error, "Unable to send the audio message."));
+        setStatusMessage(getApiErrorMessage(error, "Unable to send the audio message."));
         setStatusTone("error");
       }
     })();
@@ -1024,7 +1028,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       setNewMessage("");
       stopTyping(activeConversationId);
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to send the message."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to send the message."));
       setStatusTone("error");
     }
   };
@@ -1033,12 +1037,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     return (
       conversationMessages?.map((message) => {
         const author = userMap.get(message.authorId);
-        const attachments = (conversationFiles ?? [])
-          .filter((file) => file.messageId === message._id && file.previewUrl)
-          .map((file) => ({
-            id: file._id,
-            image: file.previewUrl ?? file.downloadUrl ?? "",
-          }));
+        const attachments = attachmentsByMessageId.get(message._id) ?? [];
 
         return {
           attachments: attachments.length > 0 ? attachments : undefined,
@@ -1072,7 +1071,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       }) ?? []
     );
   }, [
-    conversationFiles,
+    attachmentsByMessageId,
     conversationMessages,
     currentUser?.id,
     editingMessageId,

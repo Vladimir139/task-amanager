@@ -26,6 +26,7 @@ export const ProjectManagementPanel: FC = () => {
     handleSelectedUserChange,
     isDeletingProject,
     isLoading,
+    isProjectDirty,
     isMutating,
     memberItems,
     projectForm,
@@ -81,7 +82,9 @@ export const ProjectManagementPanel: FC = () => {
             onClick={() => {
               void handleSaveProject();
             }}
-            disabled={!canManageProject || isMutating || !projectForm.title.trim()}
+            disabled={
+              !canManageProject || isMutating || !projectForm.title.trim() || !isProjectDirty
+            }
           >
             Save project
           </Button>

@@ -15,6 +15,7 @@ import {
 } from "@/features/boardCrud";
 import { type BoardColumnRecord, type BoardRecord, type TaskRecord } from "@/shared/api/types";
 import { getTasksRoute } from "@/shared/config/router";
+import { getApiErrorMessage } from "@/shared/lib/api";
 
 interface BoardFormState {
   description: string;
@@ -41,6 +42,7 @@ interface ColumnItem {
   color: string;
   deleteTargetColumnId: string;
   deleteTargetOptions: Array<{ id: string; title: string }>;
+  hasChanges: boolean;
   id: string;
   isDefault: boolean;
   isLocked: boolean;
@@ -55,6 +57,7 @@ interface UseTaskBoardManagementPanelResult {
   canManageBoard: boolean;
   columnItems: ColumnItem[];
   createBoardForm: BoardFormState;
+  isBoardDirty: boolean;
   handleBoardFieldChange: (
     field: keyof BoardFormState,
   ) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -85,19 +88,6 @@ const initialBoardForm: BoardFormState = {
   description: "",
   emoji: "",
   title: "",
-};
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (!error || typeof error !== "object" || !("data" in error)) {
-    return fallback;
-  }
-
-  const data = error.data as { message?: string | string[] };
-  if (Array.isArray(data.message)) {
-    return data.message[0] ?? fallback;
-  }
-
-  return data.message ?? fallback;
 };
 
 const normalizeOptionalValue = (value: string): string | undefined => {
@@ -166,6 +156,9 @@ export const useTaskBoardManagementPanel = ({
     return columns.map((column) => {
       const draft = columnDrafts[column._id];
       const taskCount = tasksByColumn[column._id]?.length ?? 0;
+      const normalizedDraftTitle = draft?.title.trim() ?? column.title;
+      const normalizedDraftColor = normalizeOptionalValue(draft?.color ?? "");
+      const normalizedColumnColor = normalizeOptionalValue(column.color ?? "");
 
       return {
         color: draft?.color ?? column.color ?? "",
@@ -176,6 +169,8 @@ export const useTaskBoardManagementPanel = ({
             id: candidate._id,
             title: candidate.title,
           })),
+        hasChanges:
+          normalizedDraftTitle !== column.title || normalizedDraftColor !== normalizedColumnColor,
         id: column._id,
         isDefault: Boolean(board.isDefault),
         isLocked: column.isLocked ?? false,
@@ -196,6 +191,11 @@ export const useTaskBoardManagementPanel = ({
     isDeletingColumn;
 
   const canDeleteBoard = !board.isDefault;
+  const isBoardDirty =
+    boardForm.title.trim() !== board.title ||
+    normalizeOptionalValue(boardForm.emoji) !== normalizeOptionalValue(board.emoji ?? "") ||
+    normalizeOptionalValue(boardForm.description) !==
+      normalizeOptionalValue(board.description ?? "");
 
   const handleBoardFieldChange =
     (field: keyof BoardFormState) =>
@@ -262,7 +262,7 @@ export const useTaskBoardManagementPanel = ({
       setCreateBoardForm(initialBoardForm);
       await navigate(getTasksRoute(projectId, createdBoard._id));
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to create the board."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to create the board."));
       setStatusTone("error");
     }
   };
@@ -273,6 +273,10 @@ export const useTaskBoardManagementPanel = ({
     if (!title) {
       setStatusMessage("Board title is required.");
       setStatusTone("error");
+      return;
+    }
+
+    if (!isBoardDirty) {
       return;
     }
 
@@ -291,7 +295,7 @@ export const useTaskBoardManagementPanel = ({
       setStatusMessage("Board details updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the board."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the board."));
       setStatusTone("error");
     }
   };
@@ -318,7 +322,7 @@ export const useTaskBoardManagementPanel = ({
 
       await navigate(getTasksRoute(projectId, nextBoardId));
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to delete the board."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to delete the board."));
       setStatusTone("error");
     }
   };
@@ -348,7 +352,7 @@ export const useTaskBoardManagementPanel = ({
       setStatusMessage("Board column created.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to create the board column."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to create the board column."));
       setStatusTone("error");
     }
   };
@@ -356,10 +360,19 @@ export const useTaskBoardManagementPanel = ({
   const handleColumnSave = async (columnId: string): Promise<void> => {
     const draft = columnDrafts[columnId];
     const title = draft?.title.trim();
+    const currentColumn = columns.find((column) => column._id === columnId);
 
     if (!title) {
       setStatusMessage("Column title is required.");
       setStatusTone("error");
+      return;
+    }
+
+    if (
+      title === currentColumn?.title &&
+      normalizeOptionalValue(draft?.color ?? "") ===
+        normalizeOptionalValue(currentColumn?.color ?? "")
+    ) {
       return;
     }
 
@@ -378,7 +391,7 @@ export const useTaskBoardManagementPanel = ({
       setStatusMessage("Board column updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the board column."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the board column."));
       setStatusTone("error");
     }
   };
@@ -411,7 +424,7 @@ export const useTaskBoardManagementPanel = ({
       setStatusMessage("Board columns reordered.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to reorder board columns."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to reorder board columns."));
       setStatusTone("error");
     }
   };
@@ -440,7 +453,7 @@ export const useTaskBoardManagementPanel = ({
       setStatusMessage("Board column deleted.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to delete the board column."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to delete the board column."));
       setStatusTone("error");
     }
   };
@@ -451,6 +464,7 @@ export const useTaskBoardManagementPanel = ({
     canManageBoard,
     columnItems,
     createBoardForm,
+    isBoardDirty,
     handleBoardFieldChange,
     handleColumnDelete,
     handleColumnFieldChange,

@@ -16,6 +16,7 @@ import {
 } from "@/features/projectMembers";
 import { useUpdateProjectMutation } from "@/features/updateProject";
 import { getProjectsRoute, getTasksRoute } from "@/shared/config/router";
+import { getApiErrorMessage } from "@/shared/lib/api";
 import { getInitials } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
 
@@ -57,6 +58,7 @@ interface UseProjectManagementPanelResult {
   handleSaveProject: () => Promise<void>;
   handleSelectedUserChange: (event: ChangeEvent<HTMLInputElement>) => void;
   isDeletingProject: boolean;
+  isProjectDirty: boolean;
   isLoading: boolean;
   isMutating: boolean;
   memberItems: ProjectMemberItem[];
@@ -81,19 +83,6 @@ const formatDateInput = (value?: string | null): string => value?.split("T")[0] 
 
 const toIsoDate = (value: string): string | undefined =>
   value ? new Date(`${value}T00:00:00.000Z`).toISOString() : undefined;
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (!error || typeof error !== "object" || !("data" in error)) {
-    return fallback;
-  }
-
-  const data = error.data as { message?: string | string[] };
-  if (Array.isArray(data.message)) {
-    return data.message[0] ?? fallback;
-  }
-
-  return data.message ?? fallback;
-};
 
 export const useProjectManagementPanel = (): UseProjectManagementPanelResult => {
   const navigate = useNavigate();
@@ -159,6 +148,20 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
   }, [authUser?.id, projectMembers]);
 
   const canManageProject = currentUserRole === "owner" || currentUserRole === "admin";
+  const isProjectDirty = useMemo(() => {
+    if (!selectedProject) {
+      return false;
+    }
+
+    return (
+      projectForm.title.trim() !== selectedProject.title ||
+      projectForm.description !== (selectedProject.description ?? "") ||
+      projectForm.color !== selectedProject.color ||
+      projectForm.status !== selectedProject.status ||
+      projectForm.startDate !== formatDateInput(selectedProject.startDate) ||
+      projectForm.dueDate !== formatDateInput(selectedProject.dueDate)
+    );
+  }, [projectForm, selectedProject]);
 
   const memberItems = useMemo<ProjectMemberItem[]>(() => {
     const userMap = new Map(users.map((user) => [user._id, user]));
@@ -217,7 +220,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
   };
 
   const handleSaveProject = async (): Promise<void> => {
-    if (!selectedProjectId) {
+    if (!selectedProjectId || !isProjectDirty) {
       return;
     }
 
@@ -238,7 +241,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       setStatusMessage("Project details updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the project."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the project."));
       setStatusTone("error");
     }
   };
@@ -255,7 +258,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       await deleteProject(selectedProjectId).unwrap();
       await navigate(getProjectsRoute());
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to delete the project."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to delete the project."));
       setStatusTone("error");
     }
   };
@@ -279,7 +282,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       setStatusMessage("Project member added.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to add the project member."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to add the project member."));
       setStatusTone("error");
     }
   };
@@ -304,7 +307,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       setStatusMessage("Project member role updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the member role."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the member role."));
       setStatusTone("error");
     }
   };
@@ -325,7 +328,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       setStatusMessage("Project member removed.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to remove the member."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to remove the member."));
       setStatusTone("error");
     }
   };
@@ -344,6 +347,7 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     handleSaveProject,
     handleSelectedUserChange,
     isDeletingProject,
+    isProjectDirty,
     isLoading: isProjectLoading || isMembersLoading,
     isMutating:
       isUpdatingProject ||

@@ -6,42 +6,25 @@ import { useRef, useState } from "react";
 import { useUploadFileMutation } from "@/entities/file";
 import {
   type FolderColor,
+  folderColors,
   useCreateFolderMutation,
-  useGetFolderByIdQuery,
-  useSelectedFolderId,
+  useSelectedFolder,
 } from "@/entities/folder";
 import { useSelectedProjectId } from "@/entities/project";
+import { getApiErrorMessage } from "@/shared/lib/api";
 
 import styles from "./FilesHeader.module.scss";
-
-const folderColors: FolderColor[] = ["blue", "purple", "yellow", "green", "red"];
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (!error || typeof error !== "object" || !("data" in error)) {
-    return fallback;
-  }
-
-  const data = error.data as { message?: string | string[] };
-  if (Array.isArray(data.message)) {
-    return data.message[0] ?? fallback;
-  }
-
-  return data.message ?? fallback;
-};
 
 export const FilesHeader: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedProjectId = useSelectedProjectId();
-  const selectedFolderId = useSelectedFolderId();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const [folderName, setFolderName] = useState("");
-  const [folderColor, setFolderColor] = useState<FolderColor>("blue");
+  const [folderColor, setFolderColor] = useState<(typeof folderColors)[number]>("blue");
   const [createFolder, { isLoading: isCreatingFolder }] = useCreateFolderMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
-  const { data: selectedFolder } = useGetFolderByIdQuery(selectedFolderId ?? "", {
-    skip: !selectedFolderId,
-  });
+  const { selectedFolder, selectedFolderId } = useSelectedFolder();
 
   const handleCreateFolder = async (): Promise<void> => {
     const trimmedFolderName = folderName.trim();
@@ -67,7 +50,7 @@ export const FilesHeader: FC = () => {
       );
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to create the folder."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to create the folder."));
       setStatusTone("error");
     }
   };
@@ -104,7 +87,7 @@ export const FilesHeader: FC = () => {
       );
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to upload selected files."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to upload selected files."));
       setStatusTone("error");
     }
 

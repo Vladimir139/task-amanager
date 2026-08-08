@@ -40,6 +40,7 @@ export const TaskBoardManagementPanel: FC<TaskBoardManagementPanelProps> = ({
     handleNewColumnColorChange,
     handleNewColumnTitleChange,
     handleSaveBoard,
+    isBoardDirty,
     isMutating,
     newColumnColor,
     newColumnTitle,
@@ -123,7 +124,7 @@ export const TaskBoardManagementPanel: FC<TaskBoardManagementPanelProps> = ({
               onClick={() => {
                 void handleSaveBoard();
               }}
-              disabled={!canManageBoard || isMutating || !boardForm.title.trim()}
+              disabled={!canManageBoard || isMutating || !boardForm.title.trim() || !isBoardDirty}
             >
               Save board
             </Button>
@@ -283,7 +284,9 @@ export const TaskBoardManagementPanel: FC<TaskBoardManagementPanelProps> = ({
                   onClick={() => {
                     void handleColumnSave(column.id);
                   }}
-                  disabled={!canManageBoard || isMutating || !column.title.trim()}
+                  disabled={
+                    !canManageBoard || isMutating || !column.title.trim() || !column.hasChanges
+                  }
                 >
                   Save
                 </Button>

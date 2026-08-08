@@ -24,7 +24,7 @@ import {
   getInitials,
   normalizeCategoryLabel,
 } from "@/shared/lib/formatters";
-import { useRealtimeSocket } from "@/shared/lib/realtime";
+import { mergePresenceState, setPresenceState, useRealtimeSocket } from "@/shared/lib/realtime";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 interface UseTaskBoardWorkspaceResult {
@@ -166,24 +166,15 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     };
 
     const handlePresenceChanged = (presence: Record<string, boolean>): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        ...presence,
-      }));
+      setPresenceByUserId((currentState) => mergePresenceState(currentState, presence));
     };
 
     const handleOnline = ({ userId }: { userId: string }): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        [userId]: true,
-      }));
+      setPresenceByUserId((currentState) => setPresenceState(currentState, userId, true));
     };
 
     const handleOffline = ({ userId }: { userId: string }): void => {
-      setPresenceByUserId((currentState) => ({
-        ...currentState,
-        [userId]: false,
-      }));
+      setPresenceByUserId((currentState) => setPresenceState(currentState, userId, false));
     };
 
     if (presenceSocket.connected) {

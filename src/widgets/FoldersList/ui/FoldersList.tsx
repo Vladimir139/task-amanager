@@ -8,8 +8,9 @@ import {
   type Folder as FolderType,
   FolderCard,
   type FolderColor,
+  folderColors,
+  mapFolderColor,
   useDeleteFolderMutation,
-  useGetFolderByIdQuery,
   useGetFoldersQuery,
   useSelectedFolderId,
   useUpdateFolderMutation,
@@ -18,32 +19,10 @@ import { useSelectedProjectId } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
 import type { FolderRecord } from "@/shared/api/types";
 import { getFilesRoute } from "@/shared/config/router/routes";
+import { getApiErrorMessage } from "@/shared/lib/api";
 import { getInitials } from "@/shared/lib/formatters";
 
 import styles from "./FoldersList.module.scss";
-
-const folderColors: FolderColor[] = ["blue", "purple", "yellow", "green", "red"];
-
-const mapFolderColor = (color: string): FolderType["color"] => {
-  if (["blue", "purple", "yellow", "green", "red"].includes(color)) {
-    return color as FolderType["color"];
-  }
-
-  return "blue";
-};
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (!error || typeof error !== "object" || !("data" in error)) {
-    return fallback;
-  }
-
-  const data = error.data as { message?: string | string[] };
-  if (Array.isArray(data.message)) {
-    return data.message[0] ?? fallback;
-  }
-
-  return data.message ?? fallback;
-};
 
 export const FoldersList: FC = () => {
   const navigate = useNavigate();
@@ -51,19 +30,12 @@ export const FoldersList: FC = () => {
   const selectedFolderId = useSelectedFolderId();
   const { data, isError, isLoading } = useGetFoldersQuery();
   const { data: users } = useGetUsersQuery();
-  const {
-    data: selectedFolderRecord,
-    isError: isSelectedFolderError,
-    isLoading: isSelectedFolderLoading,
-  } = useGetFolderByIdQuery(selectedFolderId ?? "", {
-    skip: !selectedFolderId,
-  });
   const [updateFolder, { isLoading: isUpdatingFolder }] = useUpdateFolderMutation();
   const [deleteFolder, { isLoading: isDeletingFolder }] = useDeleteFolderMutation();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const [folderName, setFolderName] = useState("");
-  const [folderColor, setFolderColor] = useState<FolderColor>("blue");
+  const [folderColor, setFolderColor] = useState<(typeof folderColors)[number]>("blue");
 
   const userMap = useMemo(() => new Map((users ?? []).map((user) => [user._id, user])), [users]);
 
@@ -103,11 +75,8 @@ export const FoldersList: FC = () => {
       return null;
     }
 
-    return (
-      foldersById.get(selectedFolderId) ??
-      (selectedFolderRecord ? mapFolder(selectedFolderRecord) : null)
-    );
-  }, [foldersById, mapFolder, selectedFolderId, selectedFolderRecord]);
+    return foldersById.get(selectedFolderId) ?? null;
+  }, [foldersById, selectedFolderId]);
 
   const visibleFolders = useMemo(() => {
     const parentId = selectedFolder ? String(selectedFolder.id) : null;
@@ -151,7 +120,16 @@ export const FoldersList: FC = () => {
   };
 
   const handleSaveFolder = async (): Promise<void> => {
-    if (!selectedFolderId || !folderName.trim()) {
+    if (!selectedFolderId || !selectedFolder) {
+      return;
+    }
+
+    const trimmedFolderName = folderName.trim();
+    const hasFolderChanges =
+      trimmedFolderName.length > 0 &&
+      (trimmedFolderName !== selectedFolder.name || folderColor !== selectedFolder.color);
+
+    if (!hasFolderChanges) {
       return;
     }
 
@@ -162,12 +140,12 @@ export const FoldersList: FC = () => {
       await updateFolder({
         color: folderColor,
         folderId: selectedFolderId,
-        name: folderName.trim(),
+        name: trimmedFolderName,
       }).unwrap();
       setStatusMessage("Folder updated.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to update the folder."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the folder."));
       setStatusTone("error");
     }
   };
@@ -191,10 +169,15 @@ export const FoldersList: FC = () => {
       setStatusMessage("Folder deleted.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to delete the folder."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to delete the folder."));
       setStatusTone("error");
     }
   };
+
+  const isFolderDirty = selectedFolder
+    ? folderName.trim().length > 0 &&
+      (folderName.trim() !== selectedFolder.name || folderColor !== selectedFolder.color)
+    : false;
 
   return (
     <Paper className={styles.foldersSection} elevation={0}>
@@ -272,7 +255,7 @@ export const FoldersList: FC = () => {
             onClick={() => {
               void handleSaveFolder();
             }}
-            disabled={isUpdatingFolder || folderName.trim().length === 0}
+            disabled={isUpdatingFolder || !isFolderDirty}
           >
             {isUpdatingFolder ? "Saving..." : "Save"}
           </Button>
@@ -293,12 +276,9 @@ export const FoldersList: FC = () => {
 
       {isError && <Typography>Unable to load folders.</Typography>}
       {isLoading && <Typography>Loading folders...</Typography>}
-      {isSelectedFolderError && <Typography>Unable to load the selected folder.</Typography>}
-      {selectedFolderId &&
-        !selectedFolder &&
-        !isLoading &&
-        !isSelectedFolderLoading &&
-        !isSelectedFolderError && <Typography>Folder not found.</Typography>}
+      {selectedFolderId && !selectedFolder && !isLoading && !isError && (
+        <Typography>Folder not found.</Typography>
+      )}
       {!isLoading &&
         !isError &&
         (!selectedFolderId || Boolean(selectedFolder)) &&
