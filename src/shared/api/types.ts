@@ -17,6 +17,15 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+export interface NotificationSettingsRecord {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  messageSoundEnabled: boolean;
+  marketingEnabled: boolean;
+  taskAssignedEnabled: boolean;
+  messageReceivedEnabled: boolean;
+}
+
 export interface UserRecord {
   _id: string;
   email: string;
@@ -32,7 +41,7 @@ export interface UserRecord {
   lastActiveAt?: string | null;
   timezone?: string | null;
   locale?: string | null;
-  notificationSettings?: Record<string, boolean>;
+  notificationSettings?: NotificationSettingsRecord;
   createdAt?: string;
   updatedAt?: string;
 }

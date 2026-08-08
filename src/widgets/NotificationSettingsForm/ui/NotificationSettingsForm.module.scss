@@ -1,0 +1,37 @@
+.formSection {
+  width: 650px;
+  max-width: calc(100% - 58px);
+  margin-top: 30px;
+  margin-left: 58px;
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #eef0f5;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.settingTitle {
+  color: #262864;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settingDescription {
+  margin-top: 6px;
+  color: #707a96;
+  font-size: 13px;
+}
+
+.settingSwitch {
+  margin-right: 0;
+}

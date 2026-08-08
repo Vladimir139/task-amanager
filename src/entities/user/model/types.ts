@@ -18,6 +18,25 @@ export interface UserProfile {
   email: string;
   role: string;
   avatar: string;
+  timezone: string;
+  locale: string;
 }
 
-export type UserProfileField = "firstName" | "lastName" | "email" | "role";
+export interface UserNotificationSettings {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  messageSoundEnabled: boolean;
+  marketingEnabled: boolean;
+  taskAssignedEnabled: boolean;
+  messageReceivedEnabled: boolean;
+}
+
+export interface UserPasswordForm {
+  confirmPassword: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export type UserNotificationField = keyof UserNotificationSettings;
+export type UserPasswordField = keyof UserPasswordForm;
+export type UserProfileField = "firstName" | "lastName" | "email" | "role" | "timezone" | "locale";

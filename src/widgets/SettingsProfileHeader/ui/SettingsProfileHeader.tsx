@@ -7,6 +7,7 @@ interface SettingsProfileHeaderProps {
   avatar: string;
   firstName: string;
   isSaving?: boolean;
+  isSaveDisabled?: boolean;
   lastName: string;
   onCancel: () => void;
   onSave: () => void;
@@ -19,6 +20,7 @@ export const SettingsProfileHeader: FC<SettingsProfileHeaderProps> = ({
   onCancel,
   onSave,
   isSaving = false,
+  isSaveDisabled = false,
 }) => {
   const fullName = `${firstName} ${lastName}`.trim();
 
@@ -43,7 +45,7 @@ export const SettingsProfileHeader: FC<SettingsProfileHeaderProps> = ({
             disableElevation
             className={styles.saveButton}
             onClick={onSave}
-            disabled={isSaving}
+            disabled={isSaving || isSaveDisabled}
           >
             {isSaving ? "Saving..." : "Save"}
           </Button>

@@ -1,15 +1,31 @@
 import { baseApi } from "@/shared/api";
-import type { UserRecord } from "@/shared/api/types";
+import type { NotificationSettingsRecord, UserRecord } from "@/shared/api/types";
 
 export interface UpdateCurrentUserPayload {
   firstName: string;
   lastName: string;
   email: string;
   roleTitle: string;
+  timezone: string;
+  locale: string;
 }
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export type UpdateNotificationSettingsPayload = NotificationSettingsRecord;
 
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    changePassword: build.mutation<{ updated: true }, ChangePasswordPayload>({
+      query: (body) => ({
+        body,
+        method: "PATCH",
+        url: "/users/me/password",
+      }),
+    }),
     getCurrentUser: build.query<UserRecord, void>({
       providesTags: ["CurrentUser"],
       query: () => "/users/me",
@@ -24,6 +40,14 @@ export const usersApi = baseApi.injectEndpoints({
         body,
         method: "PATCH",
         url: "/users/me",
+      }),
+    }),
+    updateNotificationSettings: build.mutation<UserRecord, UpdateNotificationSettingsPayload>({
+      invalidatesTags: ["CurrentUser", "Users"],
+      query: (body) => ({
+        body,
+        method: "PATCH",
+        url: "/users/me/notifications-settings",
       }),
     }),
     uploadAvatar: build.mutation<UserRecord, File>({
@@ -43,8 +67,10 @@ export const usersApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useChangePasswordMutation,
   useGetCurrentUserQuery,
   useGetUsersQuery,
   useUpdateCurrentUserMutation,
+  useUpdateNotificationSettingsMutation,
   useUploadAvatarMutation,
 } = usersApi;
