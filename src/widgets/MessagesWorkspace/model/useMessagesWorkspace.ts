@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { type ChatMember } from "@/entities/chatMember";
@@ -10,7 +10,14 @@ import {
   useSelectedConversationId,
 } from "@/entities/conversation";
 import { type Conversation } from "@/entities/conversation";
-import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
+import { useUploadFileMutation } from "@/entities/file";
+import {
+  useDeleteMessageMutation,
+  useGetConversationMessagesQuery,
+  useSendMessageMutation,
+  useUpdateMessageMutation,
+  useUploadAudioMessageMutation,
+} from "@/entities/message";
 import { type SharedFile } from "@/entities/sharedFile";
 import { selectAuthUser } from "@/entities/user";
 import { useMarkConversationReadMutation } from "@/features/markConversationRead";
@@ -74,6 +81,19 @@ const mapSharedType = (kind: string): SharedFile["type"] => {
   return "other";
 };
 
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (!error || typeof error !== "object" || !("data" in error)) {
+    return fallback;
+  }
+
+  const data = error.data as { message?: string | string[] };
+  if (Array.isArray(data.message)) {
+    return data.message[0] ?? fallback;
+  }
+
+  return data.message ?? fallback;
+};
+
 interface UseMessagesWorkspaceResult {
   activeConversationId: string | null;
   chatMembers: ChatMember[];
@@ -82,15 +102,19 @@ interface UseMessagesWorkspaceResult {
   conversationName: string;
   conversationSubtitle: string;
   conversations: Conversation[];
+  handleAttachImages: (files: FileList | null) => void;
+  handleUploadAudio: (files: FileList | null) => void;
   hasConversations: boolean;
   isError: boolean;
   isLoading: boolean;
-  isSendingMessage: boolean;
+  isMutating: boolean;
   newMessage: string;
   onlineCount: number;
   selectConversation: (conversationId: string) => void;
   setNewMessage: (value: string) => void;
   sharedFiles: SharedFile[];
+  statusMessage: string | null;
+  statusTone: "error" | "success" | null;
   submitMessage: () => Promise<void>;
 }
 
@@ -99,6 +123,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   const currentUser = useAppSelector(selectAuthUser);
   const selectedConversationId = useSelectedConversationId();
   const [newMessage, setNewMessage] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState("");
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const {
     data: conversationsData,
     isError: isConversationsError,
@@ -154,6 +182,17 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     },
   );
   const [sendMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
+  const [updateMessage, { isLoading: isUpdatingMessage }] = useUpdateMessageMutation();
+  const [deleteMessage, { isLoading: isDeletingMessage }] = useDeleteMessageMutation();
+  const [uploadAudioMessage, { isLoading: isUploadingAudio }] = useUploadAudioMessageMutation();
+  const [uploadFile, { isLoading: isUploadingFiles }] = useUploadFileMutation();
+
+  useEffect(() => {
+    setEditingMessageId(null);
+    setEditingMessageText("");
+    setStatusMessage(null);
+    setStatusTone(null);
+  }, [activeConversationId]);
 
   const conversations = useMemo<Conversation[]>(() => {
     return (
@@ -220,6 +259,211 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     }));
   }, [conversationUsers]);
 
+  const sharedFiles = useMemo<SharedFile[]>(() => {
+    return (
+      conversationFiles?.map((file) => ({
+        id: file._id,
+        information: `${formatBytes(file.size)} · ${formatDateTimeLabel(file.createdAt)}`,
+        name: file.originalName,
+        type: mapSharedType(file.kind),
+      })) ?? []
+    );
+  }, [conversationFiles]);
+
+  const onlineCount = conversationUsers.filter((user) => user.presenceStatus === "online").length;
+  const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
+  const isMutating =
+    isSendingMessage ||
+    isUpdatingMessage ||
+    isDeletingMessage ||
+    isUploadingAudio ||
+    isUploadingFiles;
+
+  const selectConversation = (conversationId: string): void => {
+    void navigate(getMessagesRoute(conversationId));
+  };
+
+  const handleStartEditMessage = useCallback((messageId: string, text: string): void => {
+    setEditingMessageId(messageId);
+    setEditingMessageText(text);
+    setStatusMessage(null);
+    setStatusTone(null);
+  }, []);
+
+  const handleCancelEditMessage = useCallback((): void => {
+    setEditingMessageId(null);
+    setEditingMessageText("");
+    setStatusMessage(null);
+    setStatusTone(null);
+  }, []);
+
+  const handleSubmitEditMessage = useCallback(async (): Promise<void> => {
+    if (!editingMessageId) {
+      return;
+    }
+
+    const normalizedText = editingMessageText.trim();
+    if (!normalizedText) {
+      setStatusMessage("Message text is required.");
+      setStatusTone("error");
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await updateMessage({
+        messageId: editingMessageId,
+        text: normalizedText,
+      }).unwrap();
+
+      setEditingMessageId(null);
+      setEditingMessageText("");
+      setStatusMessage("Message updated.");
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error, "Unable to update the message."));
+      setStatusTone("error");
+    }
+  }, [editingMessageId, editingMessageText, updateMessage]);
+
+  const handleDeleteMessage = useCallback(
+    async (messageId: string): Promise<void> => {
+      if (!activeConversationId) {
+        return;
+      }
+
+      setStatusMessage(null);
+      setStatusTone(null);
+
+      try {
+        await deleteMessage({
+          conversationId: activeConversationId,
+          messageId,
+        }).unwrap();
+
+        if (editingMessageId === messageId) {
+          setEditingMessageId(null);
+          setEditingMessageText("");
+        }
+
+        setStatusMessage("Message deleted.");
+        setStatusTone("success");
+      } catch (error) {
+        setStatusMessage(getErrorMessage(error, "Unable to delete the message."));
+        setStatusTone("error");
+      }
+    },
+    [activeConversationId, deleteMessage, editingMessageId],
+  );
+
+  const handleAttachImages = (files: FileList | null): void => {
+    const selectedFiles = Array.from(files ?? []);
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    void (async () => {
+      if (!activeConversationId) {
+        return;
+      }
+
+      setStatusMessage(null);
+      setStatusTone(null);
+
+      try {
+        const uploadedFiles = await Promise.all(
+          selectedFiles.map(async (file) =>
+            uploadFile({
+              conversationId: activeConversationId,
+              file,
+              kind: file.type.startsWith("image/") ? "image" : undefined,
+            }).unwrap(),
+          ),
+        );
+
+        await sendMessage({
+          conversationId: activeConversationId,
+          fileIds: uploadedFiles.map((file) => file._id),
+          kind: "text",
+          text: newMessage.trim() || undefined,
+        }).unwrap();
+
+        setNewMessage("");
+        setStatusMessage("Images shared.");
+        setStatusTone("success");
+      } catch (error) {
+        setStatusMessage(getErrorMessage(error, "Unable to share the selected images."));
+        setStatusTone("error");
+      }
+    })();
+  };
+
+  const handleUploadAudio = (files: FileList | null): void => {
+    const file = files?.[0];
+    if (!file) {
+      return;
+    }
+
+    void (async () => {
+      if (!activeConversationId) {
+        return;
+      }
+
+      setStatusMessage(null);
+      setStatusTone(null);
+
+      try {
+        const uploadedAudio = await uploadAudioMessage({
+          conversationId: activeConversationId,
+          file,
+        }).unwrap();
+
+        await sendMessage({
+          audio: {
+            fileId: uploadedAudio._id,
+            durationMs: uploadedAudio.durationMs ?? undefined,
+            mimeType: uploadedAudio.mimeType,
+            waveform: uploadedAudio.waveform ?? undefined,
+          },
+          conversationId: activeConversationId,
+          kind: "audio",
+        }).unwrap();
+
+        setStatusMessage("Audio message sent.");
+        setStatusTone("success");
+      } catch (error) {
+        setStatusMessage(getErrorMessage(error, "Unable to send the audio message."));
+        setStatusTone("error");
+      }
+    })();
+  };
+
+  const submitMessage = async (): Promise<void> => {
+    const normalizedMessage = newMessage.trim();
+
+    if (!activeConversationId || !normalizedMessage) {
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await sendMessage({
+        conversationId: activeConversationId,
+        kind: "text",
+        text: normalizedMessage,
+      }).unwrap();
+
+      setNewMessage("");
+    } catch (error) {
+      setStatusMessage(getErrorMessage(error, "Unable to send the message."));
+      setStatusTone("error");
+    }
+  };
+
   const chatMessages = useMemo<ChatMessage[]>(() => {
     return (
       conversationMessages?.map((message) => {
@@ -235,8 +479,24 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
           attachments: attachments.length > 0 ? attachments : undefined,
           author: author ? `${author.firstName} ${author.lastName}`.trim() : "Teammate",
           avatar: author?.avatarUrl ?? "",
+          canDelete: message.authorId === currentUser?.id,
+          canEdit: message.authorId === currentUser?.id && Boolean(message.text),
           id: message._id,
+          editDraft: editingMessageId === message._id ? editingMessageText : (message.text ?? ""),
+          isEdited: message.isEdited,
+          isEditing: editingMessageId === message._id,
           isOwn: message.authorId === currentUser?.id,
+          onDelete: () => {
+            void handleDeleteMessage(message._id);
+          },
+          onEditCancel: handleCancelEditMessage,
+          onEditChange: setEditingMessageText,
+          onEditStart: () => {
+            handleStartEditMessage(message._id, message.text ?? "");
+          },
+          onEditSubmit: () => {
+            void handleSubmitEditMessage();
+          },
           text: message.text
             ? [message.text]
             : message.kind === "audio"
@@ -246,41 +506,18 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         };
       }) ?? []
     );
-  }, [conversationFiles, conversationMessages, currentUser?.id, userMap]);
-
-  const sharedFiles = useMemo<SharedFile[]>(() => {
-    return (
-      conversationFiles?.map((file) => ({
-        id: file._id,
-        information: `${formatBytes(file.size)} · ${formatDateTimeLabel(file.createdAt)}`,
-        name: file.originalName,
-        type: mapSharedType(file.kind),
-      })) ?? []
-    );
-  }, [conversationFiles]);
-
-  const onlineCount = conversationUsers.filter((user) => user.presenceStatus === "online").length;
-  const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
-
-  const selectConversation = (conversationId: string): void => {
-    void navigate(getMessagesRoute(conversationId));
-  };
-
-  const submitMessage = async (): Promise<void> => {
-    const normalizedMessage = newMessage.trim();
-
-    if (!activeConversationId || !normalizedMessage) {
-      return;
-    }
-
-    await sendMessage({
-      conversationId: activeConversationId,
-      kind: "text",
-      text: normalizedMessage,
-    }).unwrap();
-
-    setNewMessage("");
-  };
+  }, [
+    conversationFiles,
+    conversationMessages,
+    currentUser?.id,
+    editingMessageId,
+    editingMessageText,
+    handleCancelEditMessage,
+    handleDeleteMessage,
+    handleStartEditMessage,
+    handleSubmitEditMessage,
+    userMap,
+  ]);
 
   return {
     activeConversationId,
@@ -290,15 +527,19 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     conversationName: conversationDisplay.name,
     conversationSubtitle: conversationDisplay.subtitle,
     conversations,
+    handleAttachImages,
+    handleUploadAudio,
     hasConversations,
     isError,
     isLoading: isConversationsLoading || isDetailsLoading || isMessagesLoading,
-    isSendingMessage,
+    isMutating,
     newMessage,
     onlineCount,
     selectConversation,
     setNewMessage,
     sharedFiles,
+    statusMessage,
+    statusTone,
     submitMessage,
   };
 };

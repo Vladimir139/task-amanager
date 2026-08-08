@@ -2,9 +2,11 @@ import { baseApi } from "@/shared/api";
 import type { ActivityRecord, FileRecord, StorageSummaryRecord } from "@/shared/api/types";
 
 export interface UploadFilePayload {
+  conversationId?: string;
   file: File;
   folderId?: string;
   kind?: string;
+  messageId?: string;
   projectId?: string;
 }
 
@@ -24,7 +26,7 @@ export const filesApi = baseApi.injectEndpoints({
     }),
     uploadFile: build.mutation<FileRecord, UploadFilePayload>({
       invalidatesTags: ["Files", "Storage", "Activity", "Folders"],
-      query: ({ file, folderId, kind, projectId }) => {
+      query: ({ conversationId, file, folderId, kind, messageId, projectId }) => {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -38,6 +40,14 @@ export const filesApi = baseApi.injectEndpoints({
 
         if (projectId) {
           formData.append("projectId", projectId);
+        }
+
+        if (conversationId) {
+          formData.append("conversationId", conversationId);
+        }
+
+        if (messageId) {
+          formData.append("messageId", messageId);
         }
 
         return {

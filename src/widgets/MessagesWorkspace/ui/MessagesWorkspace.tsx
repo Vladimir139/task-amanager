@@ -17,12 +17,16 @@ export const MessagesWorkspace: FC = () => {
     conversationName,
     conversationSubtitle,
     conversations,
+    handleAttachImages,
+    handleUploadAudio,
     hasConversations,
     isError,
     isLoading,
-    isSendingMessage,
+    isMutating,
     newMessage,
     onlineCount,
+    statusMessage,
+    statusTone,
     selectConversation,
     setNewMessage,
     sharedFiles,
@@ -53,17 +57,21 @@ export const MessagesWorkspace: FC = () => {
 
       <ChatWindow
         avatar={conversationAvatar}
+        composerStatusMessage={statusMessage}
+        composerStatusTone={statusTone}
         title={conversationName}
         members={chatMembers}
         membersCount={chatMembers.length}
         onlineCount={onlineCount}
         messages={chatMessages}
         newMessage={newMessage}
+        onAttachImages={handleAttachImages}
         onMessageChange={setNewMessage}
         onMessageSubmit={() => {
           void submitMessage();
         }}
-        isSubmitting={isSendingMessage}
+        onUploadAudio={handleUploadAudio}
+        isSubmitting={isMutating}
         isLoading={isLoading}
       />
 

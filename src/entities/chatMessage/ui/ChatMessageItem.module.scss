@@ -29,11 +29,10 @@ $primary: #5355ff;
       color: #ffffff;
     }
 
-    button {
-      right: auto;
-      left: -34px;
-      color: #68728d;
-    }
+  }
+
+  .actionRow {
+    justify-content: flex-end;
   }
 }
 
@@ -50,6 +49,7 @@ $primary: #5355ff;
 .messageInformation {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 15px;
   margin-bottom: 8px;
 
@@ -85,19 +85,19 @@ $primary: #5355ff;
     line-height: 1.5;
   }
 
-  button {
-    position: absolute;
-    top: 50%;
-    right: -34px;
-    width: 29px;
-    height: 29px;
-    color: #6e7995;
-    transform: translateY(-50%);
+}
 
-    svg {
-      font-size: 18px;
-    }
-  }
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .messageAttachments {

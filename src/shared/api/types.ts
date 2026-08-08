@@ -120,6 +120,11 @@ export interface MessageRecord {
   fileIds: string[];
   audio?: MessageAudioRecord | null;
   isEdited?: boolean;
+  editedAt?: string | null;
+  editVersion?: number;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  systemPayload?: Record<string, unknown> | null;
   createdAt?: string;
   updatedAt?: string;
 }
