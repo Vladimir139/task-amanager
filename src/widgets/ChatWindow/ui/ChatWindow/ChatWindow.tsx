@@ -49,6 +49,9 @@ export const ChatWindow: FC<ChatWindowProps> = ({
 
       <Box className={styles.messages}>
         {isLoading && <Typography>Loading messages...</Typography>}
+        {!isLoading && messages.length === 0 && (
+          <Typography>No messages yet. Start the conversation.</Typography>
+        )}
 
         {firstMessage && <ChatMessageItem key={firstMessage.id} message={firstMessage} />}
 

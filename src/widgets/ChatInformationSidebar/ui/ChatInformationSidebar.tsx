@@ -1,5 +1,4 @@
-import { Add, ExpandMore } from "@mui/icons-material";
-import { Avatar, Box, IconButton, Typography } from "@mui/material";
+import { Avatar, Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
@@ -37,39 +36,28 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({
       <section className={styles.sidebarSection}>
         <Box className={styles.sidebarSectionHeader}>
           <Typography component="h3">Attachments</Typography>
-
-          <IconButton aria-label="Collapse attachments">
-            <ExpandMore />
-          </IconButton>
         </Box>
 
         <Box className={styles.files}>
-          {sharedFiles.map((file) => (
-            <SharedFileItem key={file.id} file={file} />
-          ))}
+          {sharedFiles.length > 0 ? (
+            sharedFiles.map((file) => <SharedFileItem key={file.id} file={file} />)
+          ) : (
+            <Typography>No shared files yet.</Typography>
+          )}
         </Box>
       </section>
 
       <section className={styles.sidebarSection}>
         <Box className={styles.sidebarSectionHeader}>
           <Typography component="h3">Members</Typography>
-
-          <IconButton aria-label="Collapse members">
-            <ExpandMore />
-          </IconButton>
         </Box>
 
-        <button type="button" className={styles.addMember}>
-          <span>
-            <Add />
-          </span>
-          Add Member
-        </button>
-
         <Box className={styles.members}>
-          {members.map((member) => (
-            <ChatMemberItem key={member.id} member={member} />
-          ))}
+          {members.length > 0 ? (
+            members.map((member) => <ChatMemberItem key={member.id} member={member} />)
+          ) : (
+            <Typography>No members found.</Typography>
+          )}
         </Box>
       </section>
     </aside>

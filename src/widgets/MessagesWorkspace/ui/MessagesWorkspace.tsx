@@ -17,18 +17,28 @@ export const MessagesWorkspace: FC = () => {
     conversationName,
     conversationSubtitle,
     conversations,
+    hasConversations,
+    isError,
     isLoading,
     isSendingMessage,
     newMessage,
     onlineCount,
-    setActiveConversationId,
+    selectConversation,
     setNewMessage,
     sharedFiles,
     submitMessage,
   } = useMessagesWorkspace();
 
-  if (!conversations.length && isLoading) {
+  if (isLoading && !hasConversations) {
     return <Typography>Loading conversations...</Typography>;
+  }
+
+  if (isError && !hasConversations) {
+    return <Typography>Unable to load conversations.</Typography>;
+  }
+
+  if (!hasConversations) {
+    return <Typography>No conversations yet.</Typography>;
   }
 
   return (
@@ -36,8 +46,9 @@ export const MessagesWorkspace: FC = () => {
       <ConversationsSidebar
         activeConversationId={activeConversationId}
         conversations={conversations}
+        isError={isError}
         isLoading={isLoading}
-        onConversationSelect={setActiveConversationId}
+        onConversationSelect={selectConversation}
       />
 
       <ChatWindow

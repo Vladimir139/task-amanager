@@ -9,6 +9,7 @@ export const conversationsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getConversationDetails: build.query<ConversationDetailsResponse, string>({
       providesTags: (_result, _error, conversationId) => [
+        "Conversations",
         { id: conversationId, type: "Conversations" },
       ],
       query: (conversationId) => `/conversations/${conversationId}`,
@@ -20,7 +21,13 @@ export const conversationsApi = baseApi.injectEndpoints({
       query: (conversationId) => `/conversations/${conversationId}/files`,
     }),
     getConversations: build.query<ConversationRecord[], void>({
-      providesTags: ["Conversations"],
+      providesTags: (result) => [
+        "Conversations",
+        ...(result ?? []).map((conversation) => ({
+          id: conversation._id,
+          type: "Conversations" as const,
+        })),
+      ],
       query: () => "/conversations",
     }),
   }),

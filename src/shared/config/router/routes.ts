@@ -66,3 +66,14 @@ export const getProjectsRoute = (projectId?: string): string => {
 
   return `${ROUTES.projects.page}?projectId=${encodeURIComponent(projectId)}`;
 };
+
+export const getMessagesRoute = (conversationId?: string): string => {
+  if (!conversationId) {
+    return ROUTES.messages.page;
+  }
+
+  const params = new URLSearchParams();
+  params.set("conversationId", conversationId);
+
+  return `${ROUTES.messages.page}?${params.toString()}`;
+};

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { type ChatMember } from "@/entities/chatMember";
 import { type ChatMessage } from "@/entities/chatMessage";
@@ -6,12 +7,15 @@ import {
   useGetConversationDetailsQuery,
   useGetConversationFilesQuery,
   useGetConversationsQuery,
+  useSelectedConversationId,
 } from "@/entities/conversation";
 import { type Conversation } from "@/entities/conversation";
 import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
 import { type SharedFile } from "@/entities/sharedFile";
 import { selectAuthUser } from "@/entities/user";
+import { useMarkConversationReadMutation } from "@/features/markConversationRead";
 import type { ConversationRecord, UserRecord } from "@/shared/api";
+import { getMessagesRoute } from "@/shared/config/router";
 import { formatBytes, formatConversationTime, formatDateTimeLabel } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
 
@@ -27,11 +31,12 @@ const getConversationDisplay = (
     const fullName = otherUser
       ? `${otherUser.firstName} ${otherUser.lastName}`.trim()
       : (conversation.title ?? "Direct chat");
+    const presenceLabel = otherUser?.presenceStatus === "online" ? "Online" : "Direct message";
 
     return {
       avatar: otherUser?.avatarUrl ?? conversation.avatarUrl ?? "",
       name: fullName,
-      subtitle: otherUser?.email ?? fullName,
+      subtitle: presenceLabel,
     };
   }
 
@@ -77,43 +82,77 @@ interface UseMessagesWorkspaceResult {
   conversationName: string;
   conversationSubtitle: string;
   conversations: Conversation[];
+  hasConversations: boolean;
+  isError: boolean;
   isLoading: boolean;
   isSendingMessage: boolean;
   newMessage: string;
   onlineCount: number;
-  setActiveConversationId: (conversationId: string) => void;
+  selectConversation: (conversationId: string) => void;
   setNewMessage: (value: string) => void;
   sharedFiles: SharedFile[];
   submitMessage: () => Promise<void>;
 }
 
 export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
+  const navigate = useNavigate();
   const currentUser = useAppSelector(selectAuthUser);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const selectedConversationId = useSelectedConversationId();
   const [newMessage, setNewMessage] = useState("");
-  const { data: conversationsData, isLoading: isConversationsLoading } = useGetConversationsQuery();
+  const {
+    data: conversationsData,
+    isError: isConversationsError,
+    isLoading: isConversationsLoading,
+  } = useGetConversationsQuery();
+  const [markConversationRead] = useMarkConversationReadMutation();
+
+  const hasConversations = (conversationsData?.length ?? 0) > 0;
+  const activeConversationId = useMemo(() => {
+    if (!selectedConversationId) {
+      return null;
+    }
+
+    if (!conversationsData) {
+      return selectedConversationId;
+    }
+
+    return conversationsData.some((conversation) => conversation._id === selectedConversationId)
+      ? selectedConversationId
+      : null;
+  }, [conversationsData, selectedConversationId]);
 
   useEffect(() => {
-    if (activeConversationId || !conversationsData?.length) {
+    if (!conversationsData?.length) {
       return;
     }
 
-    setActiveConversationId(conversationsData[0]._id);
-  }, [activeConversationId, conversationsData]);
+    if (selectedConversationId && activeConversationId) {
+      return;
+    }
 
-  const { data: conversationDetails, isLoading: isDetailsLoading } = useGetConversationDetailsQuery(
+    void navigate(getMessagesRoute(conversationsData[0]._id), { replace: true });
+  }, [activeConversationId, conversationsData, navigate, selectedConversationId]);
+
+  const {
+    data: conversationDetails,
+    isError: isDetailsError,
+    isLoading: isDetailsLoading,
+  } = useGetConversationDetailsQuery(activeConversationId ?? "", {
+    skip: !activeConversationId,
+  });
+  const {
+    data: conversationMessages,
+    isError: isMessagesError,
+    isLoading: isMessagesLoading,
+  } = useGetConversationMessagesQuery(activeConversationId ?? "", {
+    skip: !activeConversationId,
+  });
+  const { data: conversationFiles, isError: isFilesError } = useGetConversationFilesQuery(
     activeConversationId ?? "",
     {
       skip: !activeConversationId,
     },
   );
-  const { data: conversationMessages, isLoading: isMessagesLoading } =
-    useGetConversationMessagesQuery(activeConversationId ?? "", {
-      skip: !activeConversationId,
-    });
-  const { data: conversationFiles } = useGetConversationFilesQuery(activeConversationId ?? "", {
-    skip: !activeConversationId,
-  });
   const [sendMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
 
   const conversations = useMemo<Conversation[]>(() => {
@@ -143,6 +182,23 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       conversationsData?.find((conversation) => conversation._id === activeConversationId) ?? null,
     [activeConversationId, conversationsData],
   );
+
+  useEffect(() => {
+    if (
+      !activeConversationId ||
+      !selectedConversation ||
+      isMessagesLoading ||
+      (selectedConversation.unreadCount ?? 0) === 0 ||
+      (selectedConversation.lastSequence ?? 0) <= 0
+    ) {
+      return;
+    }
+
+    void markConversationRead({
+      conversationId: activeConversationId,
+      sequence: selectedConversation.lastSequence,
+    });
+  }, [activeConversationId, isMessagesLoading, markConversationRead, selectedConversation]);
 
   const conversationUsers = useMemo(
     () => conversationDetails?.users ?? selectedConversation?.members ?? [],
@@ -204,6 +260,11 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   }, [conversationFiles]);
 
   const onlineCount = conversationUsers.filter((user) => user.presenceStatus === "online").length;
+  const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
+
+  const selectConversation = (conversationId: string): void => {
+    void navigate(getMessagesRoute(conversationId));
+  };
 
   const submitMessage = async (): Promise<void> => {
     const normalizedMessage = newMessage.trim();
@@ -229,11 +290,13 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     conversationName: conversationDisplay.name,
     conversationSubtitle: conversationDisplay.subtitle,
     conversations,
+    hasConversations,
+    isError,
     isLoading: isConversationsLoading || isDetailsLoading || isMessagesLoading,
     isSendingMessage,
     newMessage,
     onlineCount,
-    setActiveConversationId,
+    selectConversation,
     setNewMessage,
     sharedFiles,
     submitMessage,

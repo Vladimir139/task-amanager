@@ -11,6 +11,7 @@ import styles from "./ConversationsSidebar.module.scss";
 interface ConversationsSidebarProps {
   activeConversationId: string | null;
   conversations: Conversation[];
+  isError?: boolean;
   isLoading?: boolean;
   onConversationSelect: (conversationId: string) => void;
 }
@@ -18,6 +19,7 @@ interface ConversationsSidebarProps {
 export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
   activeConversationId,
   conversations,
+  isError = false,
   isLoading = false,
   onConversationSelect,
 }) => {
@@ -30,13 +32,12 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
       return conversations;
     }
 
-    return conversations.filter((conversation) =>
-      conversation.name.toLowerCase().includes(normalizedSearch),
+    return conversations.filter(
+      (conversation) =>
+        conversation.name.toLowerCase().includes(normalizedSearch) ||
+        conversation.preview.toLowerCase().includes(normalizedSearch),
     );
   }, [conversations, search]);
-
-  const pinnedConversations = filteredConversations.slice(0, 3);
-  const otherConversations = filteredConversations.slice(3);
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -71,24 +72,17 @@ export const ConversationsSidebar: FC<ConversationsSidebarProps> = ({
       />
 
       {isLoading && <Typography>Loading conversations...</Typography>}
+      {isError && !isLoading && <Typography>Unable to refresh conversations.</Typography>}
+      {!isLoading && !isError && filteredConversations.length === 0 && (
+        <Typography>
+          {conversations.length === 0
+            ? "No conversations yet."
+            : "No conversations match your search."}
+        </Typography>
+      )}
 
       <Box className={styles.conversationList}>
-        {pinnedConversations.map((conversation) => (
-          <ConversationItem
-            key={conversation.id}
-            conversation={conversation}
-            isActive={activeConversationId === String(conversation.id)}
-            onClick={handleConversationClick}
-          />
-        ))}
-
-        {otherConversations.length > 0 && (
-          <Box className={styles.conversationDivider}>
-            <Typography>All Messages</Typography>
-          </Box>
-        )}
-
-        {otherConversations.map((conversation) => (
+        {filteredConversations.map((conversation) => (
           <ConversationItem
             key={conversation.id}
             conversation={conversation}
