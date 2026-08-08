@@ -6,9 +6,12 @@ export interface Folder {
   filesCount: number;
   color: FolderColor;
   members?: string[];
+  parentId?: string | null;
+  projectId?: string | null;
 }
 
 export interface FolderCardProps {
   folder: Folder;
+  isActive?: boolean;
   onClick?: (folder: Folder) => void;
 }

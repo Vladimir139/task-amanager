@@ -34,6 +34,11 @@ $green: #35cc6d;
   }
 }
 
+.activeFolderCard {
+  border-color: $primary;
+  box-shadow: 0 10px 24px rgb(83 85 255 / 12%);
+}
+
 .folderCardHeader {
   display: flex;
   align-items: flex-start;

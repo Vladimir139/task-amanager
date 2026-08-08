@@ -2,7 +2,7 @@ $primary: #5355ff;
 
 .pageHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
 
@@ -13,9 +13,16 @@ $primary: #5355ff;
   }
 }
 
+.contextText {
+  margin-top: 8px;
+  color: #7f8aa8;
+  font-size: 13px !important;
+}
+
 .pageActions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
 
   button {
@@ -26,6 +33,14 @@ $primary: #5355ff;
     font-weight: 600;
     text-transform: none;
   }
+}
+
+.folderNameField {
+  min-width: 210px !important;
+}
+
+.folderColorField {
+  min-width: 120px !important;
 }
 
 .createFolderButton {

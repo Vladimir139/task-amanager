@@ -1,5 +1,6 @@
 $primary: #5355ff;
 $title: #262864;
+$text: #7f8aa8;
 
 .foldersSection {
   padding: 25px 30px 30px;
@@ -15,21 +16,11 @@ $title: #262864;
 .foldersTitle {
   display: flex;
   align-items: center;
+  gap: 9px;
 
   > p {
-    margin-left: 9px;
     font-size: 13px;
     font-weight: 700;
-  }
-
-  button {
-    width: 29px;
-    height: 29px;
-    color: #7c87a3;
-
-    svg {
-      font-size: 20px;
-    }
   }
 }
 
@@ -47,24 +38,52 @@ $title: #262864;
   }
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .showAllButton {
   display: flex;
   height: 35px;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   padding: 0 15px;
-  color: $title;
-  background: #fafbff;
-  border: 0;
+  color: $title !important;
+  background: #fafbff !important;
+  border: 0 !important;
   border-radius: 7px;
-  cursor: pointer;
   font-size: 12px;
   font-weight: 600;
+  text-transform: none !important;
 
   svg {
     color: #74809b;
-    font-size: 20px;
+    font-size: 18px;
   }
+}
+
+.scopeText {
+  margin-top: 14px;
+  color: $text;
+  font-size: 13px !important;
+}
+
+.folderEditor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.folderNameField {
+  min-width: 220px !important;
+}
+
+.folderColorField {
+  min-width: 130px !important;
 }
 
 .foldersGrid {

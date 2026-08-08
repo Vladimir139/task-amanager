@@ -1,12 +1,20 @@
 import { Add, Link } from "@mui/icons-material";
-import { Alert, Box, Button, Typography } from "@mui/material";
+import { Alert, Box, Button, MenuItem, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useRef, useState } from "react";
 
 import { useUploadFileMutation } from "@/entities/file";
-import { useCreateFolderMutation } from "@/entities/folder";
+import {
+  type FolderColor,
+  useCreateFolderMutation,
+  useGetFolderByIdQuery,
+  useSelectedFolderId,
+} from "@/entities/folder";
+import { useSelectedProjectId } from "@/entities/project";
 
 import styles from "./FilesHeader.module.scss";
+
+const folderColors: FolderColor[] = ["blue", "purple", "yellow", "green", "red"];
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (!error || typeof error !== "object" || !("data" in error)) {
@@ -23,15 +31,22 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 
 export const FilesHeader: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectedProjectId = useSelectedProjectId();
+  const selectedFolderId = useSelectedFolderId();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+  const [folderName, setFolderName] = useState("");
+  const [folderColor, setFolderColor] = useState<FolderColor>("blue");
   const [createFolder, { isLoading: isCreatingFolder }] = useCreateFolderMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
+  const { data: selectedFolder } = useGetFolderByIdQuery(selectedFolderId ?? "", {
+    skip: !selectedFolderId,
+  });
 
   const handleCreateFolder = async (): Promise<void> => {
-    const name = window.prompt("Folder name");
+    const trimmedFolderName = folderName.trim();
 
-    if (!name?.trim()) {
+    if (!trimmedFolderName) {
       return;
     }
 
@@ -39,8 +54,17 @@ export const FilesHeader: FC = () => {
     setStatusTone(null);
 
     try {
-      await createFolder({ color: "blue", name: name.trim() }).unwrap();
-      setStatusMessage("Folder created.");
+      await createFolder({
+        color: folderColor,
+        name: trimmedFolderName,
+        parentId: selectedFolderId ?? undefined,
+        projectId: selectedProjectId ?? undefined,
+      }).unwrap();
+      setFolderName("");
+      setFolderColor("blue");
+      setStatusMessage(
+        selectedFolder ? `Folder created inside ${selectedFolder.name}.` : "Folder created.",
+      );
       setStatusTone("success");
     } catch (error) {
       setStatusMessage(getErrorMessage(error, "Unable to create the folder."));
@@ -67,6 +91,8 @@ export const FilesHeader: FC = () => {
         selectedFiles.map(async (file) =>
           uploadFile({
             file,
+            folderId: selectedFolderId ?? undefined,
+            projectId: selectedProjectId ?? undefined,
           }).unwrap(),
         ),
       );
@@ -90,9 +116,42 @@ export const FilesHeader: FC = () => {
       <Box>
         <Typography component="h1">Files</Typography>
         {statusMessage && statusTone && <Alert severity={statusTone}>{statusMessage}</Alert>}
+        <Typography className={styles.contextText}>
+          {selectedFolder
+            ? `Uploads and new folders will be added to ${selectedFolder.name}.`
+            : selectedProjectId
+              ? "Working inside the selected project."
+              : "Create folders and upload files for your workspace."}
+        </Typography>
       </Box>
 
       <Box className={styles.pageActions}>
+        <TextField
+          value={folderName}
+          onChange={(event) => {
+            setFolderName(event.target.value);
+          }}
+          size="small"
+          placeholder="Folder name"
+          className={styles.folderNameField}
+        />
+
+        <TextField
+          select
+          value={folderColor}
+          onChange={(event) => {
+            setFolderColor(event.target.value as FolderColor);
+          }}
+          size="small"
+          className={styles.folderColorField}
+        >
+          {folderColors.map((color) => (
+            <MenuItem key={color} value={color}>
+              {color}
+            </MenuItem>
+          ))}
+        </TextField>
+
         <Button
           variant="contained"
           disableElevation
@@ -101,9 +160,9 @@ export const FilesHeader: FC = () => {
           onClick={() => {
             void handleCreateFolder();
           }}
-          disabled={isCreatingFolder}
+          disabled={isCreatingFolder || folderName.trim().length === 0}
         >
-          {isCreatingFolder ? "Creating..." : "Create New Folder"}
+          {isCreatingFolder ? "Creating..." : "Create Folder"}
         </Button>
 
         <input

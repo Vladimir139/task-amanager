@@ -14,13 +14,17 @@ const folderClassNames: Record<FolderColor, string> = {
   red: styles.redFolder,
 };
 
-export const FolderCard: FC<FolderCardProps> = ({ folder, onClick }) => {
+export const FolderCard: FC<FolderCardProps> = ({ folder, isActive = false, onClick }) => {
   const handleClick = () => {
     onClick?.(folder);
   };
 
   return (
-    <button type="button" className={styles.folderCard} onClick={handleClick}>
+    <button
+      type="button"
+      className={`${styles.folderCard} ${isActive ? styles.activeFolderCard : ""}`}
+      onClick={handleClick}
+    >
       <Box className={styles.folderCardHeader}>
         <FolderIcon className={`${styles.folderIcon} ${folderClassNames[folder.color]}`} />
 

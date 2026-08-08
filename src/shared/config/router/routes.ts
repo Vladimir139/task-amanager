@@ -77,3 +77,21 @@ export const getMessagesRoute = (conversationId?: string): string => {
 
   return `${ROUTES.messages.page}?${params.toString()}`;
 };
+
+export const getFilesRoute = (projectId?: string, folderId?: string): string => {
+  if (!projectId && !folderId) {
+    return ROUTES.files.page;
+  }
+
+  const params = new URLSearchParams();
+
+  if (projectId) {
+    params.set("projectId", projectId);
+  }
+
+  if (folderId) {
+    params.set("folderId", folderId);
+  }
+
+  return `${ROUTES.files.page}?${params.toString()}`;
+};
