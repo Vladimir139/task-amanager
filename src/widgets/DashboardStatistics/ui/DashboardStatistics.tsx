@@ -15,21 +15,21 @@ export const DashboardStatistics: FC = () => {
       id: "completed",
       increase: String(data?.taskCompleted ?? 0),
       title: "Task Completed",
-      value: String(data?.taskCompleted ?? 0).padStart(2, "0"),
+      value: String(data?.taskCompleted ?? 0),
     },
     {
       color: "blue",
       id: "new-task",
       increase: String(data?.newTask ?? 0),
       title: "New Task",
-      value: String(data?.newTask ?? 0).padStart(2, "0"),
+      value: String(data?.newTask ?? 0),
     },
     {
       color: "red",
       id: "project-done",
       increase: String(data?.projectDone ?? 0),
       title: "Project Done",
-      value: String(data?.projectDone ?? 0).padStart(2, "0"),
+      value: String(data?.projectDone ?? 0),
     },
   ];
 

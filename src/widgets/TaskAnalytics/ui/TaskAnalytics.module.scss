@@ -1,6 +1,5 @@
 $primary-dark: #21235f;
 $blue: #16a8ff;
-$track: #eef2ff;
 
 .analyticsCard {
   margin-top: 30px;
@@ -81,63 +80,42 @@ $track: #eef2ff;
   border-radius: 999px;
 }
 
-.chart {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-  gap: 18px;
-  align-items: end;
-  min-height: 305px;
+.chartContainer {
   margin-top: 28px;
+  min-height: 320px;
 }
 
-.chartColumn {
+.chart {
+  width: 100%;
+}
+
+:global(.MuiChartsAxis-tickLabel),
+:global(.MuiChartsAxis-label),
+:global(.MuiChartsLegend-label) {
+  fill: $primary-dark;
+  font-family: inherit;
+}
+
+:global(.MuiLineElement-root) {
+  stroke-width: 3;
+}
+
+:global(.MuiMarkElement-root) {
+  display: none;
+}
+
+:global(.MuiChartsGrid-line) {
+  stroke: #e8ecf7;
+}
+
+.chartEmptyState {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
   align-items: center;
-  justify-content: flex-end;
-  height: 100%;
+  justify-content: center;
+  min-height: 320px;
 }
 
-.chartBarTrack {
-  display: flex;
-  align-items: flex-end;
-  width: 100%;
-  height: 220px;
-  padding: 8px;
-  background: $track;
-  border-radius: 20px;
-}
-
-.chartBarStack {
-  display: flex;
-  flex-direction: column-reverse;
-  width: 100%;
-  min-height: 12px;
-  overflow: hidden;
-  border-radius: 14px;
-}
-
-.chartBarValue {
-  width: 100%;
-  min-height: 8px;
-}
-
-.chartLabel,
-.chartValue,
 .chartState {
   color: $primary-dark;
   text-align: center;
-}
-
-.chartLabel {
-  font-size: 12px;
-}
-
-.chartValue {
-  font-weight: 700;
-}
-
-.chartState {
-  margin-top: 28px;
 }

@@ -1,4 +1,5 @@
 import { Box, Paper, Typography } from "@mui/material";
+import { LineChart } from "@mui/x-charts/LineChart";
 import type { FC } from "react";
 import { useMemo, useState } from "react";
 
@@ -55,7 +56,7 @@ export const TaskAnalytics: FC = () => {
   const [period, setPeriod] = useState<AnalyticsPeriod>("Monthly");
   const { data, isError, isLoading } = useGetDashboardTaskAnalyticsQuery(apiPeriodMap[period]);
 
-  const chartData = useMemo(() => {
+  const analyticsGroups = useMemo(() => {
     const groups = new Map<string, Map<string, number>>();
 
     for (const item of data ?? []) {
@@ -67,38 +68,38 @@ export const TaskAnalytics: FC = () => {
       groups.set(item._id.label, labelGroup);
     }
 
-    return Array.from(groups.entries())
-      .slice(-8)
-      .map(([label, workflowStates]) => {
-        const segments = Array.from(workflowStates.entries()).map(([workflowState, value]) => ({
-          color: workflowStateColors[workflowState] ?? "#98a2b3",
-          label: workflowStateLabels[workflowState] ?? workflowState,
-          value,
-          workflowState,
-        }));
-        const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+    return Array.from(groups.entries()).slice(-8);
+  }, [data]);
+
+  const xAxisLabels = useMemo(
+    () => analyticsGroups.map(([label]) => formatAnalyticsLabel(label, period)),
+    [analyticsGroups, period],
+  );
+
+  const chartSeries = useMemo(() => {
+    const workflowStates = Array.from(
+      new Set(
+        analyticsGroups.flatMap(([, workflowStateValues]) =>
+          Array.from(workflowStateValues.keys()),
+        ),
+      ),
+    );
+
+    return workflowStates
+      .map((workflowState) => {
+        const values = analyticsGroups.map(
+          ([, workflowStateValues]) => workflowStateValues.get(workflowState) ?? 0,
+        );
 
         return {
-          displayLabel: formatAnalyticsLabel(label, period),
-          label,
-          segments,
-          total,
+          color: workflowStateColors[workflowState] ?? "#98a2b3",
+          data: values,
+          label: workflowStateLabels[workflowState] ?? workflowState,
+          showMark: false,
         };
-      });
-  }, [data, period]);
-
-  const maxValue = Math.max(...chartData.map((item) => item.total), 1);
-  const legendItems = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          chartData
-            .flatMap((item) => item.segments)
-            .map((segment) => [segment.workflowState, segment]),
-        ).values(),
-      ),
-    [chartData],
-  );
+      })
+      .filter((series) => series.data.some((value) => value > 0));
+  }, [analyticsGroups]);
 
   return (
     <Paper className={styles.analyticsCard} elevation={0}>
@@ -121,10 +122,10 @@ export const TaskAnalytics: FC = () => {
         </Box>
       </Box>
 
-      {legendItems.length > 0 && (
+      {chartSeries.length > 0 && (
         <Box className={styles.legend}>
-          {legendItems.map((item) => (
-            <Box key={item.workflowState} className={styles.legendItem}>
+          {chartSeries.map((item) => (
+            <Box key={item.label} className={styles.legendItem}>
               <span
                 className={styles.legendDot}
                 style={{ backgroundColor: item.color }}
@@ -140,33 +141,32 @@ export const TaskAnalytics: FC = () => {
       {isLoading && <Typography className={styles.chartState}>Loading analytics...</Typography>}
 
       {!isLoading && !isError && (
-        <Box className={styles.chart}>
-          {chartData.length === 0 ? (
-            <Typography className={styles.chartState}>No analytics yet for this period.</Typography>
+        <Box className={styles.chartContainer}>
+          {chartSeries.length === 0 || xAxisLabels.length === 0 ? (
+            <Box className={styles.chartEmptyState}>
+              <Typography className={styles.chartState}>
+                No analytics yet for this period.
+              </Typography>
+            </Box>
           ) : (
-            chartData.map((item) => (
-              <Box key={item.label} className={styles.chartColumn}>
-                <Box className={styles.chartBarTrack}>
-                  <Box
-                    className={styles.chartBarStack}
-                    sx={{ height: `${(item.total / maxValue) * 100}%` }}
-                  >
-                    {item.segments.map((segment) => (
-                      <Box
-                        key={`${item.label}-${segment.workflowState}`}
-                        className={styles.chartBarValue}
-                        sx={{
-                          backgroundColor: segment.color,
-                          flex: segment.value,
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-                <Typography className={styles.chartValue}>{item.total}</Typography>
-                <Typography className={styles.chartLabel}>{item.displayLabel}</Typography>
-              </Box>
-            ))
+            <LineChart
+              className={styles.chart}
+              height={320}
+              margin={{ bottom: 30, left: 40, right: 20, top: 20 }}
+              series={chartSeries}
+              xAxis={[
+                {
+                  data: xAxisLabels,
+                  scaleType: "point",
+                },
+              ]}
+              yAxis={[
+                {
+                  min: 0,
+                },
+              ]}
+              grid={{ horizontal: true }}
+            />
           )}
         </Box>
       )}

@@ -816,8 +816,6 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
 
       setEditingMessageId(null);
       setEditingMessageText("");
-      setStatusMessage("Message updated.");
-      setStatusTone("success");
     } catch (error) {
       setStatusMessage(getApiErrorMessage(error, "Unable to update the message."));
       setStatusTone("error");
