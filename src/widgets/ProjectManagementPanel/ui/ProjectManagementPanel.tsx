@@ -1,4 +1,4 @@
-import { Alert, Avatar, Box, Button, MenuItem, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Button, Chip, MenuItem, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -17,27 +17,27 @@ import styles from "./ProjectManagementPanel.module.scss";
 export const ProjectManagementPanel: FC = () => {
   const navigate = useNavigate();
   const {
-    addMemberRole,
-    availableUsers,
     canManageProject,
-    handleAddMember,
-    handleAddMemberRoleChange,
     handleDeleteProject,
     handleFieldChange,
+    handleInvitationEmailChange,
+    handleInvitationRoleChange,
     handleMemberRoleChange,
     handleOpenBoard,
     handleRemoveMember,
     handleSaveProject,
-    handleSelectedUserChange,
+    handleSendInvitation,
     isDeletingProject,
     isLoading,
     isProjectDirty,
     isMutating,
+    invitationEmail,
+    invitationRole,
     memberItems,
+    pendingInvitationItems,
     projectForm,
     selectedProjectId,
     selectedProjectTitle,
-    selectedUserId,
     statusMessage,
     statusTone,
   } = useProjectManagementPanel();
@@ -120,66 +120,61 @@ export const ProjectManagementPanel: FC = () => {
                     fullWidth
                   />
 
-                  <TextField
-                    label="Description"
-                    value={projectForm.description}
-                    onChange={handleFieldChange("description")}
-                    multiline
-                    minRows={4}
-                    disabled={!canManageProject}
-                    fullWidth
-                    className={styles.descriptionField}
-                  />
+                  <Box className={styles.detailsRows}>
+                    <Box className={styles.detailsRow}>
+                      <TextField
+                        select
+                        label="Status"
+                        value={projectForm.status}
+                        onChange={handleFieldChange("status")}
+                        disabled={!canManageProject}
+                        fullWidth
+                      >
+                        {projectStatusOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
 
-                  <TextField
-                    select
-                    label="Status"
-                    value={projectForm.status}
-                    onChange={handleFieldChange("status")}
-                    disabled={!canManageProject}
-                    fullWidth
-                  >
-                    {projectStatusOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                      <TextField
+                        select
+                        label="Color"
+                        value={projectForm.color}
+                        onChange={handleFieldChange("color")}
+                        disabled={!canManageProject}
+                        fullWidth
+                      >
+                        {projectColorOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Box>
 
-                  <TextField
-                    select
-                    label="Color"
-                    value={projectForm.color}
-                    onChange={handleFieldChange("color")}
-                    disabled={!canManageProject}
-                    fullWidth
-                  >
-                    {projectColorOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    <Box className={styles.detailsRow}>
+                      <TextField
+                        label="Start date"
+                        type="date"
+                        value={projectForm.startDate}
+                        onChange={handleFieldChange("startDate")}
+                        disabled={!canManageProject}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        fullWidth
+                      />
 
-                  <TextField
-                    label="Start date"
-                    type="date"
-                    value={projectForm.startDate}
-                    onChange={handleFieldChange("startDate")}
-                    disabled={!canManageProject}
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    fullWidth
-                  />
-
-                  <TextField
-                    label="Due date"
-                    type="date"
-                    value={projectForm.dueDate}
-                    onChange={handleFieldChange("dueDate")}
-                    disabled={!canManageProject}
-                    slotProps={{ inputLabel: { shrink: true } }}
-                    fullWidth
-                  />
+                      <TextField
+                        label="Due date"
+                        type="date"
+                        value={projectForm.dueDate}
+                        onChange={handleFieldChange("dueDate")}
+                        disabled={!canManageProject}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        fullWidth
+                      />
+                    </Box>
+                  </Box>
                 </Box>
               </section>
 
@@ -190,31 +185,20 @@ export const ProjectManagementPanel: FC = () => {
 
                 <Box className={styles.addMemberRow}>
                   <TextField
-                    select
-                    label="User"
-                    value={selectedUserId}
-                    onChange={handleSelectedUserChange}
-                    disabled={!canManageProject || availableUsers.length === 0}
+                    label="Invite by email"
+                    type="email"
+                    value={invitationEmail}
+                    onChange={handleInvitationEmailChange}
+                    disabled={!canManageProject}
                     fullWidth
-                  >
-                    {availableUsers.length > 0 ? (
-                      availableUsers.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.label}
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem value="" disabled>
-                        No users available
-                      </MenuItem>
-                    )}
-                  </TextField>
+                    placeholder="name@example.com"
+                  />
 
                   <TextField
                     select
                     label="Role"
-                    value={addMemberRole}
-                    onChange={handleAddMemberRoleChange}
+                    value={invitationRole}
+                    onChange={handleInvitationRoleChange}
                     disabled={!canManageProject}
                     fullWidth
                   >
@@ -228,13 +212,41 @@ export const ProjectManagementPanel: FC = () => {
                   <Button
                     variant="contained"
                     onClick={() => {
-                      void handleAddMember();
+                      void handleSendInvitation();
                     }}
-                    disabled={!canManageProject || !selectedUserId || isMutating}
+                    disabled={!canManageProject || !invitationEmail.trim() || isMutating}
                   >
-                    Add
+                    Invite
                   </Button>
                 </Box>
+
+                {pendingInvitationItems.length > 0 && (
+                  <Box className={styles.pendingInvitations}>
+                    <Typography className={styles.helperText}>Pending invitations</Typography>
+
+                    <Box className={styles.pendingInvitationList}>
+                      {pendingInvitationItems.map((invitation) => (
+                        <Box key={invitation.id} className={styles.pendingInvitationRow}>
+                          <Box>
+                            <Typography className={styles.memberName}>
+                              {invitation.invitedUserName
+                                ? `${invitation.invitedUserName} · ${invitation.email}`
+                                : invitation.email}
+                            </Typography>
+                            <Typography className={styles.memberMeta}>
+                              Sent {invitation.createdAt}
+                            </Typography>
+                          </Box>
+
+                          <Box className={styles.pendingInvitationMeta}>
+                            <Chip size="small" label={invitation.role} />
+                            <Chip size="small" label="Pending" color="info" variant="outlined" />
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
 
                 <Box className={styles.memberList}>
                   {memberItems.map((member) => (

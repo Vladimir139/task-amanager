@@ -1,0 +1,96 @@
+$border: #e8ecf7;
+$surface: #ffffff;
+$surface-alt: #f7f9ff;
+$title: #25275f;
+$text: #7d87a3;
+
+.panel {
+  display: grid;
+  gap: 18px;
+  width: 650px;
+  max-width: calc(100% - 58px);
+  margin-top: 30px;
+  margin-left: 58px;
+  padding: 28px 30px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  color: $title;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.subtitle {
+  margin-top: 6px !important;
+  color: $text;
+  font-size: 13px !important;
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+}
+
+.invitationCard {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  background: $surface-alt;
+  border: 1px solid #e2e7fb;
+  border-radius: 14px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.projectTitle {
+  color: $title;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.metaText {
+  margin-top: 4px !important;
+  color: $text;
+  font-size: 12px !important;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.emptyState {
+  color: $text;
+  font-size: 14px !important;
+}
+
+@media (width <= 720px) {
+  .panel {
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .header,
+  .cardHeader,
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

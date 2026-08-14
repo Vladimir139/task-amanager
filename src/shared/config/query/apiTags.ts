@@ -8,6 +8,7 @@ export const apiTags = [
   "Dashboard",
   "Files",
   "Folders",
+  "ProjectInvitations",
   "ProjectMembers",
   "ProjectStats",
   "Projects",

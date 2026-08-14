@@ -8,6 +8,7 @@ import { ProfileDetailsForm } from "@/widgets/ProfileDetailsForm";
 import { ProfilePreferencesForm } from "@/widgets/ProfilePreferencesForm";
 import { SettingsNavigation } from "@/widgets/SettingsNavigation";
 import { SettingsProfileHeader } from "@/widgets/SettingsProfileHeader";
+import { TeamInvitationsPanel } from "@/widgets/TeamInvitationsPanel";
 
 import { useSettingsWorkspace } from "../model/useSettingsWorkspace";
 import styles from "./SettingsWorkspace.module.scss";
@@ -86,7 +87,10 @@ export const SettingsWorkspace: FC = () => {
         />
       )}
 
-      {["My details", "Notifications", "Password", "Profile"].includes(activeTab) === false && (
+      {activeTab === "Team" && <TeamInvitationsPanel />}
+
+      {["My details", "Notifications", "Password", "Profile", "Team"].includes(activeTab) ===
+        false && (
         <section className={styles.emptySection}>
           This section has not been implemented yet.
         </section>

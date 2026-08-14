@@ -30,6 +30,8 @@ export const Header: FC = () => {
     handleOpenSettingsPage,
     handleOpenSettingsSection,
     handleOpenTask,
+    handleOpenTeamInvitations,
+    invitationNotifications,
     isLoggingOut,
     logoutAnchor,
     notificationAnchor,
@@ -170,6 +172,29 @@ export const Header: FC = () => {
               ))
             ) : (
               <Typography className={styles.emptyText}>No overdue tasks.</Typography>
+            )}
+          </Box>
+
+          <Divider />
+
+          <Box className={styles.notificationSection}>
+            <Typography className={styles.sectionTitle}>Team invitations</Typography>
+            {invitationNotifications.length > 0 ? (
+              invitationNotifications.map((invitation) => (
+                <button
+                  key={invitation.invitationId}
+                  type="button"
+                  className={styles.notificationItem}
+                  onClick={() => {
+                    void handleOpenTeamInvitations();
+                  }}
+                >
+                  <Typography>{invitation.projectTitle}</Typography>
+                  <span>{invitation.roleLabel}</span>
+                </button>
+              ))
+            ) : (
+              <Typography className={styles.emptyText}>No team invitations.</Typography>
             )}
           </Box>
         </Box>

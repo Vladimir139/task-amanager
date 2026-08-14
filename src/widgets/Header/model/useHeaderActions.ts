@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useGetConversationsQuery } from "@/entities/conversation";
+import { useGetReceivedProjectInvitationsQuery } from "@/entities/project";
 import { useGetTasksQuery } from "@/entities/task";
 import { selectAuthUser } from "@/entities/user";
 import { useLogoutMutation } from "@/features/auth";
@@ -13,6 +14,7 @@ export const settingsShortcutItems = [
   "My details",
   "Profile",
   "Password",
+  "Team",
   "Notifications",
 ] as const;
 
@@ -30,6 +32,12 @@ interface NotificationTaskItem {
   projectId: string;
 }
 
+interface NotificationInvitationItem {
+  invitationId: string;
+  projectTitle: string;
+  roleLabel: string;
+}
+
 interface UseHeaderActionsResult {
   handleConfirmLogout: () => Promise<void>;
   handleOpenMessages: (conversationId: string) => Promise<void>;
@@ -37,6 +45,8 @@ interface UseHeaderActionsResult {
   handleOpenSettingsPage: () => Promise<void>;
   handleOpenSettingsSection: (tab: string) => Promise<void>;
   handleOpenTask: (task: NotificationTaskItem) => Promise<void>;
+  handleOpenTeamInvitations: () => Promise<void>;
+  invitationNotifications: NotificationInvitationItem[];
   isLoggingOut: boolean;
   logoutAnchor: HTMLElement | null;
   notificationAnchor: HTMLElement | null;
@@ -76,6 +86,7 @@ export const useHeaderActions = (): UseHeaderActionsResult => {
   const currentUser = useAppSelector(selectAuthUser);
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
   const { data: conversations = [] } = useGetConversationsQuery();
+  const { data: projectInvitations = [] } = useGetReceivedProjectInvitationsQuery();
   const { data: tasks = [] } = useGetTasksQuery();
   const [notificationAnchor, setNotificationAnchor] = useState<HTMLElement | null>(null);
   const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(null);
@@ -120,7 +131,23 @@ export const useHeaderActions = (): UseHeaderActionsResult => {
     [tasks],
   );
 
-  const notificationCount = unreadMessages.length + overdueTasks.length;
+  const invitationNotifications = useMemo<NotificationInvitationItem[]>(
+    () =>
+      projectInvitations.slice(0, 5).map((invitation) => ({
+        invitationId: invitation._id,
+        projectTitle: invitation.projectTitle ?? "Project invitation",
+        roleLabel:
+          invitation.role === "admin"
+            ? "Admin access"
+            : invitation.role === "viewer"
+              ? "Viewer access"
+              : "Member access",
+      })),
+    [projectInvitations],
+  );
+
+  const notificationCount =
+    unreadMessages.length + overdueTasks.length + invitationNotifications.length;
 
   const handleOpenMessages = async (conversationId: string): Promise<void> => {
     setNotificationAnchor(null);
@@ -135,6 +162,11 @@ export const useHeaderActions = (): UseHeaderActionsResult => {
   const handleOpenSettingsSection = async (tab: string): Promise<void> => {
     setSettingsAnchor(null);
     await navigate(getSettingsRoute(tab));
+  };
+
+  const handleOpenTeamInvitations = async (): Promise<void> => {
+    setNotificationAnchor(null);
+    await navigate(getSettingsRoute("Team"));
   };
 
   const handleOpenProfile = async (): Promise<void> => {
@@ -158,6 +190,8 @@ export const useHeaderActions = (): UseHeaderActionsResult => {
     handleOpenSettingsPage,
     handleOpenSettingsSection,
     handleOpenTask,
+    handleOpenTeamInvitations,
+    invitationNotifications,
     isLoggingOut,
     logoutAnchor,
     notificationAnchor,

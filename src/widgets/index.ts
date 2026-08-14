@@ -30,3 +30,4 @@ export * from "./TaskBoardSidebar";
 export * from "./TaskBoardTaskDialog";
 export * from "./TaskBoardWorkspace";
 export * from "./TaskList";
+export * from "./TeamInvitationsPanel";

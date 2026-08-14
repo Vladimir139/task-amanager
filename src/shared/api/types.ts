@@ -159,6 +159,23 @@ export interface ProjectMemberRecord {
   updatedAt?: string;
 }
 
+export interface ProjectInvitationRecord {
+  _id: string;
+  projectId: string;
+  email: string;
+  invitedUserId?: string | null;
+  invitedBy: string;
+  invitedByName?: string | null;
+  invitedByEmail?: string | null;
+  invitedUserName?: string | null;
+  projectTitle?: string | null;
+  role: "owner" | "admin" | "member" | "viewer";
+  status: "pending" | "accepted" | "declined";
+  respondedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProjectListResponse {
   items: ProjectRecord[];
   total: number;

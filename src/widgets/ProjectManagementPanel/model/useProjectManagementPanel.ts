@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 
 import {
   useGetProjectByIdQuery,
+  useGetProjectInvitationsQuery,
   useGetProjectMembersQuery,
   useSelectedProjectId,
 } from "@/entities/project";
 import { selectAuthUser, useGetUsersQuery } from "@/entities/user";
 import { useDeleteProjectMutation } from "@/features/deleteProject";
+import { useInviteProjectMemberMutation } from "@/features/projectInvitations";
 import {
-  useAddProjectMemberMutation,
   useRemoveProjectMemberMutation,
   useUpdateProjectMemberRoleMutation,
 } from "@/features/projectMembers";
@@ -42,30 +43,38 @@ interface ProjectMemberItem {
   role: "owner" | "admin" | "member" | "viewer";
 }
 
+interface PendingInvitationItem {
+  createdAt: string;
+  email: string;
+  id: string;
+  invitedUserName: string | null;
+  role: EditableProjectRole;
+}
+
 interface UseProjectManagementPanelResult {
-  addMemberRole: EditableProjectRole;
-  availableUsers: Array<{ id: string; label: string }>;
   canManageProject: boolean;
-  handleAddMember: () => Promise<void>;
   handleDeleteProject: () => Promise<void>;
-  handleAddMemberRoleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleFieldChange: (
     field: keyof ProjectFormState,
   ) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInvitationEmailChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInvitationRoleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleMemberRoleChange: (memberUserId: string, role: EditableProjectRole) => Promise<void>;
   handleOpenBoard: () => void;
   handleRemoveMember: (memberUserId: string) => Promise<void>;
   handleSaveProject: () => Promise<void>;
-  handleSelectedUserChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleSendInvitation: () => Promise<void>;
   isDeletingProject: boolean;
   isProjectDirty: boolean;
   isLoading: boolean;
   isMutating: boolean;
+  invitationEmail: string;
+  invitationRole: EditableProjectRole;
   memberItems: ProjectMemberItem[];
+  pendingInvitationItems: PendingInvitationItem[];
   projectForm: ProjectFormState;
   selectedProjectId: string | null;
   selectedProjectTitle: string;
-  selectedUserId: string;
   statusMessage: string | null;
   statusTone: "error" | "success" | null;
 }
@@ -89,8 +98,8 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
   const authUser = useAppSelector(selectAuthUser);
   const selectedProjectId = useSelectedProjectId();
   const [projectForm, setProjectForm] = useState<ProjectFormState>(initialProjectForm);
-  const [selectedUserId, setSelectedUserId] = useState("");
-  const [addMemberRole, setAddMemberRole] = useState<EditableProjectRole>("member");
+  const [invitationEmail, setInvitationEmail] = useState("");
+  const [invitationRole, setInvitationRole] = useState<EditableProjectRole>("member");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
 
@@ -109,9 +118,24 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     skip: !selectedProjectId,
   });
   const { data: users = [] } = useGetUsersQuery();
+  const currentUserRole = useMemo(() => {
+    if (!authUser?.id) {
+      return null;
+    }
+
+    return projectMembers?.find((member) => member.userId === authUser.id)?.role ?? null;
+  }, [authUser?.id, projectMembers]);
+  const canManageProject = currentUserRole === "owner" || currentUserRole === "admin";
+  const {
+    data: pendingInvitations = [],
+    isError: isInvitationsError,
+    isLoading: isInvitationsLoading,
+  } = useGetProjectInvitationsQuery(selectedProjectId ?? "", {
+    skip: !selectedProjectId || !canManageProject,
+  });
   const [updateProject, { isLoading: isUpdatingProject }] = useUpdateProjectMutation();
   const [deleteProject, { isLoading: isDeletingProject }] = useDeleteProjectMutation();
-  const [addProjectMember, { isLoading: isAddingMember }] = useAddProjectMemberMutation();
+  const [inviteProjectMember, { isLoading: isInvitingMember }] = useInviteProjectMemberMutation();
   const [updateProjectMemberRole, { isLoading: isUpdatingMemberRole }] =
     useUpdateProjectMemberRoleMutation();
   const [removeProjectMember, { isLoading: isRemovingMember }] = useRemoveProjectMemberMutation();
@@ -135,19 +159,11 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
           : (selectedProject.status as ProjectFormState["status"]),
       title: selectedProject.title,
     });
+    setInvitationEmail("");
+    setInvitationRole("member");
     setStatusMessage(null);
     setStatusTone(null);
   }, [selectedProject]);
-
-  const currentUserRole = useMemo(() => {
-    if (!authUser?.id) {
-      return null;
-    }
-
-    return projectMembers?.find((member) => member.userId === authUser.id)?.role ?? null;
-  }, [authUser?.id, projectMembers]);
-
-  const canManageProject = currentUserRole === "owner" || currentUserRole === "admin";
   const isProjectDirty = useMemo(() => {
     if (!selectedProject) {
       return false;
@@ -183,16 +199,17 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     });
   }, [authUser?.id, projectMembers, users]);
 
-  const availableUsers = useMemo(() => {
-    const existingIds = new Set((projectMembers ?? []).map((member) => member.userId));
-
-    return users
-      .filter((user) => !existingIds.has(user._id))
-      .map((user) => ({
-        id: user._id,
-        label: `${user.firstName} ${user.lastName}`.trim() || user.email,
-      }));
-  }, [projectMembers, users]);
+  const pendingInvitationItems = useMemo<PendingInvitationItem[]>(
+    () =>
+      pendingInvitations.map((invitation) => ({
+        createdAt: formatDateInput(invitation.createdAt) || "Today",
+        email: invitation.email,
+        id: invitation._id,
+        invitedUserName: invitation.invitedUserName ?? null,
+        role: invitation.role === "owner" ? "member" : invitation.role,
+      })),
+    [pendingInvitations],
+  );
 
   const handleFieldChange =
     (field: keyof ProjectFormState) =>
@@ -203,12 +220,14 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
       }));
     };
 
-  const handleSelectedUserChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    setSelectedUserId(event.target.value);
+  const handleInvitationEmailChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void => {
+    setInvitationEmail(event.target.value);
   };
 
-  const handleAddMemberRoleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    setAddMemberRole(event.target.value as EditableProjectRole);
+  const handleInvitationRoleChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setInvitationRole(event.target.value as EditableProjectRole);
   };
 
   const handleOpenBoard = (): void => {
@@ -263,8 +282,8 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     }
   };
 
-  const handleAddMember = async (): Promise<void> => {
-    if (!selectedProjectId || !selectedUserId) {
+  const handleSendInvitation = async (): Promise<void> => {
+    if (!selectedProjectId || !invitationEmail.trim()) {
       return;
     }
 
@@ -272,17 +291,17 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     setStatusTone(null);
 
     try {
-      await addProjectMember({
+      await inviteProjectMember({
+        email: invitationEmail.trim(),
         projectId: selectedProjectId,
-        role: addMemberRole,
-        userId: selectedUserId,
+        role: invitationRole,
       }).unwrap();
-      setSelectedUserId("");
-      setAddMemberRole("member");
-      setStatusMessage("Project member added.");
+      setInvitationEmail("");
+      setInvitationRole("member");
+      setStatusMessage("Invitation sent.");
       setStatusTone("success");
     } catch (error) {
-      setStatusMessage(getApiErrorMessage(error, "Unable to add the project member."));
+      setStatusMessage(getApiErrorMessage(error, "Unable to send the invitation."));
       setStatusTone("error");
     }
   };
@@ -334,37 +353,45 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
   };
 
   return {
-    addMemberRole,
-    availableUsers,
     canManageProject,
-    handleAddMember,
-    handleAddMemberRoleChange,
     handleDeleteProject,
     handleFieldChange,
+    handleInvitationEmailChange,
+    handleInvitationRoleChange,
     handleMemberRoleChange,
     handleOpenBoard,
     handleRemoveMember,
     handleSaveProject,
-    handleSelectedUserChange,
+    handleSendInvitation,
     isDeletingProject,
     isProjectDirty,
-    isLoading: isProjectLoading || isMembersLoading,
+    isLoading: isProjectLoading || isMembersLoading || (canManageProject && isInvitationsLoading),
     isMutating:
       isUpdatingProject ||
-      isAddingMember ||
+      isInvitingMember ||
       isUpdatingMemberRole ||
       isRemovingMember ||
       isDeletingProject,
+    invitationEmail,
+    invitationRole,
     memberItems,
+    pendingInvitationItems,
     projectForm,
     selectedProjectId,
     selectedProjectTitle: selectedProject?.title ?? "Project",
-    selectedUserId,
     statusMessage: !selectedProjectId
       ? "Select a project from the list to manage its details and members."
-      : isProjectError || isMembersError
+      : isProjectError || isMembersError || (canManageProject && isInvitationsError)
         ? "Unable to load the selected project."
         : statusMessage,
-    statusTone: !selectedProjectId ? null : isProjectError || isMembersError ? "error" : statusTone,
+    statusTone:
+      !selectedProjectId ||
+      isProjectError ||
+      isMembersError ||
+      (canManageProject && isInvitationsError)
+        ? !selectedProjectId
+          ? null
+          : "error"
+        : statusTone,
   };
 };

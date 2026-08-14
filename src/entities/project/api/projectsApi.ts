@@ -1,5 +1,6 @@
 import { baseApi } from "@/shared/api";
 import type {
+  ProjectInvitationRecord,
   ProjectListResponse,
   ProjectMemberRecord,
   ProjectRecord,
@@ -23,9 +24,17 @@ export const projectsApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, projectId) => [{ id: projectId, type: "Projects" }],
       query: (projectId) => `/projects/${projectId}`,
     }),
+    getProjectInvitations: build.query<ProjectInvitationRecord[], string>({
+      providesTags: (_result, _error, projectId) => [{ id: projectId, type: "ProjectInvitations" }],
+      query: (projectId) => `/projects/${projectId}/invitations`,
+    }),
     getProjectMembers: build.query<ProjectMemberRecord[], string>({
       providesTags: (_result, _error, projectId) => [{ id: projectId, type: "ProjectMembers" }],
       query: (projectId) => `/projects/${projectId}/members`,
+    }),
+    getReceivedProjectInvitations: build.query<ProjectInvitationRecord[], void>({
+      providesTags: [{ id: "received", type: "ProjectInvitations" }],
+      query: () => "/projects/invitations/received",
     }),
     getProjectStats: build.query<ProjectStatsResponse, void>({
       providesTags: ["ProjectStats"],
@@ -43,7 +52,9 @@ export const projectsApi = baseApi.injectEndpoints({
 
 export const {
   useGetProjectByIdQuery,
+  useGetProjectInvitationsQuery,
   useGetProjectMembersQuery,
+  useGetReceivedProjectInvitationsQuery,
   useGetProjectStatsQuery,
   useGetProjectsQuery,
 } = projectsApi;
