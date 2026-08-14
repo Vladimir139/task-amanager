@@ -32,6 +32,27 @@
   min-width: 220px;
 }
 
+.boardControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerIconButton {
+  color: #5355ff !important;
+  background: #edf0ff !important;
+}
+
+.headerActionButton {
+  border-color: #dbe2f1 !important;
+  color: #21235f !important;
+}
+
+.makeGlobalButton {
+  white-space: nowrap;
+}
+
 .boardMemberSummary {
   display: flex;
   align-items: center;
@@ -54,4 +75,15 @@
   width: 31px !important;
   height: 31px !important;
   font-size: 9px !important;
+}
+
+@media (max-width: 900px) {
+  .boardTop,
+  .boardMemberSummary {
+    align-items: flex-start;
+  }
+
+  .boardTop {
+    flex-direction: column;
+  }
 }

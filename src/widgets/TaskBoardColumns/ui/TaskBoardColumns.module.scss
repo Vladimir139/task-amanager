@@ -1,20 +1,35 @@
 .board {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-auto-columns: minmax(260px, 1fr);
+  grid-auto-flow: column;
   align-items: start;
   gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .boardColumn {
   min-width: 0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.columnDropTarget {
+  transform: translateY(-2px);
+
+  .columnHeader {
+    box-shadow: 0 12px 28px rgb(83 85 255 / 18%);
+  }
 }
 
 .columnHeader {
   display: flex;
-  min-height: 54px;
-  align-items: center;
+  min-height: 58px;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0 17px;
+  gap: 10px;
+  padding: 12px 14px 10px;
   border-radius: 11px !important;
 
   h2 {
@@ -24,11 +39,10 @@
 }
 
 .columnMeta {
-  display: flex;
+  display: grid;
   min-width: 0;
   flex: 1;
-  align-items: center;
-  gap: 12px;
+  gap: 8px;
 
   p:last-child {
     color: #78839e;
@@ -37,14 +51,60 @@
   }
 }
 
+.columnEditRow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) 54px auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.columnTitleInput {
+  :global(.MuiInputBase-root) {
+    background: #ffffff;
+    border-radius: 10px;
+  }
+}
+
+.columnColorInput {
+  :global(.MuiInputBase-root) {
+    padding: 4px;
+    background: #ffffff;
+    border-radius: 10px;
+  }
+
+  :global(.MuiInputBase-input) {
+    height: 32px;
+    padding: 0;
+    cursor: pointer;
+  }
+}
+
+.columnActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.columnMenuButton,
 .addTaskButton {
-  margin-left: 12px !important;
   color: #5355ff !important;
   background: #edf0ff !important;
 }
 
+.dragHandleButton {
+  color: #5c6888 !important;
+  background: #f3f5fb !important;
+  cursor: grab !important;
+
+  &:active {
+    cursor: grabbing !important;
+  }
+}
+
 .columnTasks {
   display: flex;
+  min-height: 120px;
   margin-top: 13px;
   flex-direction: column;
   gap: 13px;
@@ -54,4 +114,59 @@
   padding: 24px 16px;
   color: #78839e;
   text-align: center;
+}
+
+.taskDropZone {
+  position: relative;
+  border-radius: 16px;
+}
+
+.taskDropBefore::before,
+.taskDropAfter::after {
+  position: absolute;
+  right: 8px;
+  left: 8px;
+  z-index: 2;
+  height: 3px;
+  background: #5355ff;
+  border-radius: 999px;
+  content: "";
+}
+
+.taskDropBefore::before {
+  top: -7px;
+}
+
+.taskDropAfter::after {
+  bottom: -7px;
+}
+
+.deletePopover {
+  display: grid;
+  width: 320px;
+  gap: 12px;
+  padding: 18px;
+}
+
+.deleteTitle {
+  color: #161616;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.deleteText {
+  color: #667085;
+  font-size: 13px !important;
+}
+
+.deleteActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .columnEditRow {
+    grid-template-columns: 1fr;
+  }
 }

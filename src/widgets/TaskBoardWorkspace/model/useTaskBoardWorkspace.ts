@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -11,9 +12,13 @@ import {
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
 import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
-import { useActiveProject } from "@/entities/project";
+import {
+  projectSelectionActions,
+  selectCurrentProjectId,
+  useActiveProject,
+} from "@/entities/project";
 import { useSelectedTaskId } from "@/entities/task";
-import { selectAuthUser } from "@/entities/user";
+import { selectAuthUser, useUpdateCurrentProjectMutation } from "@/entities/user";
 import { selectAccessToken } from "@/features/auth/model/selectors";
 import { baseApi } from "@/shared/api";
 import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
@@ -54,6 +59,7 @@ interface UseTaskBoardWorkspaceResult {
   isError: boolean;
   isLoading: boolean;
   isMessagesError: boolean;
+  isSavingGlobalProject: boolean;
   isSendingMessage: boolean;
   memberOptions: Array<{
     id: string;
@@ -64,11 +70,13 @@ interface UseTaskBoardWorkspaceResult {
   message: string;
   onBoardSelect: (boardId: string) => void;
   onCreateTask: (columnId: string) => void;
+  onMakeProjectGlobal: () => Promise<void>;
   onOpenTask: (taskId: string) => void;
   projectId: string | null;
   sendMessage: () => Promise<void>;
   selectedTaskId: string | null;
   setMessage: (value: string) => void;
+  shouldShowMakeProjectGlobalAction: boolean;
   taskBoardEmoji: string;
   taskBoardExtraMembersCount: number;
   taskBoardMembersCount: number;
@@ -82,6 +90,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector(selectAccessToken);
   const currentUser = useAppSelector(selectAuthUser);
+  const currentProjectId = useAppSelector(selectCurrentProjectId);
   const { activeProjectId: projectId } = useActiveProject();
   const selectedBoardId = useSelectedBoardId();
   const selectedTaskId = useSelectedTaskId();
@@ -89,6 +98,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [createTaskColumnId, setCreateTaskColumnId] = useState<string | null>(null);
+  const [updateCurrentProject, { isLoading: isSavingGlobalProject }] =
+    useUpdateCurrentProjectMutation();
   const typingTimeoutRef = useRef<number | null>(null);
   const typingConversationIdRef = useRef<string | null>(null);
   const {
@@ -518,6 +529,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     return currentMemberRole === "owner" || currentMemberRole === "admin";
   }, [boardView?.members, currentUser?.id]);
 
+  const shouldShowMakeProjectGlobalAction = Boolean(projectId) && currentProjectId !== projectId;
+
   const handleBoardSelect = (boardId: string): void => {
     if (!projectId) {
       return;
@@ -525,6 +538,22 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
 
     setCreateTaskColumnId(null);
     void navigate(getTasksRoute(projectId, boardId));
+  };
+
+  const handleMakeProjectGlobal = async (): Promise<void> => {
+    if (!projectId || projectId === currentProjectId) {
+      return;
+    }
+
+    dispatch(projectSelectionActions.setCurrentProjectId(projectId));
+
+    try {
+      await updateCurrentProject({ currentProjectId: projectId }).unwrap();
+      toast.success("The project is now your global selection.");
+    } catch {
+      dispatch(projectSelectionActions.setCurrentProjectId(currentProjectId ?? null));
+      toast.error("Unable to save the global project.");
+    }
   };
 
   const handleOpenTask = (taskId: string): void => {
@@ -601,16 +630,19 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     isLoading:
       Boolean(projectId) && (isBoardsLoading || (Boolean(activeBoardId) && isBoardLoading)),
     isMessagesError,
+    isSavingGlobalProject,
     isSendingMessage,
     memberOptions,
     message,
     onBoardSelect: handleBoardSelect,
     onCreateTask: handleCreateTask,
+    onMakeProjectGlobal: handleMakeProjectGlobal,
     onOpenTask: handleOpenTask,
     projectId,
     sendMessage,
     selectedTaskId,
     setMessage,
+    shouldShowMakeProjectGlobalAction,
     taskBoardEmoji: boardView?.board.emoji ?? "🔥",
     taskBoardExtraMembersCount: Math.max(boardMembers.length - 5, 0),
     taskBoardMembersCount: boardMembers.length,

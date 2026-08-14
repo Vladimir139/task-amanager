@@ -1,0 +1,534 @@
+import type { ChangeEvent, DragEvent, MouseEvent } from "react";
+import { useMemo, useState } from "react";
+
+import { selectAuthUser } from "@/entities/user";
+import {
+  useDeleteBoardColumnMutation,
+  useReorderBoardColumnsMutation,
+  useUpdateBoardColumnMutation,
+} from "@/features/boardColumns";
+import { useMoveTaskMutation } from "@/features/moveTask";
+import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
+import { getApiErrorMessage } from "@/shared/lib/api";
+import { useAppSelector } from "@/shared/libs/redux";
+
+interface UseTaskBoardColumnsProps {
+  boardId: string;
+  canManageBoard: boolean;
+  columnRecords: BoardColumnRecord[];
+  projectId: string;
+  tasksByColumn: Record<string, TaskRecord[]>;
+}
+
+type ColumnMenuAction = "edit" | "delete";
+type TaskDropPosition = "before" | "after";
+
+interface UseTaskBoardColumnsResult {
+  activeColumnDropId: string | null;
+  activeTaskDropKey: string | null;
+  confirmDeleteAnchor: HTMLElement | null;
+  confirmDeleteColumn: BoardColumnRecord | null;
+  deleteTargetColumnId: string;
+  draggedColumnId: string | null;
+  editingColor: string;
+  editingColumnId: string | null;
+  editingTitle: string;
+  handleCancelColumnEdit: () => void;
+  handleColumnDeleteTargetChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleColumnDragEnd: () => void;
+  handleColumnDragOver: (event: DragEvent<HTMLElement>, targetColumnId: string) => void;
+  handleColumnDragStart: (event: DragEvent<HTMLElement>, columnId: string) => void;
+  handleColumnDrop: (event: DragEvent<HTMLElement>, targetColumnId: string) => Promise<void>;
+  handleColumnMenuAction: (action: ColumnMenuAction) => void;
+  handleColumnMenuClose: () => void;
+  handleColumnMenuOpen: (event: MouseEvent<HTMLElement>, columnId: string) => void;
+  handleConfirmDelete: () => Promise<void>;
+  handleDeleteCancel: () => void;
+  handleEditColorChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleEditTitleChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleSaveColumnEdit: () => Promise<void>;
+  handleTaskDragEnd: () => void;
+  handleTaskDragOver: (event: DragEvent<HTMLElement>, columnId: string, taskId?: string) => void;
+  handleTaskDragStart: (
+    event: DragEvent<HTMLElement>,
+    sourceColumnId: string,
+    taskId: string,
+  ) => void;
+  handleTaskDropOnColumn: (event: DragEvent<HTMLElement>, targetColumnId: string) => Promise<void>;
+  handleTaskDropOnTask: (
+    event: DragEvent<HTMLElement>,
+    targetColumnId: string,
+    targetTaskId: string,
+  ) => Promise<void>;
+  isColumnBeingEdited: (columnId: string) => boolean;
+  isDeleteDisabled: boolean;
+  isMutating: boolean;
+  isTaskDraggable: (taskId: string, columnId: string) => boolean;
+  menuAnchor: HTMLElement | null;
+  menuColumnId: string | null;
+  statusMessage: string | null;
+  statusTone: "error" | "success" | null;
+}
+
+interface DraggedTaskState {
+  sourceColumnId: string;
+  taskId: string;
+}
+
+const normalizeOptionalValue = (value: string): string | undefined => {
+  const normalizedValue = value.trim();
+
+  return normalizedValue || undefined;
+};
+
+export const useTaskBoardColumns = ({
+  boardId,
+  canManageBoard,
+  columnRecords,
+  projectId,
+  tasksByColumn,
+}: UseTaskBoardColumnsProps): UseTaskBoardColumnsResult => {
+  const currentUser = useAppSelector(selectAuthUser);
+  const [moveTask, { isLoading: isMovingTask }] = useMoveTaskMutation();
+  const [reorderBoardColumns, { isLoading: isReorderingColumns }] =
+    useReorderBoardColumnsMutation();
+  const [updateBoardColumn, { isLoading: isUpdatingColumn }] = useUpdateBoardColumnMutation();
+  const [deleteBoardColumn, { isLoading: isDeletingColumn }] = useDeleteBoardColumnMutation();
+
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [menuColumnId, setMenuColumnId] = useState<string | null>(null);
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingColor, setEditingColor] = useState("");
+  const [confirmDeleteAnchor, setConfirmDeleteAnchor] = useState<HTMLElement | null>(null);
+  const [confirmDeleteColumnId, setConfirmDeleteColumnId] = useState<string | null>(null);
+  const [deleteTargetColumnId, setDeleteTargetColumnId] = useState("");
+  const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
+  const [draggedTask, setDraggedTask] = useState<DraggedTaskState | null>(null);
+  const [activeColumnDropId, setActiveColumnDropId] = useState<string | null>(null);
+  const [activeTaskDropKey, setActiveTaskDropKey] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+
+  const isMutating = isMovingTask || isReorderingColumns || isUpdatingColumn || isDeletingColumn;
+  const confirmDeleteColumn =
+    columnRecords.find((column) => column._id === confirmDeleteColumnId) ?? null;
+
+  const isDeleteDisabled = useMemo(() => {
+    if (!confirmDeleteColumn) {
+      return true;
+    }
+
+    const taskCount = tasksByColumn[confirmDeleteColumn._id]?.length ?? 0;
+
+    return taskCount > 0 && deleteTargetColumnId === "";
+  }, [confirmDeleteColumn, deleteTargetColumnId, tasksByColumn]);
+
+  const handleColumnMenuOpen = (event: MouseEvent<HTMLElement>, columnId: string): void => {
+    setMenuAnchor(event.currentTarget);
+    setMenuColumnId(columnId);
+  };
+
+  const handleColumnMenuClose = (): void => {
+    setMenuAnchor(null);
+    setMenuColumnId(null);
+  };
+
+  const handleCancelColumnEdit = (): void => {
+    setEditingColumnId(null);
+    setEditingTitle("");
+    setEditingColor("");
+  };
+
+  const handleDeleteCancel = (): void => {
+    setConfirmDeleteAnchor(null);
+    setConfirmDeleteColumnId(null);
+    setDeleteTargetColumnId("");
+  };
+
+  const handleColumnMenuAction = (action: ColumnMenuAction): void => {
+    const selectedColumn = columnRecords.find((column) => column._id === menuColumnId);
+
+    if (!selectedColumn) {
+      handleColumnMenuClose();
+      return;
+    }
+
+    if (action === "edit") {
+      setEditingColumnId(selectedColumn._id);
+      setEditingTitle(selectedColumn.title);
+      setEditingColor(selectedColumn.color ?? "#5355ff");
+    }
+
+    if (action === "delete") {
+      const fallbackTargetColumnId =
+        columnRecords.find((column) => column._id !== selectedColumn._id)?._id ?? "";
+
+      setConfirmDeleteAnchor(menuAnchor);
+      setConfirmDeleteColumnId(selectedColumn._id);
+      setDeleteTargetColumnId(fallbackTargetColumnId);
+    }
+
+    handleColumnMenuClose();
+  };
+
+  const handleEditTitleChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setEditingTitle(event.target.value);
+  };
+
+  const handleEditColorChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setEditingColor(event.target.value);
+  };
+
+  const handleColumnDeleteTargetChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setDeleteTargetColumnId(event.target.value);
+  };
+
+  const handleSaveColumnEdit = async (): Promise<void> => {
+    if (!editingColumnId) {
+      return;
+    }
+
+    const title = editingTitle.trim();
+
+    if (!title) {
+      setStatusMessage("Column title is required.");
+      setStatusTone("error");
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await updateBoardColumn({
+        boardId,
+        color: normalizeOptionalValue(editingColor),
+        columnId: editingColumnId,
+        projectId,
+        title,
+      }).unwrap();
+
+      handleCancelColumnEdit();
+      setStatusMessage("Board column updated.");
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the board column."));
+      setStatusTone("error");
+    }
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!confirmDeleteColumn) {
+      return;
+    }
+
+    const taskCount = tasksByColumn[confirmDeleteColumn._id]?.length ?? 0;
+
+    if (taskCount > 0 && !deleteTargetColumnId) {
+      setStatusMessage("Choose a target column before deleting a non-empty column.");
+      setStatusTone("error");
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await deleteBoardColumn({
+        boardId,
+        columnId: confirmDeleteColumn._id,
+        projectId,
+        targetColumnId: taskCount > 0 ? deleteTargetColumnId : undefined,
+      }).unwrap();
+
+      handleDeleteCancel();
+      handleCancelColumnEdit();
+      setStatusMessage("Board column deleted.");
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, "Unable to delete the board column."));
+      setStatusTone("error");
+    }
+  };
+
+  const handleColumnDragStart = (event: DragEvent<HTMLElement>, columnId: string): void => {
+    if (!canManageBoard || isMutating) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggedColumnId(columnId);
+    setDraggedTask(null);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", `column:${columnId}`);
+  };
+
+  const handleColumnDragOver = (event: DragEvent<HTMLElement>, targetColumnId: string): void => {
+    if (!draggedColumnId || draggedTask) {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveColumnDropId(targetColumnId);
+  };
+
+  const handleColumnDrop = async (
+    event: DragEvent<HTMLElement>,
+    targetColumnId: string,
+  ): Promise<void> => {
+    if (!draggedColumnId || draggedTask || draggedColumnId === targetColumnId) {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveColumnDropId(null);
+
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const placeAfter = event.clientX > targetRect.left + targetRect.width / 2;
+    const reorderedColumns = [...columnRecords];
+    const draggedColumnIndex = reorderedColumns.findIndex(
+      (column) => column._id === draggedColumnId,
+    );
+    const [draggedColumn] = reorderedColumns.splice(draggedColumnIndex, 1);
+
+    if (!draggedColumn) {
+      setDraggedColumnId(null);
+      return;
+    }
+
+    const targetIndex = reorderedColumns.findIndex((column) => column._id === targetColumnId);
+    const insertIndex = placeAfter ? targetIndex + 1 : targetIndex;
+
+    reorderedColumns.splice(insertIndex, 0, draggedColumn);
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await reorderBoardColumns({
+        boardId,
+        items: reorderedColumns.map((column, index) => ({
+          columnId: column._id,
+          position: index,
+        })),
+        projectId,
+      }).unwrap();
+
+      setStatusMessage("Board columns reordered.");
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, "Unable to reorder board columns."));
+      setStatusTone("error");
+    } finally {
+      setDraggedColumnId(null);
+    }
+  };
+
+  const handleColumnDragEnd = (): void => {
+    setDraggedColumnId(null);
+    setActiveColumnDropId(null);
+  };
+
+  const isTaskDraggable = (taskId: string, columnId: string): boolean => {
+    if (isMutating) {
+      return false;
+    }
+
+    const task = tasksByColumn[columnId]?.find((item) => item._id === taskId);
+
+    if (!task) {
+      return false;
+    }
+
+    return canManageBoard || task.reporterId === currentUser?.id;
+  };
+
+  const handleTaskDragStart = (
+    event: DragEvent<HTMLElement>,
+    sourceColumnId: string,
+    taskId: string,
+  ): void => {
+    if (!isTaskDraggable(taskId, sourceColumnId)) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggedTask({ sourceColumnId, taskId });
+    setDraggedColumnId(null);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", `task:${taskId}`);
+  };
+
+  const handleTaskDragOver = (
+    event: DragEvent<HTMLElement>,
+    columnId: string,
+    taskId?: string,
+  ): void => {
+    if (!draggedTask) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (!taskId) {
+      setActiveColumnDropId(columnId);
+      setActiveTaskDropKey(null);
+      return;
+    }
+
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const position: TaskDropPosition =
+      event.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
+
+    setActiveColumnDropId(null);
+    setActiveTaskDropKey(`${columnId}:${taskId}:${position}`);
+  };
+
+  const moveDraggedTask = async (
+    targetColumnId: string,
+    beforeTaskId?: string,
+    afterTaskId?: string,
+  ): Promise<void> => {
+    if (!draggedTask) {
+      return;
+    }
+
+    const { sourceColumnId, taskId } = draggedTask;
+
+    if (
+      sourceColumnId === targetColumnId &&
+      beforeTaskId === undefined &&
+      afterTaskId === undefined
+    ) {
+      setDraggedTask(null);
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await moveTask({
+        afterTaskId,
+        beforeTaskId,
+        boardId,
+        projectId,
+        sourceColumnId,
+        targetColumnId,
+        taskId,
+      }).unwrap();
+
+      setStatusMessage("Task moved.");
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, "Unable to move the task."));
+      setStatusTone("error");
+    } finally {
+      setDraggedTask(null);
+      setActiveColumnDropId(null);
+      setActiveTaskDropKey(null);
+    }
+  };
+
+  const handleTaskDropOnColumn = async (
+    event: DragEvent<HTMLElement>,
+    targetColumnId: string,
+  ): Promise<void> => {
+    if (!draggedTask) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const targetTasks = (tasksByColumn[targetColumnId] ?? []).filter(
+      (task) => task._id !== draggedTask.taskId,
+    );
+    const beforeTaskId = targetTasks[targetTasks.length - 1]?._id;
+
+    await moveDraggedTask(targetColumnId, beforeTaskId, undefined);
+  };
+
+  const handleTaskDropOnTask = async (
+    event: DragEvent<HTMLElement>,
+    targetColumnId: string,
+    targetTaskId: string,
+  ): Promise<void> => {
+    if (!draggedTask) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (draggedTask.taskId === targetTaskId && draggedTask.sourceColumnId === targetColumnId) {
+      setDraggedTask(null);
+      setActiveTaskDropKey(null);
+      return;
+    }
+
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const position: TaskDropPosition =
+      event.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
+    const targetTasks = (tasksByColumn[targetColumnId] ?? []).filter(
+      (task) => task._id !== draggedTask.taskId,
+    );
+    const targetIndex = targetTasks.findIndex((task) => task._id === targetTaskId);
+
+    if (targetIndex < 0) {
+      await moveDraggedTask(targetColumnId);
+      return;
+    }
+
+    const beforeTaskId =
+      position === "before" ? targetTasks[targetIndex - 1]?._id : targetTasks[targetIndex]?._id;
+    const afterTaskId =
+      position === "before" ? targetTasks[targetIndex]?._id : targetTasks[targetIndex + 1]?._id;
+
+    await moveDraggedTask(targetColumnId, beforeTaskId, afterTaskId);
+  };
+
+  const handleTaskDragEnd = (): void => {
+    setDraggedTask(null);
+    setActiveColumnDropId(null);
+    setActiveTaskDropKey(null);
+  };
+
+  return {
+    activeColumnDropId,
+    activeTaskDropKey,
+    confirmDeleteAnchor,
+    confirmDeleteColumn,
+    deleteTargetColumnId,
+    draggedColumnId,
+    editingColor,
+    editingColumnId,
+    editingTitle,
+    handleCancelColumnEdit,
+    handleColumnDeleteTargetChange,
+    handleColumnDragEnd,
+    handleColumnDragOver,
+    handleColumnDragStart,
+    handleColumnDrop,
+    handleColumnMenuAction,
+    handleColumnMenuClose,
+    handleColumnMenuOpen,
+    handleConfirmDelete,
+    handleDeleteCancel,
+    handleEditColorChange,
+    handleEditTitleChange,
+    handleSaveColumnEdit,
+    handleTaskDragEnd,
+    handleTaskDragOver,
+    handleTaskDragStart,
+    handleTaskDropOnColumn,
+    handleTaskDropOnTask,
+    isColumnBeingEdited: (columnId: string) => editingColumnId === columnId,
+    isDeleteDisabled,
+    isMutating,
+    isTaskDraggable,
+    menuAnchor,
+    menuColumnId,
+    statusMessage,
+    statusTone,
+  };
+};
