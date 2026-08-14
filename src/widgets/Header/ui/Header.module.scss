@@ -13,12 +13,47 @@ $blue: #16a8ff;
 
   display: flex;
   align-items: center;
-  justify-content: end;
+  justify-content: space-between;
 
   height: 76px;
   padding: 0 38px;
 
   background: #ffffff;
+}
+
+.projectSwitcher {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  margin-right: 24px;
+}
+
+.projectSelect {
+  width: min(360px, 100%);
+
+  :global(.MuiInputLabel-root) {
+    color: #7f8aa8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  :global(.MuiOutlinedInput-root) {
+    min-height: 48px;
+    background: #f7f8fc;
+    border-radius: 12px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border-color: $border;
+  }
+
+  :global(.MuiSelect-select),
+  :global(.MuiInputBase-input) {
+    color: $primary-dark;
+    font-size: 14px;
+    font-weight: 600;
+  }
 }
 
 .searchField {
@@ -59,6 +94,7 @@ $blue: #16a8ff;
 .profileActions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 
   button {
     color: #53618c;

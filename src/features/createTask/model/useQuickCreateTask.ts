@@ -1,8 +1,9 @@
 import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
 import { getPreferredBoardColumnId, useGetBoardViewQuery } from "@/entities/board";
-import { useActiveProject } from "@/entities/project";
+import { useActiveProject, useGetProjectsQuery } from "@/entities/project";
 import { selectAuthUser } from "@/entities/user";
 import { getInitials } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
@@ -20,16 +21,17 @@ interface UseQuickCreateTaskResult {
   collaborators: QuickTaskCollaborator[];
   currentProjectTitle: string | null;
   handleCreateTask: () => Promise<void>;
+  handleProjectChange: (projectId: string) => void;
   handleEmojiSelect: (emoji: string) => void;
   handleTaskTitleChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleCollaboratorToggle: (collaboratorId: string) => void;
   helperMessage: string;
   isLoading: boolean;
   isProjectReady: boolean;
+  projectOptions: Array<{ id: string; title: string }>;
   selectedEmoji: string | null;
   selectedCollaboratorIds: string[];
-  statusMessage: string | null;
-  statusTone: "error" | "success" | null;
+  selectedProjectId: string;
   taskTitle: string;
 }
 
@@ -51,22 +53,35 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
   const [taskTitle, setTaskTitle] = useState("");
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const [selectedCollaboratorIds, setSelectedCollaboratorIds] = useState<string[]>([]);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+  const [projectOverrideId, setProjectOverrideId] = useState<string | null>(null);
   const {
     activeProjectId,
     currentProjectTitle,
     isError: isProjectError,
     isLoading: isProjectLoading,
   } = useActiveProject();
+  const { data: projectsResponse } = useGetProjectsQuery({
+    limit: 100,
+    page: 1,
+  });
+  const projectOptions =
+    projectsResponse?.items.map((project) => ({
+      id: project._id,
+      title: project.title,
+    })) ?? [];
+  const selectedProjectId = projectOverrideId ?? activeProjectId ?? "";
+  const selectedProjectTitle =
+    projectOptions.find((project) => project.id === selectedProjectId)?.title ??
+    currentProjectTitle ??
+    null;
   const {
     data: boardView,
     isError: isBoardError,
     isLoading: isBoardLoading,
   } = useGetBoardViewQuery(
-    { projectId: activeProjectId ?? "" },
+    { projectId: selectedProjectId },
     {
-      skip: !activeProjectId,
+      skip: !selectedProjectId,
     },
   );
   const [createTask, { isLoading }] = useCreateTaskMutation();
@@ -101,6 +116,10 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
     setSelectedEmoji(emoji);
   };
 
+  const handleProjectChange = (projectId: string): void => {
+    setProjectOverrideId(projectId === activeProjectId ? null : projectId);
+  };
+
   const handleCollaboratorToggle = (collaboratorId: string): void => {
     setSelectedCollaboratorIds((currentState) =>
       currentState.includes(collaboratorId)
@@ -114,20 +133,16 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
     const boardId = boardView?.board._id;
     const preferredColumnId = getPreferredBoardColumnId(boardView?.columns);
 
-    if (!normalizedTitle || !activeProjectId || !boardId) {
-      setStatusMessage(
+    if (!normalizedTitle || !selectedProjectId || !boardId) {
+      toast.error(
         !normalizedTitle
           ? "Task title is required."
-          : !activeProjectId
+          : !selectedProjectId
             ? "Select a project before creating a dashboard task."
             : "Project board is not ready yet.",
       );
-      setStatusTone("error");
       return;
     }
-
-    setStatusMessage(null);
-    setStatusTone(null);
 
     try {
       await createTask({
@@ -135,52 +150,51 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
         boardId,
         category: "planning",
         columnId: preferredColumnId ?? undefined,
-        description: `Created from dashboard quick action for ${currentProjectTitle ?? "project"}`,
+        description: `Created from dashboard quick action for ${selectedProjectTitle ?? "project"}`,
         emoji: selectedEmoji ?? undefined,
         priority: "medium",
-        projectId: activeProjectId,
+        projectId: selectedProjectId,
         title: normalizedTitle,
       }).unwrap();
 
       setTaskTitle("");
       setSelectedEmoji(null);
-      setStatusMessage("Task created successfully.");
-      setStatusTone("success");
+      toast.success("Task created successfully.");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error, "Unable to create the dashboard task."));
-      setStatusTone("error");
+      toast.error(getErrorMessage(error, "Unable to create the dashboard task."));
     }
   };
 
-  const isProjectReady = Boolean(activeProjectId && boardView?.board._id);
+  const isProjectReady = Boolean(selectedProjectId && boardView?.board._id);
   const helperMessage =
     isProjectLoading || isBoardLoading
       ? "Loading project workspace..."
       : isProjectError || isBoardError
         ? "Unable to load the active project workspace."
-        : !activeProjectId
+        : !selectedProjectId
           ? "No project available yet. Create a project first."
           : !boardView?.board._id
             ? "This project does not have a board yet."
             : collaborators.length === 0
               ? "No collaborators available on this board yet."
-              : "Pick collaborators and create a task in the active project board.";
+              : "Pick collaborators and create a task in the selected project backlog.";
 
   return {
     canCreateTask: taskTitle.trim() !== "" && isProjectReady,
     collaborators,
-    currentProjectTitle,
+    currentProjectTitle: selectedProjectTitle,
     handleCreateTask,
+    handleProjectChange,
     handleEmojiSelect,
     handleTaskTitleChange,
     handleCollaboratorToggle,
     helperMessage,
     isLoading,
     isProjectReady,
+    projectOptions,
     selectedEmoji,
     selectedCollaboratorIds,
-    statusMessage,
-    statusTone,
+    selectedProjectId,
     taskTitle,
   };
 };

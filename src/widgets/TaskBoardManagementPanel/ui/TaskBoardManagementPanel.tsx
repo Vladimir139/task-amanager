@@ -2,6 +2,7 @@ import { Alert, Box, Button, MenuItem, Paper, TextField, Typography } from "@mui
 import type { FC } from "react";
 
 import { type BoardColumnRecord, type BoardRecord, type TaskRecord } from "@/shared/api/types";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import { useTaskBoardManagementPanel } from "../model/useTaskBoardManagementPanel";
 import styles from "./TaskBoardManagementPanel.module.scss";
@@ -55,6 +56,8 @@ export const TaskBoardManagementPanel: FC<TaskBoardManagementPanelProps> = ({
     tasksByColumn,
   });
 
+  useStatusToast({ message: statusMessage, tone: statusTone });
+
   return (
     <Paper className={styles.panel} elevation={0}>
       <Box className={styles.panelHeader}>
@@ -69,12 +72,6 @@ export const TaskBoardManagementPanel: FC<TaskBoardManagementPanelProps> = ({
           </Typography>
         </Box>
       </Box>
-
-      {statusMessage && statusTone && (
-        <Alert severity={statusTone} className={styles.statusAlert}>
-          {statusMessage}
-        </Alert>
-      )}
 
       {!canManageBoard && (
         <Alert severity="info" className={styles.statusAlert}>

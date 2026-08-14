@@ -11,7 +11,7 @@ import {
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
 import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
-import { useSelectedProjectId } from "@/entities/project";
+import { useActiveProject } from "@/entities/project";
 import { useSelectedTaskId } from "@/entities/task";
 import { selectAuthUser } from "@/entities/user";
 import { selectAccessToken } from "@/features/auth/model/selectors";
@@ -54,7 +54,6 @@ interface UseTaskBoardWorkspaceResult {
   isError: boolean;
   isLoading: boolean;
   isMessagesError: boolean;
-  isProjectSelected: boolean;
   isSendingMessage: boolean;
   memberOptions: Array<{
     id: string;
@@ -83,7 +82,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const dispatch = useAppDispatch();
   const accessToken = useAppSelector(selectAccessToken);
   const currentUser = useAppSelector(selectAuthUser);
-  const projectId = useSelectedProjectId();
+  const { activeProjectId: projectId } = useActiveProject();
   const selectedBoardId = useSelectedBoardId();
   const selectedTaskId = useSelectedTaskId();
   const [message, setMessage] = useState("");
@@ -602,7 +601,6 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     isLoading:
       Boolean(projectId) && (isBoardsLoading || (Boolean(activeBoardId) && isBoardLoading)),
     isMessagesError,
-    isProjectSelected: Boolean(projectId),
     isSendingMessage,
     memberOptions,
     message,

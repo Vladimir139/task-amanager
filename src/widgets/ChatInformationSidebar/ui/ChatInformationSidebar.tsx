@@ -1,10 +1,11 @@
-import { Alert, Avatar, Box, Button, MenuItem, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, MenuItem, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
 import { ChatMemberItem } from "@/entities/chatMember";
 import type { SharedFile } from "@/entities/sharedFile";
 import { SharedFileItem } from "@/entities/sharedFile";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import styles from "./ChatInformationSidebar.module.scss";
 
@@ -53,6 +54,11 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({
 }) => {
   const isGroupConversation = conversationType === "group";
 
+  useStatusToast({
+    message: managementStatusMessage,
+    tone: managementStatusTone,
+  });
+
   return (
     <aside className={styles.informationSidebar}>
       <Box className={styles.profile}>
@@ -62,12 +68,6 @@ export const ChatInformationSidebar: FC<ChatInformationSidebarProps> = ({
 
         <Typography>{profileSubtitle}</Typography>
       </Box>
-
-      {managementStatusMessage && managementStatusTone && (
-        <Alert severity={managementStatusTone} className={styles.statusAlert}>
-          {managementStatusMessage}
-        </Alert>
-      )}
 
       {isGroupConversation && (
         <section className={styles.sidebarSection}>

@@ -1,8 +1,6 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
-import { Link } from "react-router-dom";
 
-import { ROUTES } from "@/shared/config/router";
 import { TaskBoardColumns } from "@/widgets/TaskBoardColumns";
 import { TaskBoardHeader } from "@/widgets/TaskBoardHeader";
 import { TaskBoardManagementPanel } from "@/widgets/TaskBoardManagementPanel";
@@ -29,7 +27,6 @@ export const TaskBoardWorkspace: FC = () => {
     isError,
     isLoading,
     isMessagesError,
-    isProjectSelected,
     isSendingMessage,
     memberOptions,
     message,
@@ -47,20 +44,6 @@ export const TaskBoardWorkspace: FC = () => {
     tasksByColumn,
     typingText,
   } = useTaskBoardWorkspace();
-
-  if (!isProjectSelected) {
-    return (
-      <Box className={styles.page}>
-        <Box className={styles.boardContent}>
-          <Typography>Select a project from the projects page to open its board.</Typography>
-
-          <Button component={Link} to={ROUTES.projects.page} variant="contained">
-            Open projects
-          </Button>
-        </Box>
-      </Box>
-    );
-  }
 
   if (isLoading) {
     return <Typography>Loading board...</Typography>;

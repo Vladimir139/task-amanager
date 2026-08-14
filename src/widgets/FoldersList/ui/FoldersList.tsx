@@ -1,5 +1,5 @@
 import { ArrowBack, DeleteOutlined, Folder, SaveOutlined } from "@mui/icons-material";
-import { Alert, Box, Button, MenuItem, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, MenuItem, Paper, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +21,7 @@ import type { FolderRecord } from "@/shared/api/types";
 import { getFilesRoute } from "@/shared/config/router/routes";
 import { getApiErrorMessage } from "@/shared/lib/api";
 import { getInitials } from "@/shared/lib/formatters";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import styles from "./FoldersList.module.scss";
 
@@ -36,6 +37,8 @@ export const FoldersList: FC = () => {
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const [folderName, setFolderName] = useState("");
   const [folderColor, setFolderColor] = useState<(typeof folderColors)[number]>("blue");
+
+  useStatusToast({ message: statusMessage, tone: statusTone });
 
   const userMap = useMemo(() => new Map((users ?? []).map((user) => [user._id, user])), [users]);
 
@@ -218,7 +221,6 @@ export const FoldersList: FC = () => {
             : "This folder has no subfolders yet."}
         </Typography>
       )}
-      {statusMessage && statusTone && <Alert severity={statusTone}>{statusMessage}</Alert>}
       {selectedFolder && (
         <Box className={styles.folderEditor}>
           <TextField

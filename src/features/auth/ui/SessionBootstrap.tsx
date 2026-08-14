@@ -1,6 +1,7 @@
 import type { JSX, PropsWithChildren } from "react";
 import { useEffect } from "react";
 
+import { projectSelectionActions } from "@/entities/project";
 import { mapUserRecordToAuthUser, useGetCurrentUserQuery, userActions } from "@/entities/user";
 import { clearAuthSession } from "@/features/auth/lib/session";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
@@ -23,6 +24,7 @@ export const SessionBootstrap = ({ children }: PropsWithChildren): JSX.Element =
     }
 
     dispatch(authActions.setInitialized(true));
+    dispatch(projectSelectionActions.hydrateCurrentProjectSelection(null));
     dispatch(userActions.clearAuthData());
   }, [accessToken, dispatch, isInitialized]);
 
@@ -32,6 +34,7 @@ export const SessionBootstrap = ({ children }: PropsWithChildren): JSX.Element =
     }
 
     dispatch(userActions.setAuthData(mapUserRecordToAuthUser(data)));
+    dispatch(projectSelectionActions.hydrateCurrentProjectSelection(data.currentProjectId ?? null));
     dispatch(authActions.setInitialized(true));
   }, [data, dispatch, isSuccess]);
 

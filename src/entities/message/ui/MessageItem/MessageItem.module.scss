@@ -20,13 +20,6 @@ $primary-dark: #21235f;
 .messageContent {
   min-width: 0;
 
-  p:first-child {
-    margin-bottom: 3px;
-    color: $primary-dark;
-    font-size: 15px;
-    font-weight: 700;
-  }
-
   p:last-child {
     overflow: hidden;
     color: #7c87a3;
@@ -34,4 +27,34 @@ $primary-dark: #21235f;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+
+  p {
+    min-width: 0;
+    margin-bottom: 3px;
+    color: $primary-dark;
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+
+.unreadBadge {
+  display: inline-flex;
+  min-width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  color: #ffffff;
+  background: #5355ff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
 }

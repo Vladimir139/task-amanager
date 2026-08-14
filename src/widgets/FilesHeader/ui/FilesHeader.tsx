@@ -1,5 +1,5 @@
 import { Add, Link } from "@mui/icons-material";
-import { Alert, Box, Button, MenuItem, TextField, Typography } from "@mui/material";
+import { Box, Button, MenuItem, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useRef, useState } from "react";
 
@@ -12,6 +12,7 @@ import {
 } from "@/entities/folder";
 import { useSelectedProjectId } from "@/entities/project";
 import { getApiErrorMessage } from "@/shared/lib/api";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import styles from "./FilesHeader.module.scss";
 
@@ -25,6 +26,8 @@ export const FilesHeader: FC = () => {
   const [createFolder, { isLoading: isCreatingFolder }] = useCreateFolderMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const { selectedFolder, selectedFolderId } = useSelectedFolder();
+
+  useStatusToast({ message: statusMessage, tone: statusTone });
 
   const handleCreateFolder = async (): Promise<void> => {
     const trimmedFolderName = folderName.trim();
@@ -98,7 +101,6 @@ export const FilesHeader: FC = () => {
     <Box className={styles.pageHeader}>
       <Box>
         <Typography component="h1">Files</Typography>
-        {statusMessage && statusTone && <Alert severity={statusTone}>{statusMessage}</Alert>}
         <Typography className={styles.contextText}>
           {selectedFolder
             ? `Uploads and new folders will be added to ${selectedFolder.name}.`

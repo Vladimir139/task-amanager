@@ -10,6 +10,10 @@ export interface UpdateCurrentUserPayload {
   locale: string;
 }
 
+export interface UpdateCurrentProjectPayload {
+  currentProjectId: string | null;
+}
+
 export interface ChangePasswordPayload {
   currentPassword: string;
   newPassword: string;
@@ -35,6 +39,14 @@ export const usersApi = baseApi.injectEndpoints({
       query: () => "/users",
     }),
     updateCurrentUser: build.mutation<UserRecord, UpdateCurrentUserPayload>({
+      invalidatesTags: ["CurrentUser", "Users"],
+      query: (body) => ({
+        body,
+        method: "PATCH",
+        url: "/users/me",
+      }),
+    }),
+    updateCurrentProject: build.mutation<UserRecord, UpdateCurrentProjectPayload>({
       invalidatesTags: ["CurrentUser", "Users"],
       query: (body) => ({
         body,
@@ -70,6 +82,7 @@ export const {
   useChangePasswordMutation,
   useGetCurrentUserQuery,
   useGetUsersQuery,
+  useUpdateCurrentProjectMutation,
   useUpdateCurrentUserMutation,
   useUpdateNotificationSettingsMutation,
   useUploadAvatarMutation,

@@ -4,6 +4,7 @@ export interface Message {
   message: string;
   avatar: string;
   color: string;
+  unreadCount?: number;
 }
 
 export interface MessageItemProps {

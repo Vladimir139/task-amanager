@@ -1,6 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 
+import { useAppSelector } from "@/shared/libs/redux";
+
 import { useGetProjectByIdQuery, useGetProjectsQuery } from "../../api/projectsApi";
+import { selectCurrentProjectId } from "../selectors/projectSelectionSelectors";
 
 interface UseActiveProjectResult {
   activeProjectId: string | null;
@@ -12,6 +15,8 @@ interface UseActiveProjectResult {
 export const useActiveProject = (): UseActiveProjectResult => {
   const [searchParams] = useSearchParams();
   const projectIdFromQuery = searchParams.get("projectId");
+  const currentProjectId = useAppSelector(selectCurrentProjectId);
+  const resolvedProjectId = projectIdFromQuery ?? currentProjectId;
 
   const {
     data: fallbackProjects,
@@ -23,7 +28,7 @@ export const useActiveProject = (): UseActiveProjectResult => {
       page: 1,
     },
     {
-      skip: Boolean(projectIdFromQuery),
+      skip: Boolean(resolvedProjectId),
     },
   );
 
@@ -31,14 +36,14 @@ export const useActiveProject = (): UseActiveProjectResult => {
     data: selectedProject,
     isError: isSelectedProjectError,
     isLoading: isSelectedProjectLoading,
-  } = useGetProjectByIdQuery(projectIdFromQuery ?? "", {
-    skip: !projectIdFromQuery,
+  } = useGetProjectByIdQuery(resolvedProjectId ?? "", {
+    skip: !resolvedProjectId,
   });
 
   const fallbackProject = fallbackProjects?.items[0];
 
   return {
-    activeProjectId: projectIdFromQuery ?? fallbackProject?._id ?? null,
+    activeProjectId: resolvedProjectId ?? fallbackProject?._id ?? null,
     currentProjectTitle: selectedProject?.title ?? fallbackProject?.title ?? null,
     isError: isFallbackProjectsError || isSelectedProjectError,
     isLoading: isFallbackProjectsLoading || isSelectedProjectLoading,

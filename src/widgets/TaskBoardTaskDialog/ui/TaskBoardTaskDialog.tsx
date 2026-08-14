@@ -16,6 +16,7 @@ import {
 import type { FC } from "react";
 
 import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import { useTaskBoardTaskDialog } from "../model/useTaskBoardTaskDialog";
 import styles from "./TaskBoardTaskDialog.module.scss";
@@ -113,14 +114,15 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
     tasksByColumn,
   });
 
+  useStatusToast({ message: statusMessage, tone: statusTone });
+  useStatusToast({ message: commentStatusMessage, tone: commentStatusTone });
+
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="lg">
       <DialogTitle>{dialogTitle}</DialogTitle>
 
       <DialogContent dividers>
         <Box className={styles.content}>
-          {statusMessage && statusTone && <Alert severity={statusTone}>{statusMessage}</Alert>}
-
           {!canManageTask && !isCreateMode && (
             <Alert severity="info">
               You can view this task, but only the reporter, board owners, and board admins can
@@ -488,10 +490,6 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                     <Typography component="h3" className={styles.sectionTitle}>
                       Comments ({comments.length})
                     </Typography>
-
-                    {commentStatusMessage && commentStatusTone && (
-                      <Alert severity={commentStatusTone}>{commentStatusMessage}</Alert>
-                    )}
 
                     <Paper className={styles.commentComposer} elevation={0}>
                       <TextField

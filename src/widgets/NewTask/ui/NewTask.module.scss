@@ -26,6 +26,24 @@ $border: #eceef5;
   font-weight: 500 !important;
 }
 
+.projectSelect {
+  :global(.MuiOutlinedInput-root) {
+    min-height: 40px;
+    background: #edf1f5;
+    border-radius: 8px;
+  }
+
+  :global(.MuiOutlinedInput-notchedOutline) {
+    border: 0;
+  }
+}
+
+.projectHelperText {
+  margin-top: 8px !important;
+  color: #667085;
+  font-size: 12px !important;
+}
+
 .helperText {
   color: #667085;
   font-size: 12px !important;
@@ -90,11 +108,15 @@ $border: #eceef5;
   background: $border;
 }
 
-.collaborators {
+.collaboratorHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
+}
+
+.collaborators {
+  min-width: 0;
+  flex: 1;
 }
 
 .collaboratorChips {
@@ -127,14 +149,57 @@ $border: #eceef5;
 .selectedCollaboratorChip {
   :global(.MuiChip-root),
   & {
-    color: #ffffff;
+    color: #ffffff !important;
     background: $primary !important;
+  }
+
+  :global(.MuiChip-label) {
+    color: #ffffff !important;
   }
 
   :global(.MuiAvatar-root) {
     color: $primary;
     background: #ffffff;
   }
+
+  :global(.MuiChip-deleteIcon) {
+    color: #ffffff !important;
+  }
+}
+
+.addCollaboratorButton {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  color: $primary !important;
+  background: #eef0ff !important;
+}
+
+.collaboratorMenuItem {
+  display: flex;
+  gap: 10px;
+}
+
+.collaboratorMenuAvatar {
+  width: 28px !important;
+  height: 28px !important;
+  color: $primary-dark !important;
+  background: #edf1ff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.collaboratorSelectionHint {
+  min-width: 0;
+  flex: 1;
 }
 
 .submitTaskButton {

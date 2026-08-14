@@ -6,6 +6,7 @@ import {
   projectMemberRoleOptions,
   projectStatusOptions,
 } from "@/entities/project";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
 import { useProjectManagementPanel } from "../model/useProjectManagementPanel";
 import styles from "./ProjectManagementPanel.module.scss";
@@ -36,6 +37,8 @@ export const ProjectManagementPanel: FC = () => {
     statusMessage,
     statusTone,
   } = useProjectManagementPanel();
+
+  useStatusToast({ message: statusMessage, tone: statusTone });
 
   if (!selectedProjectId) {
     return (
@@ -101,12 +104,6 @@ export const ProjectManagementPanel: FC = () => {
           </Button>
         </Box>
       </Box>
-
-      {statusMessage && statusTone && (
-        <Alert severity={statusTone} className={styles.statusAlert}>
-          {statusMessage}
-        </Alert>
-      )}
 
       {!canManageProject && (
         <Alert severity="info" className={styles.statusAlert}>

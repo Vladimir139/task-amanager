@@ -1,6 +1,7 @@
-import { Alert, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import type { FC } from "react";
 
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 import { NotificationSettingsForm } from "@/widgets/NotificationSettingsForm";
 import { PasswordSettingsForm } from "@/widgets/PasswordSettingsForm";
 import { ProfileDetailsForm } from "@/widgets/ProfileDetailsForm";
@@ -33,6 +34,8 @@ export const SettingsWorkspace: FC = () => {
     statusTone,
   } = useSettingsWorkspace();
 
+  useStatusToast({ message: statusMessage, tone: statusTone });
+
   if (isLoading) {
     return <Typography>Loading profile...</Typography>;
   }
@@ -56,12 +59,6 @@ export const SettingsWorkspace: FC = () => {
       />
 
       <SettingsNavigation activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {statusMessage && statusTone && (
-        <Alert severity={statusTone} className={styles.statusAlert}>
-          {statusMessage}
-        </Alert>
-      )}
 
       {activeTab === "My details" && (
         <ProfileDetailsForm

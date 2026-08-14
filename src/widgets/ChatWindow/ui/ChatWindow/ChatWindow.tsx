@@ -1,8 +1,9 @@
-import { Alert, Box, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
 import { type ChatMessage, ChatMessageItem } from "@/entities/chatMessage";
+import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 import { ChatHeader, MessageComposer } from "@/widgets";
 
 import styles from "./ChatWindow.module.scss";
@@ -47,6 +48,11 @@ export const ChatWindow: FC<ChatWindowProps> = ({
   const firstMessage = messages[0];
   const nextMessages = messages.slice(1);
 
+  useStatusToast({
+    message: composerStatusMessage,
+    tone: composerStatusTone,
+  });
+
   return (
     <section className={styles.chat}>
       <ChatHeader
@@ -58,9 +64,6 @@ export const ChatWindow: FC<ChatWindowProps> = ({
       />
 
       <Box className={styles.messages}>
-        {composerStatusMessage && composerStatusTone && (
-          <Alert severity={composerStatusTone}>{composerStatusMessage}</Alert>
-        )}
         {typingText && <Typography className={styles.typingIndicator}>{typingText}</Typography>}
         {isLoading && <Typography>Loading messages...</Typography>}
         {!isLoading && messages.length === 0 && (

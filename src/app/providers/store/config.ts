@@ -1,5 +1,6 @@
 import { combineReducers } from "@reduxjs/toolkit";
 
+import { projectSelectionReducer } from "@/entities/project";
 import { userReducer } from "@/entities/user";
 import { authReducer } from "@/features/auth/model/slice/authSlice";
 import { baseApi } from "@/shared/config/query";
@@ -8,6 +9,7 @@ import { clearStore, createReduxStore, type StateSchema } from "@/shared/config/
 export const reducers = {
   [baseApi.reducerPath]: baseApi.reducer,
   auth: authReducer,
+  projectSelection: projectSelectionReducer,
   user: userReducer,
 };
 

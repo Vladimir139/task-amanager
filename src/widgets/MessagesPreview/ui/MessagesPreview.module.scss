@@ -2,11 +2,24 @@ $primary-dark: #21235f;
 
 .messagesSection {
   h2 {
-    margin-bottom: 18px;
     color: $primary-dark;
     font-size: 21px;
     font-weight: 700;
   }
+}
+
+.messagesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.extraChatsIndicator {
+  color: #5355ff;
+  font-size: 12px !important;
+  font-weight: 700 !important;
 }
 
 .messagesList {

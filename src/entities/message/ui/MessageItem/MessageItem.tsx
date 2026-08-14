@@ -12,7 +12,12 @@ export const MessageItem: FC<MessageItemProps> = ({ message }) => {
       </Avatar>
 
       <Box className={styles.messageContent}>
-        <Typography>{message.name}</Typography>
+        <Box className={styles.messageHeader}>
+          <Typography>{message.name}</Typography>
+          {!!message.unreadCount && (
+            <span className={styles.unreadBadge}>{message.unreadCount}</span>
+          )}
+        </Box>
         <Typography>{message.message}</Typography>
       </Box>
     </Box>

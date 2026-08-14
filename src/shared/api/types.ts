@@ -41,6 +41,7 @@ export interface UserRecord {
   lastActiveAt?: string | null;
   timezone?: string | null;
   locale?: string | null;
+  currentProjectId?: string | null;
   notificationSettings?: NotificationSettingsRecord;
   createdAt?: string;
   updatedAt?: string;
