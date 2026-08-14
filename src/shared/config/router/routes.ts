@@ -95,3 +95,14 @@ export const getFilesRoute = (projectId?: string, folderId?: string): string => 
 
   return `${ROUTES.files.page}?${params.toString()}`;
 };
+
+export const getSettingsRoute = (tab?: string): string => {
+  if (!tab) {
+    return ROUTES.settings.page;
+  }
+
+  const params = new URLSearchParams();
+  params.set("tab", tab);
+
+  return `${ROUTES.settings.page}?${params.toString()}`;
+};

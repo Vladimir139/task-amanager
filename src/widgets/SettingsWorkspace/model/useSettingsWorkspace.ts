@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   defaultNotificationSettings,
@@ -20,7 +21,7 @@ import {
   useUploadAvatarMutation,
 } from "@/entities/user";
 import { useAppDispatch } from "@/shared/libs/redux";
-import type { SettingsTab } from "@/widgets/SettingsNavigation/model/types";
+import { type SettingsTab, settingsTabs } from "@/widgets/SettingsNavigation/model/types";
 
 interface UseSettingsWorkspaceResult {
   activeTab: SettingsTab;
@@ -80,7 +81,13 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 
 export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
   const dispatch = useAppDispatch();
-  const [activeTab, setActiveTab] = useState<SettingsTab>("My details");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const initialActiveTab =
+    requestedTab && settingsTabs.includes(requestedTab as SettingsTab)
+      ? (requestedTab as SettingsTab)
+      : "My details";
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialActiveTab);
   const [profile, setProfile] = useState<UserProfile>(emptyProfile);
   const [notificationSettings, setNotificationSettings] = useState<UserNotificationSettings>(
     defaultNotificationSettings,
@@ -114,6 +121,27 @@ export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
   }, [user]);
 
   useEffect(() => {
+    if (!requestedTab) {
+      setActiveTab("My details");
+      return;
+    }
+
+    if (settingsTabs.includes(requestedTab as SettingsTab)) {
+      setActiveTab(requestedTab as SettingsTab);
+      return;
+    }
+
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set("tab", "My details");
+        return nextParams;
+      },
+      { replace: true },
+    );
+  }, [requestedTab, setSearchParams]);
+
+  useEffect(() => {
     return () => {
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
@@ -123,6 +151,11 @@ export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
 
   const handleTabChange = (tab: SettingsTab) => {
     setActiveTab(tab);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.set("tab", tab);
+      return nextParams;
+    });
     setStatusMessage(null);
     setStatusTone(null);
   };

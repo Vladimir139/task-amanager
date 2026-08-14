@@ -34,6 +34,20 @@ const mapProjectColor = (color: string): Project["color"] => {
   return "blue";
 };
 
+const getProjectDescription = (description?: string | null): string => {
+  const normalizedDescription = description?.trim();
+
+  const fallbackDescription = normalizedDescription === "" ? undefined : normalizedDescription;
+
+  return fallbackDescription ?? "No description yet";
+};
+
+const getProjectDueTime = (dueDateLabel: string): number => {
+  const dueTime = new Date(dueDateLabel).getTime();
+
+  return Number.isNaN(dueTime) ? Number.MAX_SAFE_INTEGER : dueTime;
+};
+
 interface UseProjectsCatalogResult {
   handleManageProject: (project: Project) => void;
   handleOpenProject: (project: Project) => void;
@@ -60,18 +74,15 @@ export const useProjectsCatalog = (): UseProjectsCatalogResult => {
   const [sort, setSort] = useState<ProjectSort>("default");
 
   const { data, isError, isLoading } = useGetProjectsQuery({
-    limit: 24,
+    limit: 100,
     page: 1,
-    search,
-    sort: sort === "default" ? undefined : sort,
-    status: status === "all" ? undefined : status,
   });
   const { data: users } = useGetUsersQuery();
 
   const projects = useMemo(() => {
     const userMap = new Map((users ?? []).map((user) => [user._id, user]));
 
-    return (data?.items ?? []).map((project) => {
+    const mappedProjects = (data?.items ?? []).map((project) => {
       const owner = userMap.get(project.ownerId);
       const members = Array.from({ length: Math.min(project.memberCount, 4) }, (_, index) => {
         if (owner && index === 0) {
@@ -91,18 +102,63 @@ export const useProjectsCatalog = (): UseProjectsCatalogResult => {
 
       return {
         color: mapProjectColor(project.color),
-        description: project.description || "No description yet",
+        description: getProjectDescription(project.description),
         dueDate: formatDateLabel(project.dueDate),
         id: project._id,
+        memberCount: project.memberCount,
         members,
-        progress: project.progressPercent,
         status: mapProjectStatus(project.status),
         tasksCompleted: project.completedTaskCount,
-        tasksTotal: Math.max(project.taskCount, project.completedTaskCount, 1),
+        tasksTotal: Math.max(project.taskCount, project.completedTaskCount, 0),
         title: project.title,
       } satisfies Project;
     });
-  }, [data?.items, users]);
+
+    const normalizedSearch = search.trim().toLowerCase();
+
+    const filteredProjects = mappedProjects.filter((project) => {
+      const matchesStatus = status === "all" || project.status === status;
+      const matchesSearch =
+        normalizedSearch === "" ||
+        project.title.toLowerCase().includes(normalizedSearch) ||
+        project.description.toLowerCase().includes(normalizedSearch);
+
+      return matchesStatus && matchesSearch;
+    });
+
+    return [...filteredProjects].sort((firstProject, secondProject) => {
+      switch (sort) {
+        case "default":
+          return 0;
+        case "title":
+          return firstProject.title.localeCompare(secondProject.title);
+        case "progress-asc": {
+          const firstProgress =
+            firstProject.tasksTotal > 0 ? firstProject.tasksCompleted / firstProject.tasksTotal : 0;
+          const secondProgress =
+            secondProject.tasksTotal > 0
+              ? secondProject.tasksCompleted / secondProject.tasksTotal
+              : 0;
+
+          return firstProgress - secondProgress;
+        }
+        case "progress-desc": {
+          const firstProgress =
+            firstProject.tasksTotal > 0 ? firstProject.tasksCompleted / firstProject.tasksTotal : 0;
+          const secondProgress =
+            secondProject.tasksTotal > 0
+              ? secondProject.tasksCompleted / secondProject.tasksTotal
+              : 0;
+
+          return secondProgress - firstProgress;
+        }
+        case "due-date":
+          return getProjectDueTime(firstProject.dueDate) - getProjectDueTime(secondProject.dueDate);
+      }
+
+      return 0;
+    });
+  }, [data?.items, search, sort, status, users]);
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setSearch(event.target.value);

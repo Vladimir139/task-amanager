@@ -95,6 +95,7 @@ $blue: #16a8ff;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
 
   button {
     color: #53618c;
@@ -103,7 +104,6 @@ $blue: #16a8ff;
 
 .notificationButton {
   position: relative !important;
-  margin-right: 30px !important;
 }
 
 .notificationCount {
@@ -122,6 +122,10 @@ $blue: #16a8ff;
   font-weight: 700;
 }
 
+.avatarButton {
+  padding: 0 !important;
+}
+
 .profileAvatar {
   width: 40px !important;
   height: 40px !important;
@@ -129,4 +133,123 @@ $blue: #16a8ff;
   background: #eeeeff !important;
   font-size: 12px !important;
   font-weight: 700 !important;
+}
+
+.popoverPaper,
+.shortcutPopoverPaper {
+  border: 1px solid $border;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 40px rgb(33 35 95 / 12%) !important;
+}
+
+.popoverContent {
+  width: 340px;
+  padding: 18px;
+}
+
+.popoverTitle {
+  color: $primary-dark;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.notificationSection {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.sectionTitle {
+  color: #7f8aa8;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.notificationItem {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  color: inherit;
+  background: #f8f9fd;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: #eef1ff;
+  }
+
+  p {
+    overflow: hidden;
+    color: $primary-dark;
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: #7f8aa8;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+.emptyText {
+  color: #7f8aa8;
+  font-size: 13px !important;
+}
+
+.shortcutMenu {
+  display: grid;
+  width: 240px;
+  gap: 8px;
+  padding: 18px;
+}
+
+.shortcutButton {
+  padding: 11px 14px;
+  color: $primary-dark;
+  background: #f8f9fd;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+
+  &:hover {
+    background: #eef1ff;
+  }
+}
+
+.openAllSettingsButton {
+  justify-content: flex-start !important;
+  margin-top: 4px !important;
+}
+
+.logoutConfirm {
+  display: grid;
+  width: 280px;
+  gap: 10px;
+  padding: 18px;
+}
+
+.logoutText {
+  color: #7f8aa8;
+  font-size: 13px !important;
+}
+
+.logoutActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
 }

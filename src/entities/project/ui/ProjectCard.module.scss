@@ -219,6 +219,12 @@ $red: #ef5b5b;
   margin-top: 17px;
 }
 
+.projectMembersGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .projectMembers {
   :global(.MuiAvatar-root) {
     width: 28px;
@@ -260,7 +266,9 @@ $red: #ef5b5b;
 }
 
 .additionalMember {
-  font-size: 8px !important;
+  color: $title;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .openProjectButton {

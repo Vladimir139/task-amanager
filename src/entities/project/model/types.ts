@@ -16,7 +16,7 @@ export interface Project {
   description: string;
   status: ProjectStatus;
   color: ProjectColor;
-  progress: number;
+  memberCount: number;
   tasksCompleted: number;
   tasksTotal: number;
   dueDate: string;

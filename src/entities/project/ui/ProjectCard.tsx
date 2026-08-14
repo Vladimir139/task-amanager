@@ -1,13 +1,5 @@
-import { CalendarMonthOutlined, CheckCircleOutlined, MoreVert } from "@mui/icons-material";
-import {
-  Avatar,
-  AvatarGroup,
-  Box,
-  IconButton,
-  LinearProgress,
-  Paper,
-  Typography,
-} from "@mui/material";
+import { CalendarMonthOutlined, CheckCircleOutlined } from "@mui/icons-material";
+import { Avatar, AvatarGroup, Box, LinearProgress, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { Project, ProjectCardProps } from "../model/types";
@@ -45,6 +37,9 @@ export const ProjectCard: FC<ProjectCardProps> = ({
 }) => {
   const colorClassName = colorClassNames[project.color];
   const statusClassName = statusClassNames[project.status];
+  const progress =
+    project.tasksTotal > 0 ? Math.round((project.tasksCompleted / project.tasksTotal) * 100) : 0;
+  const extraMembersCount = Math.max(project.memberCount - 4, 0);
 
   const handleOpen = () => {
     onOpen?.(project);
@@ -65,13 +60,6 @@ export const ProjectCard: FC<ProjectCardProps> = ({
         <Box className={`${styles.projectIcon} ${colorClassName}`} aria-hidden="true">
           {project.title.slice(0, 1)}
         </Box>
-
-        <IconButton
-          className={styles.projectMenuButton}
-          aria-label={`Actions for ${project.title}`}
-        >
-          <MoreVert />
-        </IconButton>
       </Box>
 
       <Typography component="h3" className={styles.projectTitle}>
@@ -86,14 +74,16 @@ export const ProjectCard: FC<ProjectCardProps> = ({
             {statusLabels[project.status]}
           </span>
 
-          <Typography>{project.progress}%</Typography>
+          <Typography>
+            {project.tasksCompleted}/{project.tasksTotal} tasks
+          </Typography>
         </Box>
 
         <LinearProgress
           variant="determinate"
-          value={project.progress}
+          value={progress}
           className={`${styles.projectProgress} ${colorClassName}`}
-          aria-label={`${project.title}: ${project.progress}% complete`}
+          aria-label={`${project.title}: ${project.tasksCompleted} of ${project.tasksTotal} tasks complete`}
         />
       </Box>
 
@@ -113,21 +103,19 @@ export const ProjectCard: FC<ProjectCardProps> = ({
       </Box>
 
       <Box className={styles.projectFooter}>
-        <AvatarGroup
-          max={4}
-          className={styles.projectMembers}
-          slotProps={{
-            surplus: {
-              className: styles.additionalMember,
-            },
-          }}
-        >
-          {project.members.map((member) => (
-            <Avatar key={member.id} alt={member.name}>
-              {member.initials}
-            </Avatar>
-          ))}
-        </AvatarGroup>
+        <Box className={styles.projectMembersGroup}>
+          <AvatarGroup className={styles.projectMembers}>
+            {project.members.slice(0, 4).map((member) => (
+              <Avatar key={member.id} alt={member.name}>
+                {member.initials}
+              </Avatar>
+            ))}
+          </AvatarGroup>
+
+          {extraMembersCount > 0 && (
+            <span className={styles.additionalMember}>+{extraMembersCount}</span>
+          )}
+        </Box>
 
         <Box className={styles.projectActions}>
           <button type="button" className={styles.manageProjectButton} onClick={handleManage}>
