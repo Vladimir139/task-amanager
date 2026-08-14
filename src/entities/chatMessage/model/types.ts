@@ -1,6 +1,10 @@
 export interface MessageAttachment {
   id: string | number;
-  image: string;
+  information?: string;
+  isImage: boolean;
+  mimeType?: string;
+  name: string;
+  previewUrl: string;
 }
 
 export interface ChatMessage {

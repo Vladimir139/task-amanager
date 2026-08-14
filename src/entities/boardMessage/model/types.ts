@@ -9,12 +9,26 @@ export interface BoardAudioMessage {
 }
 
 export interface BoardMessage {
+  canDelete?: boolean;
+  canEdit?: boolean;
   id: string | number;
   author: string;
   avatar: BoardMember;
-  text?: string;
+  editDraft?: string;
+  isEdited?: boolean;
+  isEditing?: boolean;
   time: string;
   isOwn?: boolean;
+  isRead?: boolean;
+  onDelete?: () => void;
+  onEditCancel?: () => void;
+  onEditChange?: (value: string) => void;
+  onEditStart?: () => void;
+  onEditSubmit?: () => void;
+  onToggleRead?: () => void;
+  readActionLabel?: string;
+  sequence?: number;
+  text?: string;
   audio?: BoardAudioMessage;
 }
 

@@ -20,11 +20,15 @@ export const chatMessages: ChatMessage[] = [
     attachments: [
       {
         id: 1,
-        image: "/images/messages/design-preview-1.jpg",
+        isImage: true,
+        name: "design-preview-1.jpg",
+        previewUrl: "/images/messages/design-preview-1.jpg",
       },
       {
         id: 2,
-        image: "/images/messages/design-preview-2.jpg",
+        isImage: true,
+        name: "design-preview-2.jpg",
+        previewUrl: "/images/messages/design-preview-2.jpg",
       },
     ],
   },

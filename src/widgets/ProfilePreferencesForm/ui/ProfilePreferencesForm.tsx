@@ -10,6 +10,27 @@ const localeOptions = [
   { label: "Russian", value: "ru" },
 ] as const;
 
+const timezoneOptions = [
+  "UTC",
+  "Europe/London",
+  "Europe/Berlin",
+  "Europe/Madrid",
+  "Europe/Warsaw",
+  "Europe/Moscow",
+  "Asia/Dubai",
+  "Asia/Karachi",
+  "Asia/Almaty",
+  "Asia/Bangkok",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Sao_Paulo",
+] as const;
+
 interface ProfilePreferencesFormProps {
   profile: UserProfile;
   onFieldChange: (field: UserProfileField) => ChangeEventHandler<HTMLInputElement>;
@@ -19,6 +40,10 @@ export const ProfilePreferencesForm: FC<ProfilePreferencesFormProps> = ({
   profile,
   onFieldChange,
 }) => {
+  const timezoneValues = profile.timezone
+    ? Array.from(new Set([profile.timezone, ...timezoneOptions]))
+    : timezoneOptions;
+
   return (
     <section className={styles.formSection}>
       <Box className={styles.field}>
@@ -28,11 +53,20 @@ export const ProfilePreferencesForm: FC<ProfilePreferencesFormProps> = ({
 
         <TextField
           id="timezone"
+          select
           fullWidth
           value={profile.timezone}
           onChange={onFieldChange("timezone")}
-          placeholder="Europe/Moscow"
-        />
+        >
+          <MenuItem value="" disabled>
+            Select timezone
+          </MenuItem>
+          {timezoneValues.map((timezone) => (
+            <MenuItem key={timezone} value={timezone}>
+              {timezone}
+            </MenuItem>
+          ))}
+        </TextField>
       </Box>
 
       <Box className={styles.sectionDivider} />

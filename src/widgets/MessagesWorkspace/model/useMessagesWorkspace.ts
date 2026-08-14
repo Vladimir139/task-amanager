@@ -574,17 +574,33 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     );
   }, [conversationFiles]);
   const attachmentsByMessageId = useMemo(() => {
-    const nextState = new Map<string, Array<{ id: string; image: string }>>();
+    const nextState = new Map<
+      string,
+      Array<{
+        id: string;
+        information: string;
+        isImage: boolean;
+        mimeType: string;
+        name: string;
+        previewUrl: string;
+      }>
+    >();
 
     for (const file of conversationFiles ?? []) {
-      if (!file.messageId || !file.previewUrl) {
+      const attachmentUrl = file.previewUrl ?? file.downloadUrl;
+
+      if (!file.messageId || !attachmentUrl) {
         continue;
       }
 
       const attachments = nextState.get(file.messageId) ?? [];
       attachments.push({
         id: file._id,
-        image: file.previewUrl ?? file.downloadUrl ?? "",
+        information: `${formatBytes(file.size)} · ${file.kind}`,
+        isImage: file.mimeType.startsWith("image/"),
+        mimeType: file.mimeType,
+        name: file.originalName,
+        previewUrl: attachmentUrl,
       });
       nextState.set(file.messageId, attachments);
     }
@@ -956,10 +972,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
 
         setNewMessage("");
         stopTyping(activeConversationId);
-        setStatusMessage("Images shared.");
+        setStatusMessage("Files shared.");
         setStatusTone("success");
       } catch (error) {
-        setStatusMessage(getApiErrorMessage(error, "Unable to share the selected images."));
+        setStatusMessage(getApiErrorMessage(error, "Unable to share the selected files."));
         setStatusTone("error");
       }
     })();

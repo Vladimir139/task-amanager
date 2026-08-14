@@ -22,13 +22,14 @@
 }
 
 .messageBubble {
-  max-width: 155px;
+  max-width: 220px;
   padding: 10px 11px;
   color: #72809d;
   background: #f3f4f7;
   border-radius: 6px;
   font-size: 10px;
   line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 .ownMessageBubble {
@@ -40,6 +41,19 @@
   margin-top: 5px !important;
   color: #a2aaba;
   font-size: 8px !important;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.editForm {
+  display: grid;
+  gap: 8px;
+  min-width: 180px;
 }
 
 .audioMessage {

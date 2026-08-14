@@ -6,6 +6,33 @@ $border: #e3e6ef;
   margin-bottom: 25px;
 }
 
+.previewBlock {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.previewImage {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border: 1px solid $border;
+  border-radius: 16px;
+}
+
+.previewTitle {
+  color: $title;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.previewSubtitle {
+  margin-top: 4px !important;
+  color: #707a96;
+  font-size: 12px !important;
+}
+
 .uploadArea {
   display: flex;
   width: 560px;

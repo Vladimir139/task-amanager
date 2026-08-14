@@ -11,7 +11,15 @@ import {
 } from "@/entities/board";
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
-import { useGetConversationMessagesQuery, useSendMessageMutation } from "@/entities/message";
+import { useGetConversationDetailsQuery } from "@/entities/conversation";
+import {
+  useDeleteMessageMutation,
+  useGetConversationMessagesQuery,
+  useMarkMessageReadMutation,
+  useMarkMessageUnreadMutation,
+  useSendMessageMutation,
+  useUpdateMessageMutation,
+} from "@/entities/message";
 import {
   projectSelectionActions,
   selectCurrentProjectId,
@@ -23,6 +31,7 @@ import { selectAccessToken } from "@/features/auth/model/selectors";
 import { baseApi } from "@/shared/api";
 import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
 import { getTasksRoute } from "@/shared/config/router";
+import { getApiErrorMessage } from "@/shared/lib/api";
 import {
   formatDateLabel,
   formatTimeLabel,
@@ -44,8 +53,22 @@ interface UseTaskBoardWorkspaceResult {
     };
     author: string;
     avatar: BoardMember;
+    canDelete?: boolean;
+    canEdit?: boolean;
+    editDraft?: string;
     id: string;
+    isEdited?: boolean;
+    isEditing?: boolean;
     isOwn?: boolean;
+    isRead?: boolean;
+    onDelete?: () => Promise<void>;
+    onEditCancel?: () => void;
+    onEditChange?: (value: string) => void;
+    onEditStart?: () => void;
+    onEditSubmit?: () => Promise<void>;
+    onToggleRead?: () => Promise<void>;
+    readActionLabel?: string;
+    sequence?: number;
     text?: string;
     time: string;
   }>;
@@ -95,6 +118,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const selectedBoardId = useSelectedBoardId();
   const selectedTaskId = useSelectedTaskId();
   const [message, setMessage] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState("");
   const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [createTaskColumnId, setCreateTaskColumnId] = useState<string | null>(null);
@@ -143,6 +168,9 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     },
   );
   const conversationId = boardView?.chatPreview?.conversationId;
+  const { data: conversationDetails } = useGetConversationDetailsQuery(conversationId ?? "", {
+    skip: !conversationId,
+  });
   const { data: conversationMessages, isError: isMessagesError } = useGetConversationMessagesQuery(
     conversationId ?? "",
     {
@@ -150,6 +178,10 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     },
   );
   const [sendBoardMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
+  const [updateMessage] = useUpdateMessageMutation();
+  const [deleteMessage] = useDeleteMessageMutation();
+  const [markMessageRead] = useMarkMessageReadMutation();
+  const [markMessageUnread] = useMarkMessageUnreadMutation();
   const presenceSocket = useRealtimeSocket(
     "/presence",
     accessToken,
@@ -487,6 +519,10 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
 
   const boardMessages = useMemo(() => {
     const messages = conversationMessages ?? boardView?.chatPreview?.messages ?? [];
+    const currentConversationMember = conversationDetails?.members.find(
+      (member) => member.userId === currentUser?.id,
+    );
+    const lastReadSequence = currentConversationMember?.lastReadSequence ?? 0;
 
     return (
       messages.slice(-10).map((item) => {
@@ -495,6 +531,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
           height: Math.max(8, Math.round(barHeight)),
           id: `${item._id}-${index}`,
         }));
+        const isOwn = item.authorId === currentUser?.id;
+        const isRead = item.sequence <= lastReadSequence;
 
         return {
           audio:
@@ -513,14 +551,104 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
             initials: author?.initials ?? "TM",
             isOnline: author?.isOnline,
           },
+          canDelete: isOwn,
+          canEdit: isOwn && item.kind === "text" && Boolean(item.text),
+          editDraft: editingMessageId === item._id ? editingMessageText : (item.text ?? ""),
           id: item._id,
-          isOwn: item.authorId === currentUser?.id,
+          isEdited: item.isEdited,
+          isEditing: editingMessageId === item._id,
+          isOwn,
+          isRead,
+          onDelete: async () => {
+            if (!conversationId) {
+              return;
+            }
+
+            try {
+              await deleteMessage({
+                conversationId,
+                messageId: item._id,
+              }).unwrap();
+
+              if (editingMessageId === item._id) {
+                setEditingMessageId(null);
+                setEditingMessageText("");
+              }
+            } catch (error) {
+              toast.error(getApiErrorMessage(error, "Unable to delete the message."));
+            }
+          },
+          onEditCancel: () => {
+            setEditingMessageId(null);
+            setEditingMessageText("");
+          },
+          onEditChange: setEditingMessageText,
+          onEditStart: () => {
+            setEditingMessageId(item._id);
+            setEditingMessageText(item.text ?? "");
+          },
+          onEditSubmit: async () => {
+            if (!editingMessageId) {
+              return;
+            }
+
+            const normalizedText = editingMessageText.trim();
+
+            if (!normalizedText) {
+              toast.error("Message text is required.");
+              return;
+            }
+
+            try {
+              await updateMessage({
+                messageId: editingMessageId,
+                text: normalizedText,
+              }).unwrap();
+
+              setEditingMessageId(null);
+              setEditingMessageText("");
+            } catch (error) {
+              toast.error(getApiErrorMessage(error, "Unable to update the message."));
+            }
+          },
+          onToggleRead: async () => {
+            try {
+              if (isRead) {
+                await markMessageUnread({
+                  messageId: item._id,
+                  sequence: item.sequence,
+                }).unwrap();
+              } else {
+                await markMessageRead({
+                  messageId: item._id,
+                  sequence: item.sequence,
+                }).unwrap();
+              }
+            } catch (error) {
+              toast.error(getApiErrorMessage(error, "Unable to update the read status."));
+            }
+          },
+          readActionLabel: isRead ? "Mark unread" : "Mark read",
+          sequence: item.sequence,
           text: item.text ?? undefined,
           time: formatTimeLabel(item.createdAt),
         };
       }) ?? []
     );
-  }, [boardView?.chatPreview?.messages, conversationMessages, currentUser?.id, memberMap]);
+  }, [
+    boardView?.chatPreview?.messages,
+    conversationDetails?.members,
+    conversationId,
+    conversationMessages,
+    currentUser?.id,
+    deleteMessage,
+    editingMessageId,
+    editingMessageText,
+    markMessageRead,
+    markMessageUnread,
+    memberMap,
+    updateMessage,
+  ]);
 
   const canManageBoard = useMemo(() => {
     const currentMemberRole =

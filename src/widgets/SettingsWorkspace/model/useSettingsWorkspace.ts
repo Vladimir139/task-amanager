@@ -26,6 +26,7 @@ import { type SettingsTab, settingsTabs } from "@/widgets/SettingsNavigation/mod
 interface UseSettingsWorkspaceResult {
   activeTab: SettingsTab;
   avatarPreview: string;
+  avatarFileName: string | null;
   handleAvatarChange: (file: File) => void;
   handleCancel: () => void;
   handleFieldChange: (field: UserProfileField) => (event: ChangeEvent<HTMLInputElement>) => void;
@@ -302,6 +303,7 @@ export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
 
   return {
     activeTab,
+    avatarFileName: avatarFile?.name ?? null,
     avatarPreview,
     handleAvatarChange,
     handleCancel,

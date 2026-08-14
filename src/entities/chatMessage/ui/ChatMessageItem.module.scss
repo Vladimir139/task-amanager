@@ -105,11 +105,44 @@ $primary: #5355ff;
   flex-wrap: wrap;
   gap: 11px;
   margin-top: 11px;
+}
+
+.imageAttachmentLink {
+  display: block;
 
   img {
     width: 158px;
     height: 210px;
     object-fit: cover;
     border-radius: 10px;
+  }
+}
+
+.fileAttachment {
+  display: flex;
+  min-width: 220px;
+  max-width: 320px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: inherit !important;
+  background: #ffffff;
+  border-radius: 10px;
+  text-decoration: none !important;
+
+  svg {
+    color: $primary;
+  }
+
+  p:first-child {
+    color: #202020;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  p:last-child {
+    margin-top: 4px;
+    color: #8c95aa;
+    font-size: 11px;
   }
 }

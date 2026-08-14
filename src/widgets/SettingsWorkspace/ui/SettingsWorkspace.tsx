@@ -16,6 +16,7 @@ import styles from "./SettingsWorkspace.module.scss";
 export const SettingsWorkspace: FC = () => {
   const {
     activeTab,
+    avatarFileName,
     profile,
     avatarPreview,
     handleTabChange,
@@ -63,9 +64,11 @@ export const SettingsWorkspace: FC = () => {
 
       {activeTab === "My details" && (
         <ProfileDetailsForm
+          avatarPreview={avatarPreview}
           profile={profile}
           onFieldChange={handleFieldChange}
           onAvatarChange={handleAvatarChange}
+          selectedAvatarFileName={avatarFileName}
         />
       )}
 

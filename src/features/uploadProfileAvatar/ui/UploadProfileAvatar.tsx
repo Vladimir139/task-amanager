@@ -8,9 +8,15 @@ import styles from "./UploadProfileAvatar.module.scss";
 
 interface UploadProfileAvatarProps {
   onFileSelect: (file: File) => void;
+  previewUrl?: string;
+  selectedFileName?: string | null;
 }
 
-export const UploadProfileAvatar: FC<UploadProfileAvatarProps> = ({ onFileSelect }) => {
+export const UploadProfileAvatar: FC<UploadProfileAvatarProps> = ({
+  onFileSelect,
+  previewUrl,
+  selectedFileName = null,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +73,25 @@ export const UploadProfileAvatar: FC<UploadProfileAvatarProps> = ({ onFileSelect
 
   return (
     <Box className={styles.uploadField}>
+      {previewUrl && (
+        <Box className={styles.previewBlock}>
+          <Box
+            component="img"
+            src={previewUrl}
+            alt="Profile avatar preview"
+            className={styles.previewImage}
+          />
+          <Box>
+            <Typography className={styles.previewTitle}>Current avatar</Typography>
+            <Typography className={styles.previewSubtitle}>
+              {selectedFileName
+                ? `Selected: ${selectedFileName}`
+                : "Upload a new image to replace it."}
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"
@@ -89,7 +114,9 @@ export const UploadProfileAvatar: FC<UploadProfileAvatarProps> = ({ onFileSelect
           <CloudUploadOutlined />
         </Box>
 
-        <Typography>Click to upload or drag and drop</Typography>
+        <Typography>
+          {previewUrl ? "Click to replace or drag and drop" : "Click to upload or drag and drop"}
+        </Typography>
 
         <Typography>SVG, PNG, JPG or GIF, up to 5 MB</Typography>
       </button>

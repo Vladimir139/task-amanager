@@ -1,5 +1,5 @@
 import { Pause } from "@mui/icons-material";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import { BoardMemberAvatar } from "@/entities/boardMember";
@@ -31,6 +31,9 @@ function AudioMessage({ duration, waveform }: BoardAudioMessage) {
 }
 
 export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
+  const hasActions =
+    (message.canEdit ?? false) || (message.canDelete ?? false) || message.onToggleRead != null;
+
   return (
     <Box className={`${styles.messageRow} ${message.isOwn ? styles.ownMessageRow : ""}`}>
       {!message.isOwn && (
@@ -40,6 +43,33 @@ export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
       <Box className={styles.messageContainer}>
         {message.audio ? (
           <AudioMessage duration={message.audio.duration} waveform={message.audio.waveform} />
+        ) : message.isEditing ? (
+          <Box className={styles.editForm}>
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              size="small"
+              value={message.editDraft ?? ""}
+              onChange={(event) => {
+                message.onEditChange?.(event.target.value);
+              }}
+            />
+
+            <Box className={styles.actionRow}>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={message.onEditSubmit}
+                disabled={!message.editDraft?.trim()}
+              >
+                Save
+              </Button>
+              <Button variant="text" size="small" onClick={message.onEditCancel}>
+                Cancel
+              </Button>
+            </Box>
+          </Box>
         ) : (
           <Box
             className={`${styles.messageBubble} ${message.isOwn ? styles.ownMessageBubble : ""}`}
@@ -48,7 +78,31 @@ export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
           </Box>
         )}
 
-        <Typography className={styles.messageTime}>{message.time}</Typography>
+        {!message.isEditing && hasActions && (
+          <Box className={styles.actionRow}>
+            {message.canEdit && (
+              <Button variant="text" size="small" onClick={message.onEditStart}>
+                Edit
+              </Button>
+            )}
+            {message.canDelete && (
+              <Button variant="text" size="small" color="error" onClick={message.onDelete}>
+                Delete
+              </Button>
+            )}
+            {message.onToggleRead && (
+              <Button variant="text" size="small" onClick={message.onToggleRead}>
+                {message.readActionLabel ?? "Toggle read"}
+              </Button>
+            )}
+          </Box>
+        )}
+
+        <Typography className={styles.messageTime}>
+          {message.time}
+          {message.isEdited ? " · Edited" : ""}
+          {message.isRead === false ? " · Unread" : ""}
+        </Typography>
       </Box>
 
       {message.isOwn && (

@@ -1,4 +1,4 @@
-import { ImageOutlined, MicNone, SendOutlined } from "@mui/icons-material";
+import { AttachFileOutlined, MicNone, SendOutlined } from "@mui/icons-material";
 import { Box, IconButton, TextField } from "@mui/material";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
 
@@ -65,17 +65,12 @@ export const MessageComposer: FC<MessageComposerProps> = ({
         }}
       />
 
-      <IconButton
-        component="label"
-        aria-label="Attach images"
-        disabled={isSubmitting || isDisabled}
-      >
-        <ImageOutlined />
+      <IconButton component="label" aria-label="Attach files" disabled={isSubmitting || isDisabled}>
+        <AttachFileOutlined />
         <input
           hidden
           multiple
           type="file"
-          accept="image/*"
           onChange={(event) => {
             onAttachImages(event.target.files);
             event.target.value = "";

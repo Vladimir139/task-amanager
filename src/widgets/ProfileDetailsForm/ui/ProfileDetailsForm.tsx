@@ -9,15 +9,19 @@ import { userRoles } from "../model/constants";
 import styles from "./ProfileDetailsForm.module.scss";
 
 interface ProfileDetailsFormProps {
+  avatarPreview: string;
   profile: UserProfile;
   onFieldChange: (field: UserProfileField) => ChangeEventHandler<HTMLInputElement>;
   onAvatarChange: (file: File) => void;
+  selectedAvatarFileName?: string | null;
 }
 
 export const ProfileDetailsForm: FC<ProfileDetailsFormProps> = ({
+  avatarPreview,
   profile,
   onFieldChange,
   onAvatarChange,
+  selectedAvatarFileName = null,
 }) => {
   return (
     <section className={styles.formSection}>
@@ -76,7 +80,11 @@ export const ProfileDetailsForm: FC<ProfileDetailsFormProps> = ({
 
       <Box className={styles.sectionDivider} />
 
-      <UploadProfileAvatar onFileSelect={onAvatarChange} />
+      <UploadProfileAvatar
+        onFileSelect={onAvatarChange}
+        previewUrl={avatarPreview}
+        selectedFileName={selectedAvatarFileName}
+      />
 
       <Box className={styles.field}>
         <Typography component="label" htmlFor="role">

@@ -1,4 +1,5 @@
-import { Avatar, Box, Button, TextField, Typography } from "@mui/material";
+import { AttachFileOutlined } from "@mui/icons-material";
+import { Avatar, Box, Button, Link, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMessageItemProps } from "../model/types";
@@ -77,14 +78,33 @@ export const ChatMessageItem: FC<ChatMessageItemProps> = ({ message }) => {
         {!!message.attachments?.length && (
           <Box className={styles.messageBubbles}>
             <Box className={styles.messageAttachments}>
-              {message.attachments.map((attachment) => (
-                <Box
-                  component="img"
-                  key={attachment.id}
-                  src={attachment.image}
-                  alt={`Attachment from ${message.author}`}
-                />
-              ))}
+              {message.attachments.map((attachment) =>
+                attachment.isImage ? (
+                  <Link
+                    key={attachment.id}
+                    href={attachment.previewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.imageAttachmentLink}
+                  >
+                    <Box component="img" src={attachment.previewUrl} alt={attachment.name} />
+                  </Link>
+                ) : (
+                  <Link
+                    key={attachment.id}
+                    href={attachment.previewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.fileAttachment}
+                  >
+                    <AttachFileOutlined />
+                    <Box>
+                      <Typography>{attachment.name}</Typography>
+                      <Typography>{attachment.information ?? "Attachment"}</Typography>
+                    </Box>
+                  </Link>
+                ),
+              )}
             </Box>
           </Box>
         )}

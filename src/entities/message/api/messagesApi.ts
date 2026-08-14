@@ -69,6 +69,14 @@ export const messagesApi = baseApi.injectEndpoints({
         url: `/messages/${messageId}/read`,
       }),
     }),
+    markMessageUnread: build.mutation<unknown, MarkMessageReadPayload>({
+      invalidatesTags: ["Conversations"],
+      query: ({ messageId, sequence }) => ({
+        body: { sequence },
+        method: "POST",
+        url: `/messages/${messageId}/unread`,
+      }),
+    }),
     updateMessage: build.mutation<MessageRecord, UpdateMessagePayload>({
       invalidatesTags: (result) =>
         result
@@ -115,6 +123,7 @@ export const {
   useDeleteMessageMutation,
   useGetConversationMessagesQuery,
   useMarkMessageReadMutation,
+  useMarkMessageUnreadMutation,
   useSendMessageMutation,
   useUpdateMessageMutation,
   useUploadAudioMessageMutation,
