@@ -5,20 +5,21 @@ import { useNavigate } from "react-router-dom";
 import { useGetDashboardTasksQuery } from "@/entities/dashboard";
 import { type Task, TaskCard } from "@/entities/task";
 import { getTasksRoute } from "@/shared/config/router";
-import { formatTimeLabel } from "@/shared/lib/formatters";
+import { formatDateLabel } from "@/shared/lib/formatters";
 
 import styles from "./TaskList.module.scss";
 
-const getTaskProgress = (task: {
-  checklistCompleted: number;
-  checklistTotal: number;
-  workflowState: string;
-}): number => {
-  if (task.checklistTotal > 0) {
-    return Math.round((task.checklistCompleted / task.checklistTotal) * 100);
+const getTaskDescription = (description?: string | null, shortCode?: string | null): string => {
+  const normalizedDescription = description?.trim();
+
+  if (normalizedDescription) {
+    return normalizedDescription;
   }
 
-  return task.workflowState === "done" ? 100 : 45;
+  const normalizedShortCode = shortCode?.trim();
+  const fallbackDescription = normalizedShortCode === "" ? undefined : normalizedShortCode;
+
+  return fallbackDescription ?? "No description yet";
 };
 
 export const TaskList: FC = () => {
@@ -28,12 +29,16 @@ export const TaskList: FC = () => {
   const tasks =
     data?.map((task) => ({
       card: {
+        assigneeCount: task.assigneeIds.length,
+        checklistCompleted: task.checklistCompleted,
+        checklistTotal: task.checklistTotal,
         comments: task.commentCount,
+        description: getTaskDescription(task.description, task.shortCode),
+        dueDate: formatDateLabel(task.dueDate),
         id: task._id,
-        progress: getTaskProgress(task),
-        time: formatTimeLabel(task.dueDate ?? task.createdAt),
+        startDate: formatDateLabel(task.startDate),
         title: task.title,
-        url: task.description || (task.shortCode ?? "No description yet"),
+        watcherCount: task.watcherIds.length,
       } satisfies Task,
       route: getTasksRoute(task.projectId, task.boardId, task._id),
     })) ?? [];

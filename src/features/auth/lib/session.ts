@@ -1,5 +1,6 @@
 import type { AppDispatch } from "@/app/providers/store";
-import { mapAuthPayloadToAuthUser, userActions } from "@/entities/user";
+import { mapAuthPayloadToAuthUser } from "@/entities/user/model/lib/mappers";
+import { userActions } from "@/entities/user/model/slice/userSlice";
 import type { AuthResponse } from "@/shared/api/types";
 import { clearStore } from "@/shared/config/redux";
 import { clearStoredAuthTokens, saveStoredAuthTokens } from "@/shared/lib/auth/authStorage";

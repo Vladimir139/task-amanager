@@ -6,6 +6,8 @@ export interface UpdateTaskPayload {
   assigneeIds?: string[];
   boardId: string;
   category?: string;
+  checklistCompleted?: number;
+  checklistTotal?: number;
   columnId?: string;
   description?: string;
   dueDate?: string;

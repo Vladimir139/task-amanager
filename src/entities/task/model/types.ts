@@ -1,10 +1,14 @@
 export interface Task {
-  id: string | number;
-  time: string;
-  title: string;
-  url: string;
+  assigneeCount: number;
+  checklistCompleted: number;
+  checklistTotal: number;
   comments: number;
-  progress: number;
+  description: string;
+  dueDate: string;
+  id: string | number;
+  startDate: string;
+  title: string;
+  watcherCount: number;
 }
 
 export interface TaskCardProps {

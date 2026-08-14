@@ -5,6 +5,8 @@ export interface CreateTaskPayload {
   assigneeIds?: string[];
   boardId: string;
   category?: string;
+  checklistCompleted?: number;
+  checklistTotal?: number;
   columnId?: string;
   description?: string;
   dueDate?: string;

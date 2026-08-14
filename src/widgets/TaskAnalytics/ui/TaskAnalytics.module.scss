@@ -4,7 +4,10 @@ $blue: #16a8ff;
 .analyticsCard {
   margin-top: 30px;
   padding: 28px 25px 23px;
+  background: linear-gradient(180deg, #fff 0%, #f8faff 100%);
   border-radius: 18px !important;
+  border: 1px solid #edf1fb;
+  box-shadow: 0 18px 40px rgb(83 85 255 / 8%);
 }
 
 .analyticsHeader {
@@ -17,6 +20,12 @@ $blue: #16a8ff;
     font-size: 23px;
     font-weight: 700;
   }
+}
+
+.analyticsSubtitle {
+  margin-top: 6px !important;
+  color: #7f8aa8;
+  font-size: 13px !important;
 }
 
 .periodNavigation {
@@ -55,6 +64,33 @@ $blue: #16a8ff;
   }
 }
 
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.metricCard {
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #edf1fb;
+  border-radius: 16px;
+}
+
+.metricLabel {
+  color: #7f8aa8;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.metricValue {
+  margin-top: 8px !important;
+  color: $primary-dark;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -85,6 +121,13 @@ $blue: #16a8ff;
   min-height: 320px;
 }
 
+.chartPanel {
+  padding: 16px 12px 8px;
+  background: #fff;
+  border: 1px solid #edf1fb;
+  border-radius: 18px;
+}
+
 .chart {
   width: 100%;
 }
@@ -100,8 +143,8 @@ $blue: #16a8ff;
   stroke-width: 3;
 }
 
-:global(.MuiMarkElement-root) {
-  display: none;
+:global(.MuiAreaElement-root) {
+  opacity: 0.08;
 }
 
 :global(.MuiChartsGrid-line) {

@@ -1,8 +1,9 @@
 $primary: #5355ff;
+$primary-dark: #21235f;
 
 .taskCard {
   display: grid;
-  min-height: 84px;
+  min-height: 116px;
   grid-template-columns:
     180px
     minmax(220px, 1.5fr)
@@ -13,40 +14,27 @@ $primary: #5355ff;
   border-radius: 13px !important;
 }
 
-.taskStart {
+.taskTimeline {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100%;
-  align-items: center;
-  gap: 15px;
+  gap: 14px;
   padding: 0 22px;
   background: #fafaff;
 }
 
-.playButton {
-  width: 38px;
-  height: 38px;
-  color: #ffffff !important;
-  background: $primary !important;
-  box-shadow: 0 7px 14px rgb(83 85 255 / 27%);
-}
-
-.taskStartTitle {
+.timelineLabel {
   margin-bottom: 6px !important;
-  color: #222222;
+  color: #667085;
   font-size: 12px !important;
   font-weight: 600 !important;
 }
 
-.taskTime {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #7f8aa8;
-  font-size: 12px;
-
-  svg {
-    font-size: 18px;
-  }
+.timelineValue {
+  color: $primary-dark;
+  font-size: 14px !important;
+  font-weight: 700 !important;
 }
 
 .taskInformation {
@@ -84,7 +72,7 @@ $primary: #5355ff;
 
   div:first-child span {
     overflow: hidden;
-    color: $primary;
+    color: #7f8aa8;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -101,7 +89,8 @@ $primary: #5355ff;
 
   p {
     margin-bottom: 10px;
-    font-size: 14px;
+    color: $primary-dark;
+    font-size: 13px;
     font-weight: 600;
   }
 }
@@ -117,11 +106,10 @@ $primary: #5355ff;
   }
 }
 
-.reminderButton {
+.openTaskButton {
   display: flex;
   height: 39px;
   align-items: center;
-  gap: 8px;
   margin-right: 25px;
   padding: 0 16px;
   color: $primary;
@@ -131,8 +119,4 @@ $primary: #5355ff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-
-  svg {
-    font-size: 19px;
-  }
 }

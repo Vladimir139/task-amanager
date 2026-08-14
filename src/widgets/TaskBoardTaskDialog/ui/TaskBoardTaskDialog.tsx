@@ -243,6 +243,26 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                   />
 
                   <TextField
+                    label="Subtasks total"
+                    type="number"
+                    value={form.checklistTotal}
+                    onChange={handleFieldChange("checklistTotal")}
+                    disabled={!canManageTask}
+                    slotProps={{ htmlInput: { min: 0 } }}
+                    fullWidth
+                  />
+
+                  <TextField
+                    label="Completed subtasks"
+                    type="number"
+                    value={form.checklistCompleted}
+                    onChange={handleFieldChange("checklistCompleted")}
+                    disabled={!canManageTask}
+                    slotProps={{ htmlInput: { min: 0 } }}
+                    fullWidth
+                  />
+
+                  <TextField
                     label="Description"
                     value={form.description}
                     onChange={handleFieldChange("description")}

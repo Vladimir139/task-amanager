@@ -92,19 +92,64 @@ export const TaskAnalytics: FC = () => {
         );
 
         return {
+          area: true,
           color: workflowStateColors[workflowState] ?? "#98a2b3",
           data: values,
           label: workflowStateLabels[workflowState] ?? workflowState,
-          showMark: false,
+          showMark: true,
         };
       })
       .filter((series) => series.data.some((value) => value > 0));
   }, [analyticsGroups]);
 
+  const totalTasks = useMemo(() => (data ?? []).reduce((sum, item) => sum + item.count, 0), [data]);
+
+  const doneTasks = useMemo(
+    () =>
+      (data ?? []).reduce(
+        (sum, item) => sum + (item._id.workflowState === "done" ? item.count : 0),
+        0,
+      ),
+    [data],
+  );
+
+  const activeTasks = useMemo(
+    () =>
+      (data ?? []).reduce(
+        (sum, item) =>
+          sum +
+          (item._id.workflowState === "open" || item._id.workflowState === "in_progress"
+            ? item.count
+            : 0),
+        0,
+      ),
+    [data],
+  );
+
+  const peakBucket = useMemo(() => {
+    const buckets = analyticsGroups.map(([label, workflowStateValues]) => ({
+      label: formatAnalyticsLabel(label, period),
+      total: Array.from(workflowStateValues.values()).reduce((sum, value) => sum + value, 0),
+    }));
+
+    return buckets.reduce<{ label: string; total: number } | null>((best, bucket) => {
+      if (!best || bucket.total > best.total) {
+        return bucket;
+      }
+
+      return best;
+    }, null);
+  }, [analyticsGroups, period]);
+
   return (
     <Paper className={styles.analyticsCard} elevation={0}>
       <Box className={styles.analyticsHeader}>
-        <Typography component="h2">Task analytics</Typography>
+        <Box>
+          <Typography component="h2">Task analytics</Typography>
+          <Typography className={styles.analyticsSubtitle}>
+            Overview of workflow distribution for the selected period.
+          </Typography>
+        </Box>
 
         <Box className={styles.periodNavigation}>
           {periods.map((item) => (
@@ -119,6 +164,30 @@ export const TaskAnalytics: FC = () => {
               {item}
             </button>
           ))}
+        </Box>
+      </Box>
+
+      <Box className={styles.metricsGrid}>
+        <Box className={styles.metricCard}>
+          <Typography className={styles.metricLabel}>Total tasks</Typography>
+          <Typography className={styles.metricValue}>{totalTasks}</Typography>
+        </Box>
+
+        <Box className={styles.metricCard}>
+          <Typography className={styles.metricLabel}>Completed</Typography>
+          <Typography className={styles.metricValue}>{doneTasks}</Typography>
+        </Box>
+
+        <Box className={styles.metricCard}>
+          <Typography className={styles.metricLabel}>Active now</Typography>
+          <Typography className={styles.metricValue}>{activeTasks}</Typography>
+        </Box>
+
+        <Box className={styles.metricCard}>
+          <Typography className={styles.metricLabel}>Peak bucket</Typography>
+          <Typography className={styles.metricValue}>
+            {peakBucket ? `${peakBucket.label} · ${peakBucket.total}` : "No data"}
+          </Typography>
         </Box>
       </Box>
 
@@ -149,24 +218,26 @@ export const TaskAnalytics: FC = () => {
               </Typography>
             </Box>
           ) : (
-            <LineChart
-              className={styles.chart}
-              height={320}
-              margin={{ bottom: 30, left: 40, right: 20, top: 20 }}
-              series={chartSeries}
-              xAxis={[
-                {
-                  data: xAxisLabels,
-                  scaleType: "point",
-                },
-              ]}
-              yAxis={[
-                {
-                  min: 0,
-                },
-              ]}
-              grid={{ horizontal: true }}
-            />
+            <Box className={styles.chartPanel}>
+              <LineChart
+                className={styles.chart}
+                height={340}
+                margin={{ bottom: 30, left: 40, right: 20, top: 20 }}
+                series={chartSeries}
+                xAxis={[
+                  {
+                    data: xAxisLabels,
+                    scaleType: "point",
+                  },
+                ]}
+                yAxis={[
+                  {
+                    min: 0,
+                  },
+                ]}
+                grid={{ horizontal: true }}
+              />
+            </Box>
           )}
         </Box>
       )}

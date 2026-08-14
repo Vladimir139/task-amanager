@@ -31,6 +31,8 @@ type TaskMovePlacement = "top" | "bottom";
 interface TaskFormState {
   assigneeIds: string[];
   category: string;
+  checklistCompleted: string;
+  checklistTotal: string;
   columnId: string;
   description: string;
   dueDate: string;
@@ -129,6 +131,8 @@ interface UseTaskBoardTaskDialogResult {
 const initialFormState: TaskFormState = {
   assigneeIds: [],
   category: "other",
+  checklistCompleted: "0",
+  checklistTotal: "0",
   columnId: "",
   description: "",
   dueDate: "",
@@ -161,6 +165,16 @@ const normalizeOptionalValue = (value: string): string | undefined => {
   const normalized = value.trim();
 
   return normalized || undefined;
+};
+
+const normalizeChecklistValue = (value: string): number => {
+  const parsedValue = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return 0;
+  }
+
+  return parsedValue;
 };
 
 export const useTaskBoardTaskDialog = ({
@@ -246,6 +260,8 @@ export const useTaskBoardTaskDialog = ({
     setForm({
       assigneeIds: task.assigneeIds,
       category: task.category,
+      checklistCompleted: String(task.checklistCompleted ?? 0),
+      checklistTotal: String(task.checklistTotal ?? 0),
       columnId: task.columnId,
       description: task.description ?? "",
       dueDate: formatDateInput(task.dueDate),
@@ -366,9 +382,17 @@ export const useTaskBoardTaskDialog = ({
 
   const handleSaveTask = async (): Promise<void> => {
     const normalizedTitle = form.title.trim();
+    const checklistTotal = normalizeChecklistValue(form.checklistTotal);
+    const checklistCompleted = normalizeChecklistValue(form.checklistCompleted);
 
     if (!normalizedTitle) {
       setStatusMessage("Task title is required.");
+      setStatusTone("error");
+      return;
+    }
+
+    if (checklistCompleted > checklistTotal) {
+      setStatusMessage("Completed subtasks cannot exceed total subtasks.");
       setStatusTone("error");
       return;
     }
@@ -382,6 +406,8 @@ export const useTaskBoardTaskDialog = ({
           assigneeIds: form.assigneeIds,
           boardId,
           category: form.category,
+          checklistCompleted,
+          checklistTotal,
           columnId: form.columnId,
           description: normalizeOptionalValue(form.description),
           emoji: normalizeOptionalValue(form.emoji),
@@ -403,6 +429,8 @@ export const useTaskBoardTaskDialog = ({
       await updateTask({
         boardId,
         category: form.category,
+        checklistCompleted,
+        checklistTotal,
         columnId: form.columnId,
         description: normalizeOptionalValue(form.description),
         dueDate: toIsoDate(form.dueDate),
