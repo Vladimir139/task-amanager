@@ -7,6 +7,13 @@ export interface MessageAttachment {
   previewUrl: string;
 }
 
+export interface ChatAudioMessage {
+  duration?: string;
+  mimeType?: string;
+  src: string;
+  waveform?: number[];
+}
+
 export interface ChatMessage {
   canDelete?: boolean;
   canEdit?: boolean;
@@ -20,6 +27,7 @@ export interface ChatMessage {
   isEditing?: boolean;
   editDraft?: string;
   attachments?: MessageAttachment[];
+  audio?: ChatAudioMessage;
   onDelete?: () => void;
   onEditCancel?: () => void;
   onEditChange?: (value: string) => void;

@@ -26,7 +26,7 @@ export const SettingsProfileHeader: FC<SettingsProfileHeaderProps> = ({
 
   return (
     <section className={styles.profileHeader}>
-      <Box component="img" src="/images/settings-cover.jpg" alt="" className={styles.cover} />
+      <Box component="img" src="/images/settings-back.png" alt="" className={styles.cover} />
 
       <Box className={styles.profileInformation}>
         <Box className={styles.userBlock}>

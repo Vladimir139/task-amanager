@@ -92,6 +92,18 @@ const mapSharedType = (kind: string): SharedFile["type"] => {
   return "other";
 };
 
+const formatAudioDuration = (durationMs?: number | null): string | undefined => {
+  if (!durationMs || durationMs <= 0) {
+    return undefined;
+  }
+
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+  return `${minutes}:${seconds}`;
+};
+
 interface UseMessagesWorkspaceResult {
   activeConversationId: string | null;
   availableConversationUsers: Array<{ id: string; label: string }>;
@@ -574,40 +586,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       })) ?? []
     );
   }, [conversationFiles]);
-  const attachmentsByMessageId = useMemo(() => {
-    const nextState = new Map<
-      string,
-      Array<{
-        id: string;
-        information: string;
-        isImage: boolean;
-        mimeType: string;
-        name: string;
-        previewUrl: string;
-      }>
-    >();
-
-    for (const file of conversationFiles ?? []) {
-      const attachmentUrl = file.previewUrl ?? file.downloadUrl;
-
-      if (!file.messageId || !attachmentUrl) {
-        continue;
-      }
-
-      const attachments = nextState.get(file.messageId) ?? [];
-      attachments.push({
-        id: file._id,
-        information: `${formatBytes(file.size)} · ${file.kind}`,
-        isImage: file.mimeType.startsWith("image/"),
-        mimeType: file.mimeType,
-        name: file.originalName,
-        previewUrl: attachmentUrl,
-      });
-      nextState.set(file.messageId, attachments);
-    }
-
-    return nextState;
-  }, [conversationFiles]);
+  const filesById = useMemo(
+    () => new Map((conversationFiles ?? []).map((file) => [file._id, file])),
+    [conversationFiles],
+  );
 
   const activeTypingUserIds =
     (activeConversationId ? typingUsersByConversationId[activeConversationId] : undefined) ??
@@ -1049,14 +1031,47 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     return (
       conversationMessages?.map((message) => {
         const author = userMap.get(message.authorId);
-        const attachments = attachmentsByMessageId.get(message._id) ?? [];
+        const attachments = (message.fileIds ?? [])
+          .map((fileId) => ({
+            file: filesById.get(fileId),
+            fileId,
+          }))
+          .filter((entry) => Boolean(entry.file))
+          .map((entry) => {
+            const { file, fileId } = entry;
+            const attachmentUrl = file?.previewUrl ?? file?.downloadUrl ?? "";
+
+            return {
+              id: file?._id ?? fileId,
+              information: `${formatBytes(file?.size ?? 0)} · ${file?.kind ?? "file"}`,
+              isImage: file?.mimeType?.startsWith("image/") ?? false,
+              mimeType: file?.mimeType,
+              name: file?.originalName ?? "Attachment",
+              previewUrl: attachmentUrl,
+            };
+          })
+          .filter((attachment) => attachment.previewUrl !== "");
+        const audioFile = message.audio?.fileId ? filesById.get(message.audio.fileId) : undefined;
 
         return {
           attachments: attachments.length > 0 ? attachments : undefined,
+          audio:
+            message.kind === "audio" && audioFile
+              ? {
+                  duration: formatAudioDuration(message.audio?.durationMs),
+                  mimeType: audioFile.mimeType,
+                  src: audioFile.previewUrl ?? audioFile.downloadUrl ?? "",
+                  waveform: audioFile.waveform ?? message.audio?.waveform ?? undefined,
+                }
+              : undefined,
           author: author ? `${author.firstName} ${author.lastName}`.trim() : "Teammate",
           avatar: author?.avatarUrl ?? "",
           canDelete: message.authorId === currentUser?.id,
-          canEdit: message.authorId === currentUser?.id && Boolean(message.text),
+          canEdit:
+            message.authorId === currentUser?.id &&
+            message.kind === "text" &&
+            Boolean(message.text) &&
+            (message.fileIds?.length ?? 0) === 0,
           id: message._id,
           editDraft: editingMessageId === message._id ? editingMessageText : (message.text ?? ""),
           isEdited: message.isEdited,
@@ -1073,21 +1088,17 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
           onEditSubmit: () => {
             void handleSubmitEditMessage();
           },
-          text: message.text
-            ? [message.text]
-            : message.kind === "audio"
-              ? ["Voice message"]
-              : undefined,
+          text: message.text ? [message.text] : undefined,
           time: formatConversationTime(message.createdAt),
         };
       }) ?? []
     );
   }, [
-    attachmentsByMessageId,
     conversationMessages,
     currentUser?.id,
     editingMessageId,
     editingMessageText,
+    filesById,
     handleCancelEditMessage,
     handleDeleteMessage,
     handleStartEditMessage,

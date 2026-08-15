@@ -268,11 +268,7 @@ export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
         return;
       }
 
-      if (avatarFile) {
-        await uploadAvatar(avatarFile).unwrap();
-      }
-
-      const updatedUser = await updateCurrentUser({
+      const updatedProfileUser = await updateCurrentUser({
         email: profile.email,
         firstName: profile.firstName,
         lastName: profile.lastName,
@@ -280,6 +276,8 @@ export const useSettingsWorkspace = (): UseSettingsWorkspaceResult => {
         roleTitle: profile.role,
         timezone: profile.timezone,
       }).unwrap();
+
+      const updatedUser = avatarFile ? await uploadAvatar(avatarFile).unwrap() : updatedProfileUser;
 
       dispatch(userActions.setAuthData(mapUserRecordToAuthUser(updatedUser)));
       const nextProfile = mapUserRecordToProfile(updatedUser);

@@ -115,6 +115,16 @@
   gap: 13px;
 }
 
+.columnDropZone {
+  min-height: 22px;
+  border-radius: 12px;
+}
+
+.columnTaskDropActive {
+  background: rgb(83 85 255 / 10%);
+  outline: 2px dashed rgb(83 85 255 / 35%);
+}
+
 .emptyState {
   padding: 24px 16px;
   color: #78839e;

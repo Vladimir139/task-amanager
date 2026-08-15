@@ -1,4 +1,4 @@
-import { AttachFileOutlined } from "@mui/icons-material";
+import { AttachFileOutlined, PlayArrowOutlined } from "@mui/icons-material";
 import { Avatar, Box, Button, Link, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
@@ -6,6 +6,8 @@ import type { ChatMessageItemProps } from "../model/types";
 import styles from "./ChatMessageItem.module.scss";
 
 export const ChatMessageItem: FC<ChatMessageItemProps> = ({ message }) => {
+  const hasActions = (message.canEdit ?? false) || (message.canDelete ?? false);
+
   return (
     <Box className={`${styles.message} ${message.isOwn ? styles.ownMessage : ""}`}>
       {!message.isOwn && (
@@ -58,7 +60,7 @@ export const ChatMessageItem: FC<ChatMessageItemProps> = ({ message }) => {
               </Box>
             )}
 
-            {(message.canEdit ?? message.canDelete) && (
+            {hasActions && (
               <Box className={styles.actionRow}>
                 {message.canEdit && (
                   <Button variant="text" size="small" onClick={message.onEditStart}>
@@ -73,6 +75,19 @@ export const ChatMessageItem: FC<ChatMessageItemProps> = ({ message }) => {
               </Box>
             )}
           </>
+        )}
+
+        {message.audio && (
+          <Box className={styles.audioPlayer}>
+            <Box className={styles.audioPlayerHeader}>
+              <PlayArrowOutlined />
+              <Typography>{message.audio.duration ?? "Voice message"}</Typography>
+            </Box>
+
+            <audio controls src={message.audio.src} className={styles.audioElement}>
+              Your browser does not support audio playback.
+            </audio>
+          </Box>
         )}
 
         {!!message.attachments?.length && (

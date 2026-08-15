@@ -32,6 +32,7 @@ interface TaskBoardColumnsProps {
 }
 
 interface BoardColumnSectionProps extends BoardColumn {
+  activeColumnDropId: string | null;
   canManageBoard: boolean;
   columnRecord: BoardColumnRecord;
   dragStateClassName: string | undefined;
@@ -64,6 +65,7 @@ interface BoardColumnSectionProps extends BoardColumn {
 }
 
 function BoardColumnSection({
+  activeColumnDropId,
   canManageBoard,
   columnRecord,
   dragStateClassName,
@@ -154,41 +156,43 @@ function BoardColumnSection({
           )}
         </Box>
 
-        <Box className={styles.columnActions}>
-          <IconButton
-            aria-label={`Open actions for ${title}`}
-            className={styles.columnMenuButton}
-            onClick={(event) => {
-              onColumnMenuOpen(event, id);
-            }}
-            disabled={!canManageBoard || isMutating}
-          >
-            <MoreHoriz />
-          </IconButton>
+        {!isColumnBeingEdited && (
+          <Box className={styles.columnActions}>
+            <IconButton
+              aria-label={`Open actions for ${title}`}
+              className={styles.columnMenuButton}
+              onClick={(event) => {
+                onColumnMenuOpen(event, id);
+              }}
+              disabled={!canManageBoard || isMutating}
+            >
+              <MoreHoriz />
+            </IconButton>
 
-          <IconButton
-            aria-label={`Create task in ${title}`}
-            className={styles.addTaskButton}
-            onClick={() => {
-              onCreateTask(id);
-            }}
-          >
-            <Add />
-          </IconButton>
+            <IconButton
+              aria-label={`Create task in ${title}`}
+              className={styles.addTaskButton}
+              onClick={() => {
+                onCreateTask(id);
+              }}
+            >
+              <Add />
+            </IconButton>
 
-          <IconButton
-            aria-label={`Reorder ${title}`}
-            className={styles.dragHandleButton}
-            draggable={canManageBoard && !isMutating}
-            disabled={!canManageBoard || isMutating}
-            onDragEnd={onColumnDragEnd}
-            onDragStart={(event) => {
-              onColumnDragStart(event, id);
-            }}
-          >
-            <MoreVert />
-          </IconButton>
-        </Box>
+            <IconButton
+              aria-label={`Reorder ${title}`}
+              className={styles.dragHandleButton}
+              draggable={canManageBoard && !isMutating}
+              disabled={!canManageBoard || isMutating}
+              onDragEnd={onColumnDragEnd}
+              onDragStart={(event) => {
+                onColumnDragStart(event, id);
+              }}
+            >
+              <MoreVert />
+            </IconButton>
+          </Box>
+        )}
       </Paper>
 
       <Box className={styles.columnTasks}>
@@ -224,6 +228,18 @@ function BoardColumnSection({
         ) : (
           <Typography className={styles.emptyState}>No tasks in this column yet.</Typography>
         )}
+
+        <Box
+          className={`${styles.columnDropZone} ${
+            activeColumnDropId === id ? styles.columnTaskDropActive : ""
+          }`}
+          onDragOver={(event) => {
+            onTaskDragOver(event, id);
+          }}
+          onDrop={(event) => {
+            onTaskDropOnColumn(event, id);
+          }}
+        />
       </Box>
     </section>
   );
@@ -298,6 +314,7 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
               <BoardColumnSection
                 key={column.id}
                 {...column}
+                activeColumnDropId={activeColumnDropId}
                 canManageBoard={canManageBoard}
                 columnRecord={columnRecord}
                 dragStateClassName={

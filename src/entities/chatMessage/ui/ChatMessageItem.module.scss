@@ -94,6 +94,37 @@ $primary: #5355ff;
   margin-top: 10px;
 }
 
+.audioPlayer {
+  display: flex;
+  min-width: 260px;
+  max-width: 430px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #e9edfa;
+  border-radius: 12px;
+}
+
+.audioPlayerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  svg {
+    color: $primary;
+  }
+
+  p {
+    color: #535f84;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.audioElement {
+  width: 100%;
+}
+
 .editForm {
   display: flex;
   flex-direction: column;

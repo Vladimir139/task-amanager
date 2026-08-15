@@ -1,11 +1,10 @@
 import { EmailOutlined } from "@mui/icons-material";
-import { Box, InputAdornment, MenuItem, TextField, Typography } from "@mui/material";
+import { Box, InputAdornment, TextField, Typography } from "@mui/material";
 import type { ChangeEventHandler, FC } from "react";
 
 import type { UserProfile, UserProfileField } from "@/entities/user";
 import { UploadProfileAvatar } from "@/features/uploadProfileAvatar";
 
-import { userRoles } from "../model/constants";
 import styles from "./ProfileDetailsForm.module.scss";
 
 interface ProfileDetailsFormProps {
@@ -91,13 +90,7 @@ export const ProfileDetailsForm: FC<ProfileDetailsFormProps> = ({
           Role
         </Typography>
 
-        <TextField id="role" select fullWidth value={profile.role} onChange={onFieldChange("role")}>
-          {userRoles.map((role) => (
-            <MenuItem key={role} value={role}>
-              {role}
-            </MenuItem>
-          ))}
-        </TextField>
+        <TextField id="role" fullWidth value={profile.role} onChange={onFieldChange("role")} />
       </Box>
     </section>
   );
