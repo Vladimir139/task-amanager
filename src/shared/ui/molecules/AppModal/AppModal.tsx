@@ -5,17 +5,21 @@ import type { JSX, PropsWithChildren, ReactNode } from "react";
 import styles from "./AppModal.module.scss";
 
 interface AppModalProps extends PropsWithChildren {
+  contentClassName?: string;
   footer?: ReactNode;
   onClose: () => void;
   open: boolean;
+  paperClassName?: string;
   title?: string;
 }
 
 export const AppModal = ({
   children,
+  contentClassName,
   footer,
   onClose,
   open,
+  paperClassName,
   title,
 }: AppModalProps): JSX.Element => {
   const hasHeader = title != null || footer != null;
@@ -31,7 +35,7 @@ export const AppModal = ({
           className: styles.backdrop,
         },
         paper: {
-          className: styles.paper,
+          className: [styles.paper, paperClassName].filter(Boolean).join(" "),
         },
       }}
     >
@@ -51,7 +55,7 @@ export const AppModal = ({
         </Box>
       )}
 
-      <Box className={styles.content}>{children}</Box>
+      <Box className={[styles.content, contentClassName].filter(Boolean).join(" ")}>{children}</Box>
       {footer && <Box className={styles.footer}>{footer}</Box>}
     </Dialog>
   );

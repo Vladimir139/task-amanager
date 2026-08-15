@@ -5,7 +5,7 @@
   height: calc(100vh - 76px);
   min-width: 0;
   flex-direction: column;
-  padding: 21px 27px 25px;
+  padding: 34px 39px 28px;
   background: #ffffff;
 
   h2 {
@@ -42,12 +42,12 @@
 
 .chatSection {
   min-height: 0;
-  margin-top: 29px;
+  margin-top: 32px;
   flex: 1;
 
   > h2 {
-    color: #161616;
-    font-size: 14px;
+    color: #21235f;
+    font-size: 21px;
     font-weight: 700;
   }
 }
@@ -62,10 +62,10 @@
 .messages {
   display: flex;
   min-height: 0;
-  margin-top: 18px;
+  margin-top: 20px;
   flex: 1;
   flex-direction: column;
-  gap: 23px;
+  gap: 20px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -73,8 +73,8 @@
 .messageInputWrapper {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 24px;
 
   > button {
     width: 32px;

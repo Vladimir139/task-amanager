@@ -1,21 +1,12 @@
 import { Add } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC } from "react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { projectColorOptions, projectStatusOptions } from "@/entities/project";
 import { getProjectsRoute } from "@/shared/config/router";
+import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
 
 import { type CreateProjectPayload, useCreateProjectMutation } from "../../api/createProjectApi";
 
@@ -100,114 +91,119 @@ export const CreateProjectButton: FC<CreateProjectButtonProps> = ({ className })
         {isLoading ? "Creating..." : "New Project"}
       </Button>
 
-      <Dialog open={isOpen} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>Create project</DialogTitle>
+      <AppModal
+        open={isOpen}
+        onClose={handleClose}
+        title="Create project"
+        footer={
+          <>
+            <Button onClick={handleClose} disabled={isLoading}>
+              Cancel
+            </Button>
 
-        <DialogContent>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
-            <TextField
-              label="Title"
-              value={form.title}
-              onChange={handleChange("title")}
-              required
-              fullWidth
-            />
-
-            <TextField
-              label="Description"
-              value={form.description ?? ""}
-              onChange={handleChange("description")}
-              multiline
-              minRows={3}
-              fullWidth
-            />
-
-            <Box
-              sx={{
-                display: "grid",
-                gap: 2,
-                gridTemplateColumns: {
-                  sm: "repeat(2, minmax(0, 1fr))",
-                  xs: "1fr",
-                },
+            <Button
+              variant="contained"
+              onClick={() => {
+                void handleCreateProject();
               }}
+              disabled={isLoading || isSubmitDisabled}
             >
-              <TextField
-                select
-                label="Status"
-                value={form.status ?? "active"}
-                onChange={handleChange("status")}
-                fullWidth
-              >
-                {projectStatusOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {isLoading ? "Creating..." : "Create"}
+            </Button>
+          </>
+        }
+      >
+        <Stack spacing={2.5}>
+          <Typography sx={{ color: "#7f8aa8", fontSize: 14 }}>
+            Set up the basic project details before inviting teammates or opening the board.
+          </Typography>
 
-              <TextField
-                select
-                label="Color"
-                value={form.color ?? "blue"}
-                onChange={handleChange("color")}
-                fullWidth
-              >
-                {projectColorOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
+          <TextField
+            label="Title"
+            value={form.title}
+            onChange={handleChange("title")}
+            required
+            fullWidth
+          />
 
-            <Box
-              sx={{
-                display: "grid",
-                gap: 2,
-                gridTemplateColumns: {
-                  sm: "repeat(2, minmax(0, 1fr))",
-                  xs: "1fr",
-                },
-              }}
-            >
-              <TextField
-                label="Start date"
-                type="date"
-                value={form.startDate ?? ""}
-                onChange={handleChange("startDate")}
-                slotProps={{ inputLabel: { shrink: true } }}
-                fullWidth
-              />
+          <TextField
+            label="Description"
+            value={form.description ?? ""}
+            onChange={handleChange("description")}
+            multiline
+            minRows={3}
+            fullWidth
+          />
 
-              <TextField
-                label="Due date"
-                type="date"
-                value={form.dueDate ?? ""}
-                onChange={handleChange("dueDate")}
-                slotProps={{ inputLabel: { shrink: true } }}
-                fullWidth
-              />
-            </Box>
-          </Stack>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleClose} disabled={isLoading}>
-            Cancel
-          </Button>
-
-          <Button
-            variant="contained"
-            onClick={() => {
-              void handleCreateProject();
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: {
+                sm: "repeat(2, minmax(0, 1fr))",
+                xs: "1fr",
+              },
             }}
-            disabled={isLoading || isSubmitDisabled}
           >
-            {isLoading ? "Creating..." : "Create"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <TextField
+              select
+              label="Status"
+              value={form.status ?? "active"}
+              onChange={handleChange("status")}
+              fullWidth
+            >
+              {projectStatusOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              label="Color"
+              value={form.color ?? "blue"}
+              onChange={handleChange("color")}
+              fullWidth
+            >
+              {projectColorOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              gridTemplateColumns: {
+                sm: "repeat(2, minmax(0, 1fr))",
+                xs: "1fr",
+              },
+            }}
+          >
+            <TextField
+              label="Start date"
+              type="date"
+              value={form.startDate ?? ""}
+              onChange={handleChange("startDate")}
+              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth
+            />
+
+            <TextField
+              label="Due date"
+              type="date"
+              value={form.dueDate ?? ""}
+              onChange={handleChange("dueDate")}
+              slotProps={{ inputLabel: { shrink: true } }}
+              fullWidth
+            />
+          </Box>
+        </Stack>
+      </AppModal>
     </>
   );
 };
