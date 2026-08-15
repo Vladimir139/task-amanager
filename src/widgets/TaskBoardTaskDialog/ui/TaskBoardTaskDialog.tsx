@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { FC } from "react";
+import { useEffect, useRef } from "react";
 
 import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
@@ -53,6 +54,7 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
   projectId,
   tasksByColumn,
 }) => {
+  const lastCommentRef = useRef<HTMLDivElement | null>(null);
   const {
     attachmentCount,
     availableFiles,
@@ -124,6 +126,17 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
 
   useStatusToast({ message: statusMessage, tone: statusTone });
   useStatusToast({ message: commentStatusMessage, tone: commentStatusTone });
+
+  useEffect(() => {
+    if (!isOpen || comments.length === 0) {
+      return;
+    }
+
+    lastCommentRef.current?.scrollIntoView({
+      block: "end",
+      behavior: "smooth",
+    });
+  }, [comments.length, isOpen, openTaskId]);
 
   const checklistCompleted = form.checklistItems.filter((item) => item.isCompleted).length;
   const checklistTotal = form.checklistItems.length;
@@ -614,11 +627,16 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                     </Typography>
                   ) : (
                     <Box className={styles.commentsList}>
-                      {comments.map((comment) => {
+                      {comments.map((comment, index) => {
                         const isEditing = editingCommentId === comment.id;
 
                         return (
-                          <Paper key={comment.id} className={styles.commentCard} elevation={0}>
+                          <Paper
+                            key={comment.id}
+                            ref={index === comments.length - 1 ? lastCommentRef : undefined}
+                            className={styles.commentCard}
+                            elevation={0}
+                          >
                             <Box className={styles.commentHeader}>
                               <Box className={styles.commentMeta}>
                                 <Typography className={styles.commentAuthor}>

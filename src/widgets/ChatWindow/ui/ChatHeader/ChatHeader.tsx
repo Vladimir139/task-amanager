@@ -1,7 +1,9 @@
-import { Avatar, AvatarGroup, Box, Typography } from "@mui/material";
+import { Avatar, Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
+import { getAvatarColors, getAvatarInitials } from "@/shared/lib/formatters";
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 
 import styles from "../ChatWindow/ChatWindow.module.scss";
 
@@ -20,10 +22,14 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   membersCount,
   onlineCount,
 }) => {
+  const chatAvatarColors = getAvatarColors(title);
+
   return (
     <header className={styles.chatHeader}>
       <Box className={styles.teamInformation}>
-        <Avatar src={avatar} alt={title} />
+        <Avatar src={avatar} alt={title} sx={avatar ? undefined : chatAvatarColors}>
+          {getAvatarInitials(title)}
+        </Avatar>
 
         <Box>
           <Typography component="h2">{title}</Typography>
@@ -35,11 +41,15 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       </Box>
 
       <Box className={styles.teamMembers}>
-        <AvatarGroup max={3}>
-          {members.slice(0, 3).map((member) => (
-            <Avatar key={member.id} src={member.avatar} alt={member.name} />
-          ))}
-        </AvatarGroup>
+        <MemberAvatarStack
+          items={members.map((member) => ({
+            avatarUrl: member.avatar,
+            id: member.id,
+            name: member.name,
+            role: member.role,
+          }))}
+          title={`${title} members`}
+        />
       </Box>
     </header>
   );

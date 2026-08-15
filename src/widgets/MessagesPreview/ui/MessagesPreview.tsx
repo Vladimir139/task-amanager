@@ -9,13 +9,11 @@ import { selectAuthUser } from "@/entities/user";
 import { selectAccessToken } from "@/features/auth/model/selectors";
 import { baseApi } from "@/shared/api";
 import { getMessagesRoute } from "@/shared/config/router";
-import { getInitials } from "@/shared/lib/formatters";
+import { getAvatarColors, getInitials } from "@/shared/lib/formatters";
 import { useRealtimeSocket } from "@/shared/lib/realtime";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 import styles from "./MessagesPreview.module.scss";
-
-const colors = ["#f5a623", "#ff7285", "#5ac8e8", "#8e72d8", "#3ad29f"];
 
 const getConversationInitials = (title: string): string => {
   const parts = title.trim().split(/\s+/).filter(Boolean);
@@ -103,7 +101,7 @@ export const MessagesPreview: FC = () => {
     (conversation) => (conversation.unreadCount ?? 0) > 0,
   );
   const extraChatCount = Math.max(unreadConversations.length - 5, 0);
-  const messages = unreadConversations.slice(0, 5).map((conversation, index) => {
+  const messages = unreadConversations.slice(0, 5).map((conversation) => {
     const directPeer =
       conversation.type === "direct"
         ? conversation.members?.find((member) => member._id !== currentUser?.id)
@@ -116,7 +114,7 @@ export const MessagesPreview: FC = () => {
       avatar: directPeer
         ? getInitials(directPeer.firstName, directPeer.lastName)
         : getConversationInitials(conversationName),
-      color: colors[index % colors.length],
+      color: getAvatarColors(directPeer?._id ?? conversation._id).backgroundColor,
       id: conversation._id,
       message: conversation.isTyping ? "Typing..." : (conversation.preview ?? "Unread message"),
       name: conversationName,

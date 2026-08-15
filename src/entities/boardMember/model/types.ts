@@ -3,6 +3,8 @@ export interface BoardMember {
   initials: string;
   avatarUrl?: string;
   isOnline?: boolean;
+  name?: string;
+  role?: string;
 }
 
 export interface BoardMemberAvatarProps {

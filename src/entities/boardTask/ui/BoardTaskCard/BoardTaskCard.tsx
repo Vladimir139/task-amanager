@@ -4,10 +4,10 @@ import {
   CheckCircleOutlined,
   RadioButtonUncheckedOutlined,
 } from "@mui/icons-material";
-import { AvatarGroup, Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
-import { BoardMemberAvatar } from "@/entities/boardMember";
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 
 import type { BoardTaskCardProps, TaskCategory } from "../../model/types.ts";
 import styles from "./BoardTaskCard.module.scss";
@@ -48,49 +48,25 @@ export const BoardTaskCard: FC<BoardTaskCardProps> = ({ onClick, task }) => {
 
       {task.image && <Box component="img" src={task.image} alt="" className={styles.taskImage} />}
 
-      <Box className={styles.taskTitleRow}>
-        <button
-          type="button"
-          className={`${styles.completeToggleButton} ${
-            isCompleted ? styles.completedToggleButton : ""
-          }`}
-          onClick={(event) => {
-            event.stopPropagation();
-            task.onToggleCompleted?.();
-          }}
-          disabled={!task.onToggleCompleted}
-          aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
-        >
-          {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
-        </button>
-
-        <Typography component="h3" className={styles.taskTitle}>
-          {task.title}
-        </Typography>
-      </Box>
+      <Typography component="h3" className={styles.taskTitle}>
+        {task.title}
+      </Typography>
 
       <Typography className={styles.taskDescription}>{task.description}</Typography>
 
       <Box className={styles.taskDate}>{task.date}</Box>
 
       <Box className={styles.taskFooter}>
-        <AvatarGroup
-          max={4}
-          className={styles.taskMembers}
-          slotProps={{
-            surplus: {
-              className: styles.additionalAvatar,
-            },
-          }}
-        >
-          {task.members.map((member) => (
-            <BoardMemberAvatar
-              key={member.id}
-              member={member}
-              className={styles.taskMemberAvatar}
-            />
-          ))}
-        </AvatarGroup>
+        <MemberAvatarStack
+          items={task.members.map((member) => ({
+            avatarUrl: member.avatarUrl,
+            id: member.id,
+            initials: member.initials,
+            name: member.name ?? member.initials,
+            role: member.role,
+          }))}
+          title={`${task.title} assignees`}
+        />
 
         <Box className={styles.taskStatistics}>
           {task.comments !== undefined && (
@@ -115,6 +91,21 @@ export const BoardTaskCard: FC<BoardTaskCardProps> = ({ onClick, task }) => {
               </span>
             </Box>
           )}
+
+          <button
+            type="button"
+            className={`${styles.completeToggleButton} ${
+              isCompleted ? styles.completedToggleButton : ""
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              task.onToggleCompleted?.();
+            }}
+            disabled={!task.onToggleCompleted}
+            aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
+          >
+            {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
+          </button>
         </Box>
       </Box>
     </Paper>

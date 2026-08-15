@@ -38,21 +38,7 @@ export const TaskCard: FC<TaskCardProps> = ({ onOpen, task }) => {
       </Box>
 
       <Box className={styles.taskInformation}>
-        <Box className={styles.taskTitleRow}>
-          <button
-            type="button"
-            className={`${styles.completeToggleButton} ${
-              isCompleted ? styles.completedToggleButton : ""
-            }`}
-            onClick={task.onToggleCompleted}
-            disabled={!task.onToggleCompleted}
-            aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
-          >
-            {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
-          </button>
-
-          <Typography className={styles.taskTitle}>{task.title}</Typography>
-        </Box>
+        <Typography className={styles.taskTitle}>{task.title}</Typography>
 
         <Box className={styles.taskMeta}>
           <Box>
@@ -102,9 +88,23 @@ export const TaskCard: FC<TaskCardProps> = ({ onOpen, task }) => {
         />
       </Box>
 
-      <button type="button" className={styles.openTaskButton} onClick={onOpen} disabled={!onOpen}>
-        Open task
-      </button>
+      <Box className={styles.taskActions}>
+        <button
+          type="button"
+          className={`${styles.completeToggleButton} ${
+            isCompleted ? styles.completedToggleButton : ""
+          }`}
+          onClick={task.onToggleCompleted}
+          disabled={!task.onToggleCompleted}
+          aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
+        >
+          {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
+        </button>
+
+        <button type="button" className={styles.openTaskButton} onClick={onOpen} disabled={!onOpen}>
+          Open task
+        </button>
+      </Box>
     </Paper>
   );
 };

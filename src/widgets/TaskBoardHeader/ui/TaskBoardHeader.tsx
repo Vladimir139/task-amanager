@@ -1,18 +1,10 @@
 import { AddCircleOutlined, EditOutlined, ViewColumnOutlined } from "@mui/icons-material";
-import {
-  AvatarGroup,
-  Box,
-  Button,
-  IconButton,
-  MenuItem,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, IconButton, MenuItem, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { BoardMember } from "@/entities/boardMember";
-import { BoardMemberAvatar } from "@/entities/boardMember";
 import type { BoardRecord } from "@/shared/api/types";
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 
 import styles from "./TaskBoardHeader.module.scss";
 
@@ -24,7 +16,6 @@ interface TaskBoardHeaderProps {
   isMakingProjectGlobal?: boolean;
   title: string;
   members: BoardMember[];
-  extraMembersCount: number;
   onCreateBoard?: () => void;
   onCreateColumn?: () => void;
   onBoardSelect: (boardId: string) => void;
@@ -41,7 +32,6 @@ export const TaskBoardHeader: FC<TaskBoardHeaderProps> = ({
   isMakingProjectGlobal = false,
   title,
   members,
-  extraMembersCount,
   onCreateBoard,
   onCreateColumn,
   onBoardSelect,
@@ -121,17 +111,10 @@ export const TaskBoardHeader: FC<TaskBoardHeaderProps> = ({
       </Box>
 
       <Box className={styles.boardMemberSummary}>
-        <AvatarGroup max={5} className={styles.boardMemberGroup}>
-          {members.map((member) => (
-            <BoardMemberAvatar
-              key={member.id}
-              member={member}
-              className={styles.boardMemberAvatar}
-            />
-          ))}
-        </AvatarGroup>
-
-        {extraMembersCount > 0 && <Typography>{`+${extraMembersCount}`}</Typography>}
+        <MemberAvatarStack
+          items={members.map((member) => ({ ...member, name: member.name ?? member.initials }))}
+          title={`${title} members`}
+        />
       </Box>
     </Box>
   );

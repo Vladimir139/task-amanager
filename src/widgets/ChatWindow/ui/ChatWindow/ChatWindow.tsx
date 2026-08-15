@@ -56,17 +56,19 @@ export const ChatWindow: FC<ChatWindowProps> = ({
     return Math.max(messages.length - unreadCount, 0);
   }, [messages.length, unreadCount]);
   const firstUnreadRef = useRef<HTMLDivElement | null>(null);
+  const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (firstUnreadIndex < 0) {
+    if (messages.length === 0) {
       return;
     }
 
-    firstUnreadRef.current?.scrollIntoView({
-      block: "start",
+    const target = firstUnreadIndex >= 0 ? firstUnreadRef.current : lastMessageRef.current;
+    target?.scrollIntoView({
+      block: firstUnreadIndex >= 0 ? "start" : "end",
       behavior: "smooth",
     });
-  }, [firstUnreadIndex, title]);
+  }, [firstUnreadIndex, messages.length, title]);
 
   useStatusToast({
     message: composerStatusMessage,
@@ -93,7 +95,7 @@ export const ChatWindow: FC<ChatWindowProps> = ({
         )}
 
         {messages.map((message, index) => (
-          <Box key={message.id}>
+          <Box key={message.id} ref={index === messages.length - 1 ? lastMessageRef : undefined}>
             {index === firstUnreadIndex && (
               <Box ref={firstUnreadRef} className={styles.unreadDivider}>
                 <span />

@@ -22,7 +22,10 @@ export const MessageItem: FC<MessageItemProps> = ({ message }) => {
         }
       }}
     >
-      <Avatar className={styles.messageAvatar} sx={{ borderColor: message.color }}>
+      <Avatar
+        className={styles.messageAvatar}
+        sx={{ backgroundColor: message.color, borderColor: message.color }}
+      >
         {message.avatar}
       </Avatar>
 

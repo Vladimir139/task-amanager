@@ -87,16 +87,20 @@ export const useProjectsCatalog = (): UseProjectsCatalogResult => {
       const members = Array.from({ length: Math.min(project.memberCount, 4) }, (_, index) => {
         if (owner && index === 0) {
           return {
+            avatarUrl: owner.avatarUrl ?? undefined,
             id: owner._id,
             initials: getInitials(owner.firstName, owner.lastName),
             name: `${owner.firstName} ${owner.lastName}`.trim(),
+            role: "owner",
           };
         }
 
         return {
+          avatarUrl: undefined,
           id: `${project._id}-member-${index}`,
           initials: `M${index + 1}`,
           name: `Member ${index + 1}`,
+          role: "member",
         };
       });
 

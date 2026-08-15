@@ -51,13 +51,6 @@ $primary-dark: #21235f;
   padding: 0 25px;
 }
 
-.taskTitleRow {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 10px;
-}
-
 .completeToggleButton {
   display: inline-flex;
   width: 28px;
@@ -82,10 +75,11 @@ $primary-dark: #21235f;
 
 .taskTitle {
   overflow: hidden;
+  overflow: hidden;
   margin-bottom: 8px !important;
   font-size: 14px !important;
-  font-weight: 600 !important;
   text-overflow: ellipsis;
+  white-space: nowrap;
   white-space: nowrap;
 }
 
@@ -144,11 +138,19 @@ $primary-dark: #21235f;
   }
 }
 
+.taskActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  margin-right: 25px;
+}
+
 .openTaskButton {
   display: flex;
   height: 39px;
   align-items: center;
-  margin-right: 25px;
   padding: 0 16px;
   color: $primary;
   background: #ededff;

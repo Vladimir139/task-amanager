@@ -1,11 +1,12 @@
 import { SendRounded } from "@mui/icons-material";
 import { Box, IconButton, TextField, Typography } from "@mui/material";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import type { BoardMember } from "@/entities/boardMember";
-import { BoardMemberAvatar } from "@/entities/boardMember";
 import type { BoardMessage } from "@/entities/boardMessage";
 import { BoardMessageItem } from "@/entities/boardMessage";
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 import {
   type RecordedAudioPayload,
   VoiceRecorderButton,
@@ -40,6 +41,26 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
   onMessageSubmit,
   typingText = null,
 }) => {
+  const firstUnreadIndex = useMemo(
+    () => messages.findIndex((item) => !item.isOwn && !item.isRead),
+    [messages],
+  );
+  const firstUnreadRef = useRef<HTMLDivElement | null>(null);
+  const lastMessageRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      return;
+    }
+
+    const target = firstUnreadIndex >= 0 ? firstUnreadRef.current : lastMessageRef.current;
+
+    target?.scrollIntoView({
+      block: firstUnreadIndex >= 0 ? "start" : "end",
+      behavior: "smooth",
+    });
+  }, [firstUnreadIndex, messages.length]);
+
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onMessageChange(event.target.value);
   };
@@ -63,9 +84,10 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
         </Box>
 
         <Box className={styles.membersList}>
-          {members.map((member) => (
-            <BoardMemberAvatar key={member.id} member={member} showStatus />
-          ))}
+          <MemberAvatarStack
+            items={members.map((member) => ({ ...member, name: member.name ?? member.initials }))}
+            title="Board members"
+          />
         </Box>
       </Box>
 
@@ -77,8 +99,18 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
           {isError ? (
             <Typography className={styles.emptyState}>Unable to load board messages.</Typography>
           ) : messages.length > 0 ? (
-            messages.map((chatMessage) => (
-              <BoardMessageItem key={chatMessage.id} message={chatMessage} />
+            messages.map((chatMessage, index) => (
+              <Box
+                key={chatMessage.id}
+                ref={index === messages.length - 1 ? lastMessageRef : undefined}
+              >
+                {index === firstUnreadIndex && (
+                  <Typography ref={firstUnreadRef} className={styles.typingText}>
+                    Unread messages
+                  </Typography>
+                )}
+                <BoardMessageItem message={chatMessage} />
+              </Box>
             ))
           ) : (
             <Typography className={styles.emptyState}>

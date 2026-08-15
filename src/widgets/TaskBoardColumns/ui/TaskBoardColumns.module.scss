@@ -1,4 +1,7 @@
 .boardScroller {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
   overflow-x: auto;
   padding: 20px 0 28px;
 }

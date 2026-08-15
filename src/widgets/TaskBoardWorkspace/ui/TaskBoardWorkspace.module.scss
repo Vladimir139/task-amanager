@@ -1,13 +1,16 @@
 .page {
   display: grid;
-  min-height: calc(100vh - 84px);
+  height: calc(100vh - 84px);
   grid-template-columns: minmax(0, 1fr) 390px;
+  overflow: hidden;
 }
 
 .boardContent {
   display: flex;
+  min-height: 0;
   min-width: 0;
   flex-direction: column;
   gap: 24px;
   padding: 14px 28px 44px;
+  overflow: hidden;
 }

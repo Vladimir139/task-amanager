@@ -505,6 +505,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
         id: member._id,
         initials: getInitials(member.firstName, member.lastName),
         isOnline: getIsMemberOnline(member._id, member.isOnline),
+        name: `${member.firstName} ${member.lastName}`.trim(),
+        role: member.memberRole,
       })) ?? []
     );
   }, [boardView?.members, getIsMemberOnline]);
@@ -530,6 +532,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
           initials: getInitials(member.firstName, member.lastName),
           isOnline: getIsMemberOnline(member._id, member.isOnline),
           name: `${member.firstName} ${member.lastName}`.trim(),
+          role: member.memberRole,
         },
       ]),
     );
@@ -558,6 +561,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
             id: String(member?.id),
             initials: member?.initials ?? "NA",
             isOnline: member?.isOnline,
+            name: member?.name,
+            role: member?.role,
           })),
         title: task.title,
         total: task.checklistTotal || undefined,

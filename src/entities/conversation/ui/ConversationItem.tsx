@@ -2,6 +2,8 @@ import { Check, MicNone } from "@mui/icons-material";
 import { Avatar, Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
+import { getAvatarColors, getAvatarInitials } from "@/shared/lib/formatters";
+
 import type { ConversationItemProps } from "../model/types";
 import styles from "./ConversationItem.module.scss";
 
@@ -10,6 +12,8 @@ export const ConversationItem: FC<ConversationItemProps> = ({
   isActive,
   onClick,
 }) => {
+  const avatarColors = getAvatarColors(String(conversation.id));
+
   const handleClick = () => {
     onClick(conversation);
   };
@@ -21,7 +25,13 @@ export const ConversationItem: FC<ConversationItemProps> = ({
       onClick={handleClick}
     >
       <Box className={styles.conversationAvatar}>
-        <Avatar src={conversation.avatar} alt={conversation.name} />
+        <Avatar
+          src={conversation.avatar}
+          alt={conversation.name}
+          sx={conversation.avatar ? undefined : avatarColors}
+        >
+          {getAvatarInitials(conversation.name)}
+        </Avatar>
 
         {conversation.isOnline && <span className={styles.onlineIndicator} aria-label="Online" />}
       </Box>

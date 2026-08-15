@@ -39,6 +39,7 @@ const mapFileType = (kind: string): RecentFile["type"] => {
 };
 
 export const RecentFiles: FC = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [sortField, setSortField] = useState<RecentFilesSortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
@@ -131,6 +132,8 @@ export const RecentFiles: FC = () => {
       return sortDirection === "asc" ? result : -result;
     });
   }, [recentFiles, sortDirection, sortField]);
+  const visibleFiles = isExpanded ? sortedFiles : sortedFiles.slice(0, 6);
+  const hasMoreFiles = sortedFiles.length > 6;
 
   const handleSort = (field: RecentFilesSortField) => {
     if (field === sortField) {
@@ -190,11 +193,22 @@ export const RecentFiles: FC = () => {
         </Box>
 
         <Box className={styles.filesList}>
-          {sortedFiles.map((file) => (
+          {visibleFiles.map((file) => (
             <RecentFileRow key={file.id} file={file} />
           ))}
         </Box>
       </Box>
+
+      {hasMoreFiles && (
+        <Button
+          variant="text"
+          onClick={() => {
+            setIsExpanded((currentValue) => !currentValue);
+          }}
+        >
+          {isExpanded ? "Show less" : `Show more (${sortedFiles.length - 6})`}
+        </Button>
+      )}
 
       <AppModal
         open={pendingDeleteFile != null}

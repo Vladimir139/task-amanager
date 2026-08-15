@@ -80,6 +80,38 @@ export const getInitials = (...parts: Array<string | null | undefined>): string 
   return normalized.join("") || "NA";
 };
 
+const avatarPalette = [
+  { backgroundColor: "#dbe4ff", color: "#2b3f8f" },
+  { backgroundColor: "#dff5ff", color: "#115e83" },
+  { backgroundColor: "#ffe8dc", color: "#9a3412" },
+  { backgroundColor: "#e5f7eb", color: "#166534" },
+  { backgroundColor: "#f3e8ff", color: "#7e22ce" },
+  { backgroundColor: "#fde7f3", color: "#a21caf" },
+] as const;
+
+export const getAvatarInitials = (label?: string | null): string => {
+  if (!label?.trim()) {
+    return "NA";
+  }
+
+  return getInitials(...label.trim().split(/\s+/));
+};
+
+export const getAvatarColors = (
+  seed?: string | null,
+): { backgroundColor: string; color: string } => {
+  if (!seed?.trim()) {
+    return avatarPalette[0];
+  }
+
+  const hash = Array.from(seed).reduce(
+    (currentHash, character) => currentHash + character.charCodeAt(0),
+    0,
+  );
+
+  return avatarPalette[hash % avatarPalette.length] ?? avatarPalette[0];
+};
+
 export const normalizeCategoryLabel = (
   category?: string | null,
 ): "Design" | "Research" | "Planning" | "Content" | "Development" | "Other" => {

@@ -1,6 +1,8 @@
 import { CalendarMonthOutlined, CheckCircleOutlined } from "@mui/icons-material";
-import { Avatar, AvatarGroup, Box, LinearProgress, Paper, Typography } from "@mui/material";
+import { Box, LinearProgress, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
+
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 
 import type { Project, ProjectCardProps } from "../model/types";
 import styles from "./ProjectCard.module.scss";
@@ -39,8 +41,6 @@ export const ProjectCard: FC<ProjectCardProps> = ({
   const statusClassName = statusClassNames[project.status];
   const progress =
     project.tasksTotal > 0 ? Math.round((project.tasksCompleted / project.tasksTotal) * 100) : 0;
-  const extraMembersCount = Math.max(project.memberCount - 4, 0);
-
   const handleOpen = () => {
     onOpen?.(project);
   };
@@ -104,17 +104,7 @@ export const ProjectCard: FC<ProjectCardProps> = ({
 
       <Box className={styles.projectFooter}>
         <Box className={styles.projectMembersGroup}>
-          <AvatarGroup className={styles.projectMembers}>
-            {project.members.slice(0, 4).map((member) => (
-              <Avatar key={member.id} alt={member.name}>
-                {member.initials}
-              </Avatar>
-            ))}
-          </AvatarGroup>
-
-          {extraMembersCount > 0 && (
-            <span className={styles.additionalMember}>+{extraMembersCount}</span>
-          )}
+          <MemberAvatarStack items={project.members} title={`${project.title} members`} />
         </Box>
 
         <Box className={styles.projectActions}>

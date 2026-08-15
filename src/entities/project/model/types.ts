@@ -5,9 +5,11 @@ export type ProjectColor = "purple" | "blue" | "orange" | "green" | "red" | "gra
 export type ProjectViewMode = "grid" | "list";
 
 export interface ProjectMember {
+  avatarUrl?: string;
   id: string | number;
   name: string;
   initials: string;
+  role?: string;
 }
 
 export interface Project {

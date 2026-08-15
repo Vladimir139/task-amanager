@@ -54,7 +54,6 @@ export const TaskBoardWorkspace: FC = () => {
     setMessage,
     shouldShowMakeProjectGlobalAction,
     taskBoardEmoji,
-    taskBoardExtraMembersCount,
     taskBoardMembersCount,
     taskBoardTitle,
     tasksByColumn,
@@ -83,8 +82,7 @@ export const TaskBoardWorkspace: FC = () => {
           emoji={taskBoardEmoji}
           isMakingProjectGlobal={isSavingGlobalProject}
           title={taskBoardTitle}
-          members={boardMembers.slice(0, 5)}
-          extraMembersCount={taskBoardExtraMembersCount}
+          members={boardMembers}
           onCreateBoard={() => {
             setManagementMode("create-board");
           }}
@@ -118,7 +116,7 @@ export const TaskBoardWorkspace: FC = () => {
 
       <TaskBoardSidebar
         canWrite={canWriteBoardChat}
-        members={boardMembers.slice(0, 6)}
+        members={boardMembers}
         membersCount={taskBoardMembersCount}
         messages={boardMessages}
         message={message}

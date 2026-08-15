@@ -1,8 +1,9 @@
 import { Folder as FolderIcon } from "@mui/icons-material";
-import { Avatar, AvatarGroup, Box, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { FolderCardProps, FolderColor } from "@/entities/folder";
+import { MemberAvatarStack } from "@/shared/ui/molecules/MemberAvatarStack/MemberAvatarStack";
 
 import styles from "./FolderCard.module.scss";
 
@@ -29,11 +30,15 @@ export const FolderCard: FC<FolderCardProps> = ({ folder, isActive = false, onCl
         <FolderIcon className={`${styles.folderIcon} ${folderClassNames[folder.color]}`} />
 
         {!!folder.members?.length && (
-          <AvatarGroup max={2} className={styles.folderMembers}>
-            {folder.members.map((member) => (
-              <Avatar key={`${folder.id}-${member}`}>{member}</Avatar>
-            ))}
-          </AvatarGroup>
+          <MemberAvatarStack
+            items={folder.members.map((member, index) => ({
+              id: `${folder.id}-${index}`,
+              initials: member,
+              name: member,
+            }))}
+            renderAsButton={false}
+            title={`${folder.name} members`}
+          />
         )}
       </Box>
 

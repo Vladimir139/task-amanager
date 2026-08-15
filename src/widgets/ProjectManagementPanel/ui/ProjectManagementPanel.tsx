@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { projectColorOptions, projectStatusOptions } from "@/entities/project";
 import { getProjectsRoute } from "@/shared/config/router";
+import { getAvatarColors } from "@/shared/lib/formatters";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
 
@@ -250,7 +251,7 @@ export const ProjectManagementPanel: FC = () => {
                   {memberItems.map((member) => (
                     <Box key={member.id} className={styles.memberRow}>
                       <Box className={styles.memberInfo}>
-                        <Avatar>{member.initials}</Avatar>
+                        <Avatar sx={getAvatarColors(member.id)}>{member.initials}</Avatar>
 
                         <Box>
                           <Typography className={styles.memberName}>
