@@ -1,11 +1,12 @@
 import { baseApi } from "@/shared/api";
-import type { TaskRecord } from "@/shared/api/types";
+import type { TaskChecklistItemRecord, TaskRecord } from "@/shared/api/types";
 
 export interface CreateTaskPayload {
   assigneeIds?: string[];
   boardId: string;
   category?: string;
   checklistCompleted?: number;
+  checklistItems?: TaskChecklistItemRecord[];
   checklistTotal?: number;
   columnId?: string;
   description?: string;

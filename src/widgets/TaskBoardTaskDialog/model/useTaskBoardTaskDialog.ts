@@ -22,7 +22,7 @@ import {
 } from "@/features/taskParticipants";
 import { useUpdateTaskMutation } from "@/features/updateTask";
 import { useUpdateTaskCommentMutation } from "@/features/updateTaskComment";
-import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
+import type { BoardColumnRecord, TaskChecklistItemRecord, TaskRecord } from "@/shared/api/types";
 import { formatDateTimeLabel } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
 
@@ -31,8 +31,7 @@ type TaskMovePlacement = "top" | "bottom";
 interface TaskFormState {
   assigneeIds: string[];
   category: string;
-  checklistCompleted: string;
-  checklistTotal: string;
+  checklistItems: TaskChecklistItemRecord[];
   columnId: string;
   description: string;
   dueDate: string;
@@ -93,8 +92,12 @@ interface UseTaskBoardTaskDialogResult {
   handleDeleteComment: (commentId: string) => Promise<void>;
   handleEditCommentTextChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleFieldChange: (
-    field: keyof TaskFormState,
+    field: Exclude<keyof TaskFormState, "assigneeIds" | "checklistItems">,
   ) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleChecklistItemTitleChange: (itemId: string, value: string) => void;
+  handleChecklistItemToggle: (itemId: string) => void;
+  handleChecklistItemAdd: () => void;
+  handleChecklistItemRemove: (itemId: string) => void;
   handleMovePlacementChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleMoveTask: () => Promise<void>;
   handleSaveAssignees: () => Promise<void>;
@@ -131,8 +134,7 @@ interface UseTaskBoardTaskDialogResult {
 const initialFormState: TaskFormState = {
   assigneeIds: [],
   category: "other",
-  checklistCompleted: "0",
-  checklistTotal: "0",
+  checklistItems: [],
   columnId: "",
   description: "",
   dueDate: "",
@@ -167,15 +169,46 @@ const normalizeOptionalValue = (value: string): string | undefined => {
   return normalized || undefined;
 };
 
-const normalizeChecklistValue = (value: string): number => {
-  const parsedValue = Number.parseInt(value, 10);
+const createChecklistItemId = (): string =>
+  globalThis.crypto?.randomUUID?.() ?? `checklist-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
 
-  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
-    return 0;
+const createChecklistItem = (title = "", isCompleted = false): TaskChecklistItemRecord => ({
+  isCompleted,
+  itemId: createChecklistItemId(),
+  title,
+});
+
+const buildChecklistItems = (task?: TaskRecord | null): TaskChecklistItemRecord[] => {
+  if (!task) {
+    return [];
   }
 
-  return parsedValue;
+  if ((task.checklistItems?.length ?? 0) > 0) {
+    return (task.checklistItems ?? []).map((item) => ({
+      isCompleted: item.isCompleted,
+      itemId: item.itemId,
+      title: item.title,
+    }));
+  }
+
+  if ((task.checklistTotal ?? 0) === 0) {
+    return [];
+  }
+
+  return Array.from({ length: task.checklistTotal }, (_value, index) =>
+    createChecklistItem(`Subtask ${index + 1}`, index < task.checklistCompleted),
+  );
 };
+
+const normalizeChecklistItems = (
+  checklistItems: TaskChecklistItemRecord[],
+): TaskChecklistItemRecord[] =>
+  checklistItems
+    .map((item) => ({
+      ...item,
+      title: item.title.trim(),
+    }))
+    .filter((item) => item.title !== "");
 
 export const useTaskBoardTaskDialog = ({
   boardId,
@@ -260,8 +293,7 @@ export const useTaskBoardTaskDialog = ({
     setForm({
       assigneeIds: task.assigneeIds,
       category: task.category,
-      checklistCompleted: String(task.checklistCompleted ?? 0),
-      checklistTotal: String(task.checklistTotal ?? 0),
+      checklistItems: buildChecklistItems(task),
       columnId: task.columnId,
       description: task.description ?? "",
       dueDate: formatDateInput(task.dueDate),
@@ -343,13 +375,55 @@ export const useTaskBoardTaskDialog = ({
     isUploadingFiles;
 
   const handleFieldChange =
-    (field: keyof TaskFormState) =>
+    (field: Exclude<keyof TaskFormState, "assigneeIds" | "checklistItems">) =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
       setForm((currentState) => ({
         ...currentState,
         [field]: event.target.value,
       }));
     };
+
+  const handleChecklistItemTitleChange = (itemId: string, value: string): void => {
+    setForm((currentState) => ({
+      ...currentState,
+      checklistItems: currentState.checklistItems.map((item) =>
+        item.itemId === itemId
+          ? {
+              ...item,
+              title: value,
+            }
+          : item,
+      ),
+    }));
+  };
+
+  const handleChecklistItemToggle = (itemId: string): void => {
+    setForm((currentState) => ({
+      ...currentState,
+      checklistItems: currentState.checklistItems.map((item) =>
+        item.itemId === itemId
+          ? {
+              ...item,
+              isCompleted: !item.isCompleted,
+            }
+          : item,
+      ),
+    }));
+  };
+
+  const handleChecklistItemAdd = (): void => {
+    setForm((currentState) => ({
+      ...currentState,
+      checklistItems: [...currentState.checklistItems, createChecklistItem()],
+    }));
+  };
+
+  const handleChecklistItemRemove = (itemId: string): void => {
+    setForm((currentState) => ({
+      ...currentState,
+      checklistItems: currentState.checklistItems.filter((item) => item.itemId !== itemId),
+    }));
+  };
 
   const setAssigneeSelection = (userId: string): void => {
     setForm((currentState) => ({
@@ -382,8 +456,9 @@ export const useTaskBoardTaskDialog = ({
 
   const handleSaveTask = async (): Promise<void> => {
     const normalizedTitle = form.title.trim();
-    const checklistTotal = normalizeChecklistValue(form.checklistTotal);
-    const checklistCompleted = normalizeChecklistValue(form.checklistCompleted);
+    const checklistItems = normalizeChecklistItems(form.checklistItems);
+    const checklistTotal = checklistItems.length;
+    const checklistCompleted = checklistItems.filter((item) => item.isCompleted).length;
 
     if (!normalizedTitle) {
       setStatusMessage("Task title is required.");
@@ -407,6 +482,7 @@ export const useTaskBoardTaskDialog = ({
           boardId,
           category: form.category,
           checklistCompleted,
+          checklistItems,
           checklistTotal,
           columnId: form.columnId,
           description: normalizeOptionalValue(form.description),
@@ -430,6 +506,7 @@ export const useTaskBoardTaskDialog = ({
         boardId,
         category: form.category,
         checklistCompleted,
+        checklistItems,
         checklistTotal,
         columnId: form.columnId,
         description: normalizeOptionalValue(form.description),
@@ -765,6 +842,10 @@ export const useTaskBoardTaskDialog = ({
     handleCreateComment,
     handleDeleteTask,
     handleDeleteComment,
+    handleChecklistItemAdd,
+    handleChecklistItemRemove,
+    handleChecklistItemTitleChange,
+    handleChecklistItemToggle,
     handleEditCommentTextChange,
     handleFieldChange,
     handleMovePlacementChange,

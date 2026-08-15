@@ -1,4 +1,4 @@
-import { LogoutOutlined, NotificationsNoneOutlined, TaskAltOutlined } from "@mui/icons-material";
+import { ExpandMoreOutlined, LogoutOutlined, NotificationsNoneOutlined } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -114,7 +114,7 @@ export const Header: FC = () => {
             setSettingsAnchor(event.currentTarget);
           }}
         >
-          <TaskAltOutlined />
+          <ExpandMoreOutlined />
         </IconButton>
       </Box>
 

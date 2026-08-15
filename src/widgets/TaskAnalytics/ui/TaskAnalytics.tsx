@@ -53,7 +53,7 @@ const formatAnalyticsLabel = (label: string, period: AnalyticsPeriod): string =>
 };
 
 export const TaskAnalytics: FC = () => {
-  const [period, setPeriod] = useState<AnalyticsPeriod>("Monthly");
+  const [period, setPeriod] = useState<AnalyticsPeriod>("Weekly");
   const { data, isError, isLoading } = useGetDashboardTaskAnalyticsQuery(apiPeriodMap[period]);
 
   const analyticsGroups = useMemo(() => {

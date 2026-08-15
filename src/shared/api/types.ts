@@ -85,8 +85,15 @@ export interface TaskRecord {
   attachmentCount: number;
   checklistTotal: number;
   checklistCompleted: number;
+  checklistItems?: TaskChecklistItemRecord[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface TaskChecklistItemRecord {
+  itemId: string;
+  title: string;
+  isCompleted: boolean;
 }
 
 export interface TaskCommentRecord {

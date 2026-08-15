@@ -1,9 +1,12 @@
+import { AddOutlined, DeleteOutlineOutlined } from "@mui/icons-material";
 import {
   Alert,
   Box,
   Button,
   Checkbox,
   FormControlLabel,
+  IconButton,
+  LinearProgress,
   MenuItem,
   Paper,
   TextField,
@@ -67,6 +70,10 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
     handleCreateComment,
     handleDeleteTask,
     handleDeleteComment,
+    handleChecklistItemAdd,
+    handleChecklistItemRemove,
+    handleChecklistItemTitleChange,
+    handleChecklistItemToggle,
     handleEditCommentTextChange,
     handleFieldChange,
     handleMovePlacementChange,
@@ -113,6 +120,11 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
 
   useStatusToast({ message: statusMessage, tone: statusTone });
   useStatusToast({ message: commentStatusMessage, tone: commentStatusTone });
+
+  const checklistCompleted = form.checklistItems.filter((item) => item.isCompleted).length;
+  const checklistTotal = form.checklistItems.length;
+  const checklistProgress =
+    checklistTotal > 0 ? Math.round((checklistCompleted / checklistTotal) * 100) : 0;
 
   return (
     <AppModal
@@ -244,26 +256,6 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                 />
 
                 <TextField
-                  label="Subtasks total"
-                  type="number"
-                  value={form.checklistTotal}
-                  onChange={handleFieldChange("checklistTotal")}
-                  disabled={!canManageTask}
-                  slotProps={{ htmlInput: { min: 0 } }}
-                  fullWidth
-                />
-
-                <TextField
-                  label="Completed subtasks"
-                  type="number"
-                  value={form.checklistCompleted}
-                  onChange={handleFieldChange("checklistCompleted")}
-                  disabled={!canManageTask}
-                  slotProps={{ htmlInput: { min: 0 } }}
-                  fullWidth
-                />
-
-                <TextField
                   label="Description"
                   value={form.description}
                   onChange={handleFieldChange("description")}
@@ -274,6 +266,80 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                   className={styles.fullWidthField}
                 />
               </Box>
+
+              <Paper className={styles.checklistPanel} elevation={0}>
+                <Box className={styles.checklistHeader}>
+                  <Box>
+                    <Typography className={styles.attachmentTitle}>Subtasks</Typography>
+                    <Typography className={styles.helperText}>
+                      {checklistTotal > 0
+                        ? `${checklistCompleted} of ${checklistTotal} subtasks complete`
+                        : "Add subtasks as a real checklist inside the task."}
+                    </Typography>
+                  </Box>
+
+                  {canManageTask && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddOutlined />}
+                      onClick={handleChecklistItemAdd}
+                    >
+                      Add subtask
+                    </Button>
+                  )}
+                </Box>
+
+                {checklistTotal > 0 && (
+                  <LinearProgress
+                    variant="determinate"
+                    value={checklistProgress}
+                    className={styles.checklistProgress}
+                    aria-label={`${checklistCompleted} of ${checklistTotal} subtasks complete`}
+                  />
+                )}
+
+                {form.checklistItems.length > 0 ? (
+                  <Box className={styles.checklistItems}>
+                    {form.checklistItems.map((item) => (
+                      <Box key={item.itemId} className={styles.checklistItem}>
+                        <Checkbox
+                          checked={item.isCompleted}
+                          onChange={() => {
+                            handleChecklistItemToggle(item.itemId);
+                          }}
+                          disabled={!canManageTask}
+                        />
+
+                        <TextField
+                          value={item.title}
+                          onChange={(event) => {
+                            handleChecklistItemTitleChange(item.itemId, event.target.value);
+                          }}
+                          placeholder="Describe the subtask"
+                          fullWidth
+                          disabled={!canManageTask}
+                        />
+
+                        {canManageTask && (
+                          <IconButton
+                            aria-label="Remove subtask"
+                            onClick={() => {
+                              handleChecklistItemRemove(item.itemId);
+                            }}
+                          >
+                            <DeleteOutlineOutlined />
+                          </IconButton>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography className={styles.helperText}>
+                    No subtasks yet. Add a checklist like in popular task managers.
+                  </Typography>
+                )}
+              </Paper>
 
               <Box className={styles.actionRow}>
                 <Button
