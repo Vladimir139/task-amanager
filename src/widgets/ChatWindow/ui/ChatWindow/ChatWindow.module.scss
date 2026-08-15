@@ -79,6 +79,15 @@ $text: #7c87a3;
   overflow-y: auto;
 }
 
+.emptyState {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  color: #7c87a3;
+  font-size: 14px !important;
+  text-align: center;
+}
+
 .typingIndicator {
   margin-bottom: 14px;
   color: $primary;

@@ -10,7 +10,7 @@ import {
   useCreateFolderMutation,
   useSelectedFolder,
 } from "@/entities/folder";
-import { useSelectedProjectId } from "@/entities/project";
+import { useActiveProject } from "@/entities/project";
 import { getApiErrorMessage } from "@/shared/lib/api";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 
@@ -18,14 +18,16 @@ import styles from "./FilesHeader.module.scss";
 
 export const FilesHeader: FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const selectedProjectId = useSelectedProjectId();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
   const [folderName, setFolderName] = useState("");
+  const [folderNameError, setFolderNameError] = useState(false);
   const [folderColor, setFolderColor] = useState<(typeof folderColors)[number]>("blue");
   const [createFolder, { isLoading: isCreatingFolder }] = useCreateFolderMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
   const { selectedFolder, selectedFolderId } = useSelectedFolder();
+  const { activeProjectId, currentProjectTitle } = useActiveProject();
+  const effectiveProjectId = selectedFolder?.projectId ?? activeProjectId ?? undefined;
 
   useStatusToast({ message: statusMessage, tone: statusTone });
 
@@ -33,9 +35,11 @@ export const FilesHeader: FC = () => {
     const trimmedFolderName = folderName.trim();
 
     if (!trimmedFolderName) {
+      setFolderNameError(true);
       return;
     }
 
+    setFolderNameError(false);
     setStatusMessage(null);
     setStatusTone(null);
 
@@ -44,7 +48,7 @@ export const FilesHeader: FC = () => {
         color: folderColor,
         name: trimmedFolderName,
         parentId: selectedFolderId ?? undefined,
-        projectId: selectedProjectId ?? undefined,
+        projectId: effectiveProjectId,
       }).unwrap();
       setFolderName("");
       setFolderColor("blue");
@@ -78,7 +82,7 @@ export const FilesHeader: FC = () => {
           uploadFile({
             file,
             folderId: selectedFolderId ?? undefined,
-            projectId: selectedProjectId ?? undefined,
+            projectId: effectiveProjectId,
           }).unwrap(),
         ),
       );
@@ -103,10 +107,10 @@ export const FilesHeader: FC = () => {
         <Typography component="h1">Files</Typography>
         <Typography className={styles.contextText}>
           {selectedFolder
-            ? `Uploads and new folders will be added to ${selectedFolder.name}.`
-            : selectedProjectId
-              ? "Working inside the selected project."
-              : "Create folders and upload files for your workspace."}
+            ? `Current folder: ${selectedFolder.name}. New folders and uploads will be added here.`
+            : effectiveProjectId
+              ? `Current destination: ${currentProjectTitle ?? "Selected project"} root.`
+              : "Current destination: workspace root."}
         </Typography>
       </Box>
 
@@ -115,10 +119,15 @@ export const FilesHeader: FC = () => {
           value={folderName}
           onChange={(event) => {
             setFolderName(event.target.value);
+            if (folderNameError && event.target.value.trim().length > 0) {
+              setFolderNameError(false);
+            }
           }}
           size="small"
           placeholder="Folder name"
           className={styles.folderNameField}
+          error={folderNameError}
+          helperText={folderNameError ? "Enter a folder name before creating it." : " "}
         />
 
         <TextField
@@ -145,7 +154,7 @@ export const FilesHeader: FC = () => {
           onClick={() => {
             void handleCreateFolder();
           }}
-          disabled={isCreatingFolder || folderName.trim().length === 0}
+          disabled={isCreatingFolder}
         >
           {isCreatingFolder ? "Creating..." : "Create Folder"}
         </Button>
@@ -165,7 +174,7 @@ export const FilesHeader: FC = () => {
           onClick={handleUploadButtonClick}
           disabled={isUploading}
         >
-          {isUploading ? "Uploading..." : "Upload"}
+          {isUploading ? "Uploading..." : selectedFolder ? "Upload Here" : "Upload"}
         </Button>
       </Box>
     </Box>

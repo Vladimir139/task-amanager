@@ -6,6 +6,10 @@ import type { BoardMember } from "@/entities/boardMember";
 import { BoardMemberAvatar } from "@/entities/boardMember";
 import type { BoardMessage } from "@/entities/boardMessage";
 import { BoardMessageItem } from "@/entities/boardMessage";
+import {
+  type RecordedAudioPayload,
+  VoiceRecorderButton,
+} from "@/shared/ui/molecules/VoiceRecorderButton/VoiceRecorderButton";
 
 import styles from "./TaskBoardSidebar.module.scss";
 
@@ -15,6 +19,7 @@ interface TaskBoardSidebarProps {
   members: BoardMember[];
   membersCount: number;
   message: string;
+  onAudioRecorded: (payload: RecordedAudioPayload) => void;
   messages: BoardMessage[];
   onMessageChange: (value: string) => void;
   onMessageSubmit: () => void;
@@ -28,6 +33,7 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
   membersCount,
   messages,
   message,
+  onAudioRecorded,
   onMessageChange,
   onMessageSubmit,
   typingText = null,
@@ -89,6 +95,8 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
           className={styles.messageInput}
           fullWidth
         />
+
+        <VoiceRecorderButton disabled={isSubmitting} onRecorded={onAudioRecorded} />
 
         <IconButton aria-label="Send message" onClick={onMessageSubmit} disabled={isSubmitting}>
           <SendRounded />

@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Button, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -9,9 +9,10 @@ import {
   useGetRecentFilesQuery,
 } from "@/entities/file";
 import { useSelectedFolder } from "@/entities/folder";
-import { useSelectedProjectId } from "@/entities/project";
+import { useActiveProject } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
 import { formatBytes, formatDateLabel, getInitials } from "@/shared/lib/formatters";
+import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
 
 import { getSortValue } from "../lib/helpers";
 import { TableHeaderButton } from "../lib/ui";
@@ -40,11 +41,12 @@ const mapFileType = (kind: string): RecentFile["type"] => {
 };
 
 export const RecentFiles: FC = () => {
-  const selectedProjectId = useSelectedProjectId();
+  const { activeProjectId } = useActiveProject();
   const { selectedFolder, selectedFolderId } = useSelectedFolder();
   const [sortField, setSortField] = useState<RecentFilesSortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  const [pendingDeleteFile, setPendingDeleteFile] = useState<RecentFile | null>(null);
   const { data, isError, isLoading } = useGetRecentFilesQuery(
     sortField === "members"
       ? undefined
@@ -55,6 +57,7 @@ export const RecentFiles: FC = () => {
   );
   const { data: users } = useGetUsersQuery();
   const [deleteFile] = useDeleteFileMutation();
+  const isDeleteConfirmLoading = deletingFileId === pendingDeleteFile?.id;
 
   const handleDeleteFile = useCallback(
     async (fileId: string): Promise<void> => {
@@ -76,7 +79,7 @@ export const RecentFiles: FC = () => {
       data
         ?.filter(
           (file) =>
-            (!selectedProjectId || file.projectId === selectedProjectId) &&
+            (!activeProjectId || file.projectId === activeProjectId) &&
             (!selectedFolderId || file.folderId === selectedFolderId),
         )
         .map((file) => {
@@ -89,7 +92,16 @@ export const RecentFiles: FC = () => {
             members: uploader ? [getInitials(uploader.firstName, uploader.lastName)] : ["TM"],
             name: file.originalName,
             onDelete: () => {
-              void handleDeleteFile(file._id);
+              setPendingDeleteFile({
+                id: file._id,
+                isDeleting: deletingFileId === file._id,
+                lastModified: formatDateLabel(file.updatedAt ?? file.createdAt),
+                members: uploader ? [getInitials(uploader.firstName, uploader.lastName)] : ["TM"],
+                name: file.originalName,
+                openUrl: file.downloadUrl ?? file.previewUrl ?? undefined,
+                size: formatBytes(file.size),
+                type: mapFileType(file.kind),
+              });
             },
             openUrl: file.downloadUrl ?? file.previewUrl ?? undefined,
             size: formatBytes(file.size),
@@ -97,7 +109,7 @@ export const RecentFiles: FC = () => {
           } satisfies RecentFile;
         }) ?? []
     );
-  }, [data, deletingFileId, handleDeleteFile, selectedFolderId, selectedProjectId, users]);
+  }, [activeProjectId, data, deletingFileId, selectedFolderId, users]);
 
   const sortedFiles = useMemo(() => {
     if (sortField !== "members") {
@@ -181,6 +193,52 @@ export const RecentFiles: FC = () => {
           ))}
         </Box>
       </Box>
+
+      <AppModal
+        open={pendingDeleteFile != null}
+        onClose={() => {
+          if (!deletingFileId) {
+            setPendingDeleteFile(null);
+          }
+        }}
+        title="Delete file"
+        footer={
+          <>
+            <Button
+              variant="text"
+              onClick={() => {
+                setPendingDeleteFile(null);
+              }}
+              disabled={isDeleteConfirmLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              disableElevation
+              onClick={() => {
+                if (!pendingDeleteFile) {
+                  return;
+                }
+
+                void handleDeleteFile(String(pendingDeleteFile.id)).then(() => {
+                  setPendingDeleteFile(null);
+                });
+              }}
+              disabled={isDeleteConfirmLoading}
+            >
+              {isDeleteConfirmLoading ? "Deleting..." : "Delete"}
+            </Button>
+          </>
+        }
+      >
+        <Typography>
+          {pendingDeleteFile
+            ? `Delete ${pendingDeleteFile.name}? This action cannot be undone.`
+            : ""}
+        </Typography>
+      </AppModal>
     </Paper>
   );
 };

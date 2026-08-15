@@ -4,6 +4,7 @@ import type { FC } from "react";
 import type { ChatMember } from "@/entities/chatMember";
 import { type ChatMessage, ChatMessageItem } from "@/entities/chatMessage";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
+import type { RecordedAudioPayload } from "@/shared/ui/molecules/VoiceRecorderButton/VoiceRecorderButton";
 import { ChatHeader, MessageComposer } from "@/widgets";
 
 import styles from "./ChatWindow.module.scss";
@@ -22,7 +23,7 @@ interface ChatWindowProps {
   onlineCount: number;
   onMessageChange: (value: string) => void;
   onMessageSubmit: () => void;
-  onUploadAudio: (files: FileList | null) => void;
+  onUploadAudio: (payload: RecordedAudioPayload) => void;
   title: string;
   typingText?: string | null;
 }
@@ -67,7 +68,9 @@ export const ChatWindow: FC<ChatWindowProps> = ({
         {typingText && <Typography className={styles.typingIndicator}>{typingText}</Typography>}
         {isLoading && <Typography>Loading messages...</Typography>}
         {!isLoading && messages.length === 0 && (
-          <Typography>No messages yet. Start the conversation.</Typography>
+          <Typography className={styles.emptyState}>
+            No messages yet. Start the conversation.
+          </Typography>
         )}
 
         {firstMessage && <ChatMessageItem key={firstMessage.id} message={firstMessage} />}

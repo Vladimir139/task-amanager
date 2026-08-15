@@ -15,7 +15,7 @@ import {
   useSelectedFolderId,
   useUpdateFolderMutation,
 } from "@/entities/folder";
-import { useSelectedProjectId } from "@/entities/project";
+import { useActiveProject } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
 import type { FolderRecord } from "@/shared/api/types";
 import { getFilesRoute } from "@/shared/config/router/routes";
@@ -27,7 +27,7 @@ import styles from "./FoldersList.module.scss";
 
 export const FoldersList: FC = () => {
   const navigate = useNavigate();
-  const selectedProjectId = useSelectedProjectId();
+  const { activeProjectId, currentProjectTitle } = useActiveProject();
   const selectedFolderId = useSelectedFolderId();
   const { data, isError, isLoading } = useGetFoldersQuery();
   const { data: users } = useGetUsersQuery();
@@ -63,9 +63,9 @@ export const FoldersList: FC = () => {
   const folders = useMemo(
     () =>
       data
-        ?.filter((folder) => !selectedProjectId || folder.projectId === selectedProjectId)
+        ?.filter((folder) => !activeProjectId || folder.projectId === activeProjectId)
         .map(mapFolder) ?? [],
-    [data, mapFolder, selectedProjectId],
+    [activeProjectId, data, mapFolder],
   );
 
   const foldersById = useMemo(
@@ -105,18 +105,18 @@ export const FoldersList: FC = () => {
 
   const handleOpenFolder = (folder: FolderType) => {
     void navigate(
-      getFilesRoute(selectedProjectId ?? folder.projectId ?? undefined, String(folder.id)),
+      getFilesRoute(activeProjectId ?? folder.projectId ?? undefined, String(folder.id)),
     );
   };
 
   const handleGoToAllFiles = () => {
-    void navigate(getFilesRoute(selectedProjectId ?? undefined));
+    void navigate(getFilesRoute(activeProjectId ?? undefined));
   };
 
   const handleGoToParent = () => {
     void navigate(
       getFilesRoute(
-        selectedProjectId ?? parentFolder?.projectId ?? undefined,
+        activeProjectId ?? parentFolder?.projectId ?? undefined,
         parentFolder ? String(parentFolder.id) : undefined,
       ),
     );
@@ -165,7 +165,7 @@ export const FoldersList: FC = () => {
       await deleteFolder(selectedFolderId).unwrap();
       void navigate(
         getFilesRoute(
-          selectedProjectId ?? parentFolder?.projectId ?? undefined,
+          activeProjectId ?? parentFolder?.projectId ?? undefined,
           parentFolder ? String(parentFolder.id) : undefined,
         ),
       );
@@ -211,8 +211,12 @@ export const FoldersList: FC = () => {
         </Box>
       </Box>
 
-      {selectedProjectId && (
-        <Typography className={styles.scopeText}>Filtered by selected project.</Typography>
+      {activeProjectId && (
+        <Typography className={styles.scopeText}>
+          {selectedFolder
+            ? `Showing subfolders inside ${selectedFolder.name} for ${currentProjectTitle ?? "the selected project"}.`
+            : `Showing folders for ${currentProjectTitle ?? "the selected project"}.`}
+        </Typography>
       )}
       {selectedFolder && (
         <Typography className={styles.scopeText}>

@@ -36,6 +36,7 @@ export const TaskBoardWorkspace: FC = () => {
     isSendingMessage,
     memberOptions,
     message,
+    onAudioRecorded,
     onBoardSelect,
     onCreateTask,
     onMakeProjectGlobal,
@@ -112,6 +113,9 @@ export const TaskBoardWorkspace: FC = () => {
         membersCount={taskBoardMembersCount}
         messages={boardMessages}
         message={message}
+        onAudioRecorded={(payload) => {
+          void onAudioRecorded(payload);
+        }}
         onMessageChange={setMessage}
         onMessageSubmit={() => {
           void sendMessage();

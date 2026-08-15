@@ -1,6 +1,11 @@
-import { AttachFileOutlined, MicNone, SendOutlined } from "@mui/icons-material";
+import { AttachFileOutlined, SendOutlined } from "@mui/icons-material";
 import { Box, IconButton, TextField } from "@mui/material";
 import type { ChangeEvent, FC, KeyboardEvent } from "react";
+
+import {
+  type RecordedAudioPayload,
+  VoiceRecorderButton,
+} from "@/shared/ui/molecules/VoiceRecorderButton/VoiceRecorderButton";
 
 import styles from "../ChatWindow/ChatWindow.module.scss";
 
@@ -10,7 +15,7 @@ interface MessageComposerProps {
   onAttachImages: (files: FileList | null) => void;
   onChange: (value: string) => void;
   onSubmit: () => void;
-  onUploadAudio: (files: FileList | null) => void;
+  onUploadAudio: (payload: RecordedAudioPayload) => void;
   value: string;
 }
 
@@ -38,18 +43,7 @@ export const MessageComposer: FC<MessageComposerProps> = ({
 
   return (
     <Box className={styles.messageComposer}>
-      <IconButton component="label" aria-label="Upload audio" disabled={isSubmitting || isDisabled}>
-        <MicNone />
-        <input
-          hidden
-          type="file"
-          accept="audio/*"
-          onChange={(event) => {
-            onUploadAudio(event.target.files);
-            event.target.value = "";
-          }}
-        />
-      </IconButton>
+      <VoiceRecorderButton disabled={isSubmitting || isDisabled} onRecorded={onUploadAudio} />
 
       <TextField
         fullWidth

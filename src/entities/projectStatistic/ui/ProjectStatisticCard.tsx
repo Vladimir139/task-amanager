@@ -1,11 +1,10 @@
 import {
   CheckCircleOutlined,
   DashboardOutlined,
-  MoreHoriz,
   TimelapseOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
-import { Box, IconButton, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import type { ProjectStatistic, ProjectStatisticCardProps } from "../model/types";
@@ -43,10 +42,6 @@ export const ProjectStatisticCard: FC<ProjectStatisticCardProps> = ({ statistic 
           <Typography>{statistic.difference}</Typography>
         </Box>
       </Box>
-
-      <IconButton className={styles.statisticMenu} aria-label={`Actions for ${statistic.title}`}>
-        <MoreHoriz />
-      </IconButton>
     </Paper>
   );
 };

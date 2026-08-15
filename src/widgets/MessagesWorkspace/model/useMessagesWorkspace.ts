@@ -31,6 +31,7 @@ import { getApiErrorMessage } from "@/shared/lib/api";
 import { formatBytes, formatConversationTime, formatDateTimeLabel } from "@/shared/lib/formatters";
 import { mergePresenceState, setPresenceState, useRealtimeSocket } from "@/shared/lib/realtime";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
+import type { RecordedAudioPayload } from "@/shared/ui/molecules/VoiceRecorderButton/VoiceRecorderButton";
 
 const getConversationDisplay = (
   conversation: ConversationRecord,
@@ -109,7 +110,7 @@ interface UseMessagesWorkspaceResult {
   handleConversationTitleChange: (value: string) => void;
   handleConversationTitleSave: () => Promise<void>;
   handleConversationUserChange: (value: string) => void;
-  handleUploadAudio: (files: FileList | null) => void;
+  handleUploadAudio: (payload: RecordedAudioPayload) => void;
   hasConversations: boolean;
   isError: boolean;
   isLoading: boolean;
@@ -981,12 +982,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     })();
   };
 
-  const handleUploadAudio = (files: FileList | null): void => {
-    const file = files?.[0];
-    if (!file) {
-      return;
-    }
-
+  const handleUploadAudio = (payload: RecordedAudioPayload): void => {
     void (async () => {
       if (!activeConversationId) {
         return;
@@ -998,7 +994,9 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
       try {
         const uploadedAudio = await uploadAudioMessage({
           conversationId: activeConversationId,
-          file,
+          durationMs: payload.durationMs,
+          file: payload.file,
+          waveform: payload.waveform,
         }).unwrap();
 
         await sendMessage({

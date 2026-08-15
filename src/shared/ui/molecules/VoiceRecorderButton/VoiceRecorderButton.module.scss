@@ -1,0 +1,29 @@
+.recorder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recordButton {
+  color: #75809d !important;
+}
+
+.recordingButton {
+  color: #ef5b5b !important;
+  background: rgb(239 91 91 / 10%) !important;
+}
+
+.processingButton {
+  color: #5355ff !important;
+}
+
+.status {
+  color: #7c87a3;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.recordingStatus {
+  color: #ef5b5b;
+}

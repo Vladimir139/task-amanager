@@ -19,6 +19,7 @@ import {
   useMarkMessageUnreadMutation,
   useSendMessageMutation,
   useUpdateMessageMutation,
+  useUploadAudioMessageMutation,
 } from "@/entities/message";
 import {
   projectSelectionActions,
@@ -40,6 +41,7 @@ import {
 } from "@/shared/lib/formatters";
 import { mergePresenceState, setPresenceState, useRealtimeSocket } from "@/shared/lib/realtime";
 import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
+import type { RecordedAudioPayload } from "@/shared/ui/molecules/VoiceRecorderButton/VoiceRecorderButton";
 
 interface UseTaskBoardWorkspaceResult {
   activeBoardId: string | null;
@@ -91,6 +93,7 @@ interface UseTaskBoardWorkspaceResult {
     name: string;
   }>;
   message: string;
+  onAudioRecorded: (payload: RecordedAudioPayload) => Promise<void>;
   onBoardSelect: (boardId: string) => void;
   onCreateTask: (columnId: string) => void;
   onMakeProjectGlobal: () => Promise<void>;
@@ -182,6 +185,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const [deleteMessage] = useDeleteMessageMutation();
   const [markMessageRead] = useMarkMessageReadMutation();
   const [markMessageUnread] = useMarkMessageUnreadMutation();
+  const [uploadAudioMessage] = useUploadAudioMessageMutation();
   const presenceSocket = useRealtimeSocket(
     "/presence",
     accessToken,
@@ -731,6 +735,37 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     stopTyping(conversationId);
   };
 
+  const handleAudioRecorded = async (payload: RecordedAudioPayload): Promise<void> => {
+    if (!conversationId) {
+      return;
+    }
+
+    try {
+      const uploadedAudio = await uploadAudioMessage({
+        conversationId,
+        durationMs: payload.durationMs,
+        file: payload.file,
+        waveform: payload.waveform,
+      }).unwrap();
+
+      await sendBoardMessage({
+        audio: {
+          fileId: uploadedAudio._id,
+          durationMs: uploadedAudio.durationMs ?? undefined,
+          mimeType: uploadedAudio.mimeType,
+          waveform: uploadedAudio.waveform ?? undefined,
+        },
+        conversationId,
+        kind: "audio",
+      }).unwrap();
+
+      stopTyping(conversationId);
+      toast.success("Voice message sent.");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to send the voice message."));
+    }
+  };
+
   const typingMembers = (boardView?.members ?? []).filter(
     (member) => typingUserIds.includes(member._id) && member._id !== currentUser?.id,
   );
@@ -762,6 +797,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     isSendingMessage,
     memberOptions,
     message,
+    onAudioRecorded: handleAudioRecorded,
     onBoardSelect: handleBoardSelect,
     onCreateTask: handleCreateTask,
     onMakeProjectGlobal: handleMakeProjectGlobal,
