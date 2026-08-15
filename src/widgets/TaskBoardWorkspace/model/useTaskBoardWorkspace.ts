@@ -11,7 +11,10 @@ import {
 } from "@/entities/board";
 import { type BoardMember } from "@/entities/boardMember";
 import { type BoardColumn } from "@/entities/boardTask";
-import { useGetConversationDetailsQuery } from "@/entities/conversation";
+import {
+  useGetConversationDetailsQuery,
+  useGetConversationFilesQuery,
+} from "@/entities/conversation";
 import {
   useDeleteMessageMutation,
   useGetConversationMessagesQuery,
@@ -50,6 +53,7 @@ interface UseTaskBoardWorkspaceResult {
   boardMessages: Array<{
     audio?: {
       duration: string;
+      src: string;
       waveform: { id: string; height: number }[];
     };
     author: string;
@@ -177,6 +181,9 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const { data: conversationDetails } = useGetConversationDetailsQuery(conversationId ?? "", {
     skip: !conversationId,
   });
+  const { data: conversationFiles } = useGetConversationFilesQuery(conversationId ?? "", {
+    skip: !conversationId,
+  });
   const { data: conversationMessages, isError: isMessagesError } = useGetConversationMessagesQuery(
     conversationId ?? "",
     {
@@ -188,6 +195,17 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const [deleteMessage] = useDeleteMessageMutation();
   const [uploadAudioMessage] = useUploadAudioMessageMutation();
   const [markConversationRead] = useMarkConversationReadMutation();
+  const formatAudioDuration = useCallback((durationMs?: number | null): string => {
+    if (!durationMs || durationMs <= 0) {
+      return "00:00";
+    }
+
+    const totalSeconds = Math.floor(durationMs / 1000);
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+    return `${minutes}:${seconds}`;
+  }, []);
   const presenceSocket = useRealtimeSocket(
     "/presence",
     accessToken,
@@ -548,6 +566,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
 
   const boardMessages = useMemo(() => {
     const messages = conversationMessages ?? boardView?.chatPreview?.messages ?? [];
+    const filesById = new Map((conversationFiles ?? []).map((file) => [file._id, file]));
     const currentConversationMember = conversationDetails?.members.find(
       (member) => member.userId === currentUser?.id,
     );
@@ -560,16 +579,16 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
           height: Math.max(8, Math.round(barHeight)),
           id: `${item._id}-${index}`,
         }));
+        const audioFile = item.audio?.fileId ? filesById.get(item.audio.fileId) : undefined;
         const isOwn = item.authorId === currentUser?.id;
         const isRead = item.sequence <= lastReadSequence;
 
         return {
           audio:
-            item.kind === "audio" && item.audio
+            item.kind === "audio" && item.audio && audioFile
               ? {
-                  duration: formatTimeLabel(
-                    new Date((item.audio.durationMs ?? 0) * 1000).toISOString(),
-                  ),
+                  duration: formatAudioDuration(item.audio.durationMs),
+                  src: audioFile.previewUrl ?? audioFile.downloadUrl ?? "",
                   waveform: waveform ?? [],
                 }
               : undefined,
@@ -633,11 +652,13 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     );
   }, [
     boardView?.chatPreview?.messages,
+    conversationFiles,
     conversationDetails?.members,
     conversationMessages,
     currentUser?.id,
     editingMessageId,
     editingMessageText,
+    formatAudioDuration,
     memberMap,
     updateMessage,
   ]);

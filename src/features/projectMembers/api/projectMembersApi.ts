@@ -22,6 +22,7 @@ export const projectMembersApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     addProjectMember: build.mutation<ProjectMemberRecord, AddProjectMemberPayload>({
       invalidatesTags: (_result, _error, payload) => [
+        "Conversations",
         "Projects",
         { id: payload.projectId, type: "ProjectMembers" },
         { id: payload.projectId, type: "Projects" },
@@ -34,6 +35,7 @@ export const projectMembersApi = baseApi.injectEndpoints({
     }),
     removeProjectMember: build.mutation<ProjectMemberRecord, RemoveProjectMemberPayload>({
       invalidatesTags: (_result, _error, payload) => [
+        "Conversations",
         "Projects",
         { id: payload.projectId, type: "ProjectMembers" },
         { id: payload.projectId, type: "Projects" },
@@ -45,6 +47,7 @@ export const projectMembersApi = baseApi.injectEndpoints({
     }),
     updateProjectMemberRole: build.mutation<ProjectMemberRecord, UpdateProjectMemberRolePayload>({
       invalidatesTags: (_result, _error, payload) => [
+        "Conversations",
         "Projects",
         { id: payload.projectId, type: "ProjectMembers" },
         { id: payload.projectId, type: "Projects" },

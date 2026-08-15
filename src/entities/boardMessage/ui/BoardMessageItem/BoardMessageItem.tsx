@@ -1,5 +1,5 @@
-import { Pause } from "@mui/icons-material";
-import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
+import { PlayArrowOutlined } from "@mui/icons-material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import type { FC } from "react";
 
 import { BoardMemberAvatar } from "@/entities/boardMember";
@@ -7,12 +7,13 @@ import { BoardMemberAvatar } from "@/entities/boardMember";
 import type { BoardAudioMessage, BoardMessageItemProps } from "../../model/types.ts";
 import styles from "./BoardMessageItem.module.scss";
 
-function AudioMessage({ duration, waveform }: BoardAudioMessage) {
+function AudioMessage({ duration, src, waveform }: BoardAudioMessage) {
   return (
     <Box className={styles.audioMessage}>
-      <IconButton aria-label="Pause audio message">
-        <Pause />
-      </IconButton>
+      <Box className={styles.audioHeader}>
+        <PlayArrowOutlined />
+        <Typography>{duration}</Typography>
+      </Box>
 
       <Box className={styles.audioWave}>
         {waveform.map((bar) => (
@@ -25,7 +26,9 @@ function AudioMessage({ duration, waveform }: BoardAudioMessage) {
         ))}
       </Box>
 
-      <Typography>{duration}</Typography>
+      <audio controls src={src} className={styles.audioElement}>
+        Your browser does not support audio playback.
+      </audio>
     </Box>
   );
 }
@@ -41,7 +44,11 @@ export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
 
       <Box className={styles.messageContainer}>
         {message.audio ? (
-          <AudioMessage duration={message.audio.duration} waveform={message.audio.waveform} />
+          <AudioMessage
+            duration={message.audio.duration}
+            src={message.audio.src}
+            waveform={message.audio.waveform}
+          />
         ) : message.isEditing ? (
           <Box className={styles.editForm}>
             <TextField

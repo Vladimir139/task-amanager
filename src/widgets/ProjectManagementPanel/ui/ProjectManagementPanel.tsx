@@ -295,9 +295,13 @@ export const ProjectManagementPanel: FC = () => {
                           onClick={() => {
                             void handleRemoveMember(member.id);
                           }}
-                          disabled={!canManageProject || member.isOwner || isMutating}
+                          disabled={
+                            member.isCurrentUser
+                              ? member.isOwner || isMutating
+                              : !canManageProject || member.isOwner || isMutating
+                          }
                         >
-                          Remove
+                          {member.isCurrentUser ? "Leave project" : "Remove"}
                         </Button>
                       </Box>
                     </Box>

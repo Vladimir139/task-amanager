@@ -21,8 +21,12 @@ $orange: #ffb53d;
   min-width: 0;
   align-items: center;
   gap: 11px;
+}
 
-  > p {
+.fileNameText {
+  min-width: 0;
+
+  > p:first-child {
     overflow: hidden;
     color: $title;
     font-size: 14px;
@@ -30,6 +34,15 @@ $orange: #ffb53d;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.fileLocation {
+  overflow: hidden;
+  margin-top: 3px !important;
+  color: $text;
+  font-size: 11px !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fileIcon {

@@ -4,6 +4,7 @@ export interface Message {
   message: string;
   avatar: string;
   color: string;
+  onOpen?: () => void;
   unreadCount?: number;
 }
 

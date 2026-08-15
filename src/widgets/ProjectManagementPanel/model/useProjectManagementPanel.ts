@@ -344,6 +344,12 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
         memberUserId,
         projectId: selectedProjectId,
       }).unwrap();
+
+      if (memberUserId === authUser?.id) {
+        await navigate(getProjectsRoute(), { replace: true });
+        return;
+      }
+
       setStatusMessage("Project member removed.");
       setStatusTone("success");
     } catch (error) {

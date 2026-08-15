@@ -6,7 +6,22 @@ import styles from "./MessageItem.module.scss";
 
 export const MessageItem: FC<MessageItemProps> = ({ message }) => {
   return (
-    <Box className={styles.message}>
+    <Box
+      className={`${styles.message} ${message.onOpen ? styles.clickableMessage : ""}`}
+      onClick={message.onOpen}
+      role={message.onOpen ? "button" : undefined}
+      tabIndex={message.onOpen ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (!message.onOpen) {
+          return;
+        }
+
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          message.onOpen();
+        }
+      }}
+    >
       <Avatar className={styles.messageAvatar} sx={{ borderColor: message.color }}>
         {message.avatar}
       </Avatar>

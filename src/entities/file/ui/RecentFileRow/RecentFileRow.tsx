@@ -11,7 +11,12 @@ export const RecentFileRow: FC<RecentFileRowProps> = ({ file }) => {
     <Box className={styles.fileRow}>
       <Box className={styles.fileName}>
         <FileIcon type={file.type} />
-        <Typography>{file.name}</Typography>
+        <Box className={styles.fileNameText}>
+          <Typography>{file.name}</Typography>
+          {file.locationLabel && (
+            <Typography className={styles.fileLocation}>{file.locationLabel}</Typography>
+          )}
+        </Box>
       </Box>
 
       <Typography className={styles.fileSize}>{file.size}</Typography>

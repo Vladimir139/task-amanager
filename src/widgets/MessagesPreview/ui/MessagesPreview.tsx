@@ -1,9 +1,11 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useGetConversationsQuery } from "@/entities/conversation";
 import { MessageItem } from "@/entities/message";
 import { selectAuthUser } from "@/entities/user";
+import { getMessagesRoute } from "@/shared/config/router";
 import { getInitials } from "@/shared/lib/formatters";
 import { useAppSelector } from "@/shared/libs/redux";
 
@@ -23,6 +25,7 @@ const getConversationInitials = (title: string): string => {
 };
 
 export const MessagesPreview: FC = () => {
+  const navigate = useNavigate();
   const currentUser = useAppSelector(selectAuthUser);
   const { data, isError, isLoading } = useGetConversationsQuery();
 
@@ -47,6 +50,9 @@ export const MessagesPreview: FC = () => {
       id: conversation._id,
       message: conversation.isTyping ? "Typing..." : (conversation.preview ?? "Unread message"),
       name: conversationName,
+      onOpen: () => {
+        void navigate(getMessagesRoute(conversation._id));
+      },
       unreadCount: conversation.unreadCount ?? 0,
     };
   });

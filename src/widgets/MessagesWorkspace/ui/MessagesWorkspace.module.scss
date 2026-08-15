@@ -6,3 +6,16 @@ $background: #f5f6fb;
   grid-template-columns: 335px minmax(520px, 1fr) 335px;
   background: $background;
 }
+
+.emptyState {
+  display: grid;
+  min-height: calc(100vh - 76px);
+  place-items: center;
+  background: $background;
+
+  p {
+    color: #78839e;
+    font-size: 16px;
+    text-align: center;
+  }
+}

@@ -64,19 +64,11 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
     limit: 100,
     page: 1,
   });
-  const projectOptions = useMemo(
-    () => [
-      {
-        id: "",
-        title: "Without project",
-      },
-      ...(projectsResponse?.items.map((project) => ({
-        id: project._id,
-        title: project.title,
-      })) ?? []),
-    ],
-    [projectsResponse?.items],
-  );
+  const projectOptions =
+    projectsResponse?.items.map((project) => ({
+      id: project._id,
+      title: project.title,
+    })) ?? [];
   const selectedProjectId = projectOverrideId ?? activeProjectId ?? "";
   const selectedProjectTitle =
     projectOptions.find((project) => project.id === selectedProjectId)?.title ??
@@ -99,49 +91,26 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
       ? (boardView?.members.find((member) => member._id === currentUserId)?.memberRole ?? null)
       : null;
   const boardMemberIdsKey = useMemo(
-    () =>
-      selectedProjectId
-        ? (boardView?.members ?? []).map((member) => member._id).join(",")
-        : (currentUserId ?? ""),
-    [boardView?.members, currentUserId, selectedProjectId],
+    () => (boardView?.members ?? []).map((member) => member._id).join(","),
+    [boardView?.members],
   );
 
   const collaborators = useMemo(() => {
-    if (!selectedProjectId) {
-      return currentUser
-        ? [
-            {
-              id: currentUser.id,
-              initials: getInitials(currentUser.firstName, currentUser.lastName),
-              name: `${currentUser.firstName} ${currentUser.lastName}`.trim() || "You",
-            },
-          ]
-        : [];
-    }
-
     return (boardView?.members ?? []).map((member) => ({
       id: member._id,
       initials: getInitials(member.firstName, member.lastName),
       name: `${member.firstName} ${member.lastName}`.trim(),
     }));
-  }, [boardView?.members, currentUser, selectedProjectId]);
+  }, [boardView?.members]);
 
   useEffect(() => {
     const defaultCollaboratorIds =
-      !selectedProjectId && currentUserId
+      currentUserId && (boardView?.members ?? []).some((member) => member._id === currentUserId)
         ? [currentUserId]
-        : currentUserId && (boardView?.members ?? []).some((member) => member._id === currentUserId)
-          ? [currentUserId]
-          : [];
+        : [];
 
     setSelectedCollaboratorIds(defaultCollaboratorIds);
-  }, [
-    boardMemberIdsKey,
-    boardView?.board._id,
-    boardView?.members,
-    currentUserId,
-    selectedProjectId,
-  ]);
+  }, [boardMemberIdsKey, boardView?.board._id, boardView?.members, currentUserId]);
 
   const handleTaskTitleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setTaskTitle(event.target.value);
@@ -167,36 +136,32 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
     const normalizedTitle = taskTitle.trim();
     const boardId = boardView?.board._id;
     const preferredColumnId = getPreferredBoardColumnId(boardView?.columns);
-    const personalAssigneeIds =
-      selectedCollaboratorIds.length > 0
-        ? selectedCollaboratorIds
-        : currentUserId
-          ? [currentUserId]
-          : [];
 
-    if (!normalizedTitle || currentUserRole === "viewer" || (selectedProjectId && !boardId)) {
+    if (!normalizedTitle || !selectedProjectId || !boardId || currentUserRole === "viewer") {
       toast.error(
         !normalizedTitle
           ? "Task title is required."
-          : currentUserRole === "viewer"
-            ? "You only have view access to this project."
-            : "Project board is not ready yet.",
+          : !selectedProjectId
+            ? "Select a project before creating a dashboard task."
+            : !boardId
+              ? "Project board is not ready yet."
+              : currentUserRole === "viewer"
+                ? "You only have view access to this project."
+                : "Project board is not ready yet.",
       );
       return;
     }
 
     try {
       await createTask({
-        assigneeIds: personalAssigneeIds,
+        assigneeIds: selectedCollaboratorIds,
         boardId,
         category: "planning",
         columnId: preferredColumnId ?? undefined,
-        description: selectedProjectTitle
-          ? `Created from dashboard quick action for ${selectedProjectTitle}`
-          : "Created from dashboard quick action without a project",
+        description: `Created from dashboard quick action for ${selectedProjectTitle ?? "project"}`,
         emoji: selectedEmoji ?? undefined,
         priority: "low",
-        projectId: selectedProjectId || undefined,
+        projectId: selectedProjectId,
         title: normalizedTitle,
       }).unwrap();
 
@@ -208,16 +173,18 @@ export const useQuickCreateTask = (): UseQuickCreateTaskResult => {
     }
   };
 
-  const isProjectReady = !selectedProjectId || Boolean(boardView?.board._id);
+  const isProjectReady = Boolean(selectedProjectId && boardView?.board._id);
   const helperMessage =
-    isProjectLoading || (Boolean(selectedProjectId) && isBoardLoading)
+    isProjectLoading || isBoardLoading
       ? "Loading project workspace..."
-      : isProjectError || (Boolean(selectedProjectId) && isBoardError)
+      : isProjectError || isBoardError
         ? "Unable to load the active project workspace."
         : !selectedProjectId
-          ? "This task will be assigned to you and shown in Assigned tasks."
+          ? projectOptions.length > 0
+            ? "Choose a project before creating a dashboard task."
+            : "No project available yet. Create a project first."
           : currentUserRole === "viewer"
-            ? "You have view-only access to this project. Choose another project or create a personal task."
+            ? "You have view-only access to this project."
             : !boardView?.board._id
               ? "This project does not have a board yet."
               : collaborators.length === 0

@@ -4,7 +4,7 @@ import type { TaskChecklistItemRecord, TaskRecord } from "@/shared/api/types";
 
 export interface CreateTaskPayload {
   assigneeIds?: string[];
-  boardId?: string;
+  boardId: string;
   category?: string;
   checklistCompleted?: number;
   checklistItems?: TaskChecklistItemRecord[];
@@ -14,7 +14,7 @@ export interface CreateTaskPayload {
   dueDate?: string;
   emoji?: string;
   priority?: string;
-  projectId?: string;
+  projectId: string;
   startDate?: string;
   title: string;
   workflowState?: string;
@@ -28,9 +28,7 @@ export const createTaskApi = baseApi.injectEndpoints({
         "ProjectStats",
         "Projects",
         "Tasks",
-        ...(payload.projectId
-          ? [{ id: getBoardProjectTagId(payload.projectId), type: "Board" as const }]
-          : []),
+        { id: getBoardProjectTagId(payload.projectId), type: "Board" as const },
       ],
       query: (body) => ({
         body,

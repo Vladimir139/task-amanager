@@ -20,6 +20,7 @@ export const projectInvitationsApi = baseApi.injectEndpoints({
       invalidatesTags: (result) =>
         result
           ? [
+              "Conversations",
               "Projects",
               "ProjectStats",
               { id: "received", type: "ProjectInvitations" },
@@ -27,7 +28,12 @@ export const projectInvitationsApi = baseApi.injectEndpoints({
               { id: result.projectId, type: "ProjectMembers" },
               { id: result.projectId, type: "Projects" },
             ]
-          : ["Projects", "ProjectStats", { id: "received", type: "ProjectInvitations" }],
+          : [
+              "Conversations",
+              "Projects",
+              "ProjectStats",
+              { id: "received", type: "ProjectInvitations" },
+            ],
       query: ({ invitationId }) => ({
         method: "POST",
         url: `/projects/invitations/${invitationId}/accept`,

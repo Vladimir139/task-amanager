@@ -77,7 +77,7 @@ export const NewTask: FC = () => {
       <Typography className={styles.projectHelperText}>
         {currentProjectTitle
           ? `Tasks will be created in ${currentProjectTitle} and added to backlog by default.`
-          : "Choose a project or create a personal task without a project."}
+          : "Choose a project for the new task."}
       </Typography>
 
       <Typography className={styles.inputLabel}>Task Title</Typography>

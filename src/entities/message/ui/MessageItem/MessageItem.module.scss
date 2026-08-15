@@ -6,6 +6,10 @@ $primary-dark: #21235f;
   gap: 13px;
 }
 
+.clickableMessage {
+  cursor: pointer;
+}
+
 .messageAvatar {
   width: 49px !important;
   height: 49px !important;

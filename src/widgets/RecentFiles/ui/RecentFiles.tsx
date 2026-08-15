@@ -8,8 +8,8 @@ import {
   useDeleteFileMutation,
   useGetRecentFilesQuery,
 } from "@/entities/file";
-import { useSelectedFolder } from "@/entities/folder";
-import { useActiveProject } from "@/entities/project";
+import { useGetFoldersQuery, useSelectedFolder } from "@/entities/folder";
+import { useActiveProject, useGetProjectsQuery } from "@/entities/project";
 import { useGetUsersQuery } from "@/entities/user";
 import { formatBytes, formatDateLabel, getInitials } from "@/shared/lib/formatters";
 import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
@@ -42,7 +42,7 @@ const mapFileType = (kind: string): RecentFile["type"] => {
 
 export const RecentFiles: FC = () => {
   const { activeProjectId } = useActiveProject();
-  const { selectedFolder, selectedFolderId } = useSelectedFolder();
+  const { selectedFolder } = useSelectedFolder();
   const [sortField, setSortField] = useState<RecentFilesSortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
@@ -56,6 +56,11 @@ export const RecentFiles: FC = () => {
         },
   );
   const { data: users } = useGetUsersQuery();
+  const { data: folders = [] } = useGetFoldersQuery();
+  const { data: projectsResponse } = useGetProjectsQuery({
+    limit: 100,
+    page: 1,
+  });
   const [deleteFile] = useDeleteFileMutation();
   const isDeleteConfirmLoading = deletingFileId === pendingDeleteFile?.id;
 
@@ -74,21 +79,29 @@ export const RecentFiles: FC = () => {
 
   const recentFiles = useMemo(() => {
     const userMap = new Map((users ?? []).map((user) => [user._id, user]));
+    const folderMap = new Map(folders.map((folder) => [folder._id, folder]));
+    const projectMap = new Map(
+      (projectsResponse?.items ?? []).map((project) => [project._id, project]),
+    );
 
     return (
       data
-        ?.filter(
-          (file) =>
-            (!activeProjectId || file.projectId === activeProjectId) &&
-            (!selectedFolderId || file.folderId === selectedFolderId),
-        )
+        ?.filter((file) => !activeProjectId || file.projectId === activeProjectId)
         .map((file) => {
           const uploader = userMap.get(file.uploadedBy);
+          const folder = file.folderId ? folderMap.get(file.folderId) : undefined;
+          const project = file.projectId ? projectMap.get(file.projectId) : undefined;
+          const locationLabel = folder
+            ? `Folder: ${folder.name}${project ? ` · Project: ${project.title}` : ""}`
+            : project
+              ? `Project root: ${project.title}`
+              : "Workspace root";
 
           return {
             id: file._id,
             isDeleting: deletingFileId === file._id,
             lastModified: formatDateLabel(file.updatedAt ?? file.createdAt),
+            locationLabel,
             members: uploader ? [getInitials(uploader.firstName, uploader.lastName)] : ["TM"],
             name: file.originalName,
             onDelete: () => {
@@ -96,6 +109,7 @@ export const RecentFiles: FC = () => {
                 id: file._id,
                 isDeleting: deletingFileId === file._id,
                 lastModified: formatDateLabel(file.updatedAt ?? file.createdAt),
+                locationLabel,
                 members: uploader ? [getInitials(uploader.firstName, uploader.lastName)] : ["TM"],
                 name: file.originalName,
                 openUrl: file.downloadUrl ?? file.previewUrl ?? undefined,
@@ -109,7 +123,7 @@ export const RecentFiles: FC = () => {
           } satisfies RecentFile;
         }) ?? []
     );
-  }, [activeProjectId, data, deletingFileId, selectedFolderId, users]);
+  }, [activeProjectId, data, deletingFileId, folders, projectsResponse?.items, users]);
 
   const sortedFiles = useMemo(() => {
     if (sortField !== "members") {
@@ -144,7 +158,7 @@ export const RecentFiles: FC = () => {
     <Paper className={styles.recentSection} elevation={0}>
       <Box className={styles.recentHeader}>
         <Typography component="h2">
-          {selectedFolder ? `Files in ${selectedFolder.name}` : "Recent Files"}
+          {selectedFolder ? `Files, current folder ${selectedFolder.name}` : "Files"}
         </Typography>
 
         <Typography>{sortedFiles.length} items</Typography>

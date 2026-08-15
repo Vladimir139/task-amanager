@@ -54,15 +54,27 @@ export const MessagesWorkspace: FC = () => {
   } = useMessagesWorkspace();
 
   if (isLoading && !hasConversations) {
-    return <Typography>Loading conversations...</Typography>;
+    return (
+      <div className={styles.emptyState}>
+        <Typography>Loading conversations...</Typography>
+      </div>
+    );
   }
 
   if (isError && !hasConversations) {
-    return <Typography>Unable to load conversations.</Typography>;
+    return (
+      <div className={styles.emptyState}>
+        <Typography>Unable to load conversations.</Typography>
+      </div>
+    );
   }
 
   if (!hasConversations) {
-    return <Typography>No conversations yet.</Typography>;
+    return (
+      <div className={styles.emptyState}>
+        <Typography>No conversations yet.</Typography>
+      </div>
+    );
   }
 
   return (

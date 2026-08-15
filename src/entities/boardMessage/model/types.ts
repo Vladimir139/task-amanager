@@ -2,6 +2,7 @@ import type { BoardMember } from "@/entities/boardMember";
 
 export interface BoardAudioMessage {
   duration: string;
+  src: string;
   waveform: {
     id: string;
     height: number;
