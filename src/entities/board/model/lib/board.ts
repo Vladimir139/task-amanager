@@ -9,5 +9,10 @@ export const getPreferredBoardColumnId = (columns?: BoardColumnRecord[] | null):
     return null;
   }
 
-  return columns.find((column) => column.systemKey === "todo")?._id ?? columns[0]?._id ?? null;
+  return (
+    columns.find((column) => column.systemKey === "backlog")?._id ??
+    columns.find((column) => column.systemKey === "todo")?._id ??
+    columns[0]?._id ??
+    null
+  );
 };

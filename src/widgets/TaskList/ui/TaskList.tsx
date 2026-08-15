@@ -40,7 +40,10 @@ export const TaskList: FC = () => {
         title: task.title,
         watcherCount: task.watcherIds.length,
       } satisfies Task,
-      route: getTasksRoute(task.projectId, task.boardId, task._id),
+      route:
+        task.projectId && task.boardId
+          ? getTasksRoute(task.projectId, task.boardId, task._id)
+          : null,
     })) ?? [];
 
   return (
@@ -58,9 +61,19 @@ export const TaskList: FC = () => {
           <TaskCard
             key={task.card.id}
             task={task.card}
-            onOpen={() => {
-              void navigate(task.route);
-            }}
+            onOpen={
+              task.route
+                ? () => {
+                    const route = task.route;
+
+                    if (!route) {
+                      return;
+                    }
+
+                    void navigate(route);
+                  }
+                : undefined
+            }
           />
         ))}
       </Box>

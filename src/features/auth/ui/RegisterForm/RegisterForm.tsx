@@ -15,7 +15,7 @@ const initialFormState: RegisterFormState = {
   firstName: "",
   lastName: "",
   password: "",
-  roleTitle: "Product Designer",
+  roleTitle: "",
 };
 
 export const RegisterForm: FC = () => {

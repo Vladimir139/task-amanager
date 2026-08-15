@@ -1,6 +1,7 @@
-import { Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { type FC } from "react";
 
+import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
 import { ChatInformationSidebar } from "@/widgets/ChatInformationSidebar";
 import { ChatWindow } from "@/widgets/ChatWindow";
 import { ConversationsSidebar } from "@/widgets/ConversationsSidebar";
@@ -15,6 +16,8 @@ export const MessagesWorkspace: FC = () => {
     canManageConversation,
     chatMembers,
     chatMessages,
+    closeDeleteMessageConfirm,
+    confirmDeleteMessage,
     conversationAvatar,
     conversationName,
     conversationSubtitle,
@@ -38,6 +41,8 @@ export const MessagesWorkspace: FC = () => {
     newConversationMemberRole,
     newMessage,
     onlineCount,
+    pendingDeleteMessageId,
+    pendingDeleteMessageText,
     selectedConversationUserId,
     statusMessage,
     statusTone,
@@ -116,6 +121,28 @@ export const MessagesWorkspace: FC = () => {
         selectedUserId={selectedConversationUserId}
         sharedFiles={sharedFiles}
       />
+
+      <AppModal
+        open={Boolean(pendingDeleteMessageId)}
+        onClose={closeDeleteMessageConfirm}
+        title="Delete message?"
+        footer={
+          <>
+            <Button variant="outlined" onClick={closeDeleteMessageConfirm}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="error" onClick={() => void confirmDeleteMessage()}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <Typography>
+          {pendingDeleteMessageText
+            ? `This message will be deleted: “${pendingDeleteMessageText}”.`
+            : "This message will be deleted permanently."}
+        </Typography>
+      </AppModal>
     </div>
   );
 };

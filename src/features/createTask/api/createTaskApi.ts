@@ -1,9 +1,10 @@
+import { getBoardProjectTagId } from "@/entities/board";
 import { baseApi } from "@/shared/api";
 import type { TaskChecklistItemRecord, TaskRecord } from "@/shared/api/types";
 
 export interface CreateTaskPayload {
   assigneeIds?: string[];
-  boardId: string;
+  boardId?: string;
   category?: string;
   checklistCompleted?: number;
   checklistItems?: TaskChecklistItemRecord[];
@@ -13,7 +14,7 @@ export interface CreateTaskPayload {
   dueDate?: string;
   emoji?: string;
   priority?: string;
-  projectId: string;
+  projectId?: string;
   startDate?: string;
   title: string;
   workflowState?: string;
@@ -24,8 +25,12 @@ export const createTaskApi = baseApi.injectEndpoints({
     createTask: build.mutation<TaskRecord, CreateTaskPayload>({
       invalidatesTags: (_result, _error, payload) => [
         "Dashboard",
+        "ProjectStats",
+        "Projects",
         "Tasks",
-        { id: payload.projectId, type: "Board" },
+        ...(payload.projectId
+          ? [{ id: getBoardProjectTagId(payload.projectId), type: "Board" as const }]
+          : []),
       ],
       query: (body) => ({
         body,

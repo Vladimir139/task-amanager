@@ -65,25 +65,19 @@ export const NewTask: FC = () => {
           handleProjectChange(event.target.value);
         }}
         className={styles.projectSelect}
-        disabled={projectOptions.length === 0 || isLoading}
+        disabled={isLoading}
       >
-        {projectOptions.length > 0 ? (
-          projectOptions.map((project) => (
-            <MenuItem key={project.id} value={project.id}>
-              {project.title}
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem value="" disabled>
-            No projects available
+        {projectOptions.map((project) => (
+          <MenuItem key={project.id || "without-project"} value={project.id}>
+            {project.title}
           </MenuItem>
-        )}
+        ))}
       </TextField>
 
       <Typography className={styles.projectHelperText}>
         {currentProjectTitle
           ? `Tasks will be created in ${currentProjectTitle} and added to backlog by default.`
-          : "Choose a project for the new task."}
+          : "Choose a project or create a personal task without a project."}
       </Typography>
 
       <Typography className={styles.inputLabel}>Task Title</Typography>
@@ -155,7 +149,7 @@ export const NewTask: FC = () => {
           className={styles.addCollaboratorButton}
           aria-label="Choose collaborators"
           onClick={handleOpenCollaboratorMenu}
-          disabled={!isProjectReady}
+          disabled={!isProjectReady || collaborators.length === 0}
         >
           <Add />
         </IconButton>

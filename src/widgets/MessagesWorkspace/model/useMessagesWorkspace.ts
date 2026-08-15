@@ -133,6 +133,10 @@ interface UseMessagesWorkspaceResult {
   newConversationMemberRole: "admin" | "member";
   newMessage: string;
   onlineCount: number;
+  pendingDeleteMessageId: string | null;
+  pendingDeleteMessageText: string | null;
+  confirmDeleteMessage: () => Promise<void>;
+  closeDeleteMessageConfirm: () => void;
   selectConversation: (conversationId: string) => void;
   selectedConversationUserId: string;
   setNewMessage: (value: string) => void;
@@ -164,6 +168,8 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
   );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
+  const [pendingDeleteMessageId, setPendingDeleteMessageId] = useState<string | null>(null);
+  const [pendingDeleteMessageText, setPendingDeleteMessageText] = useState<string | null>(null);
   const [typingUsersByConversationId, setTypingUsersByConversationId] = useState<
     Record<string, string[]>
   >({});
@@ -851,6 +857,20 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     [activeConversationId, deleteMessage, editingMessageId],
   );
 
+  const closeDeleteMessageConfirm = useCallback((): void => {
+    setPendingDeleteMessageId(null);
+    setPendingDeleteMessageText(null);
+  }, []);
+
+  const confirmDeleteMessage = useCallback(async (): Promise<void> => {
+    if (!pendingDeleteMessageId) {
+      return;
+    }
+
+    await handleDeleteMessage(pendingDeleteMessageId);
+    closeDeleteMessageConfirm();
+  }, [closeDeleteMessageConfirm, handleDeleteMessage, pendingDeleteMessageId]);
+
   const stopTyping = useCallback(
     (conversationId?: string | null): void => {
       const resolvedConversationId = conversationId ?? typingConversationIdRef.current;
@@ -1078,7 +1098,8 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
           isEditing: editingMessageId === message._id,
           isOwn: message.authorId === currentUser?.id,
           onDelete: () => {
-            void handleDeleteMessage(message._id);
+            setPendingDeleteMessageId(message._id);
+            setPendingDeleteMessageText(message.text?.trim() ?? null);
           },
           onEditCancel: handleCancelEditMessage,
           onEditChange: setEditingMessageText,
@@ -1100,7 +1121,6 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     editingMessageText,
     filesById,
     handleCancelEditMessage,
-    handleDeleteMessage,
     handleStartEditMessage,
     handleSubmitEditMessage,
     userMap,
@@ -1115,8 +1135,10 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     conversationAvatar: conversationDisplay.avatar,
     conversationName: conversationDisplay.name,
     conversationSubtitle: conversationDisplay.subtitle,
+    confirmDeleteMessage,
     conversationTitleDraft,
     conversationType: selectedConversation?.type ?? "",
+    closeDeleteMessageConfirm,
     conversations,
     handleAttachImages,
     handleAddConversationMember,
@@ -1135,6 +1157,8 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     newConversationMemberRole,
     newMessage,
     onlineCount,
+    pendingDeleteMessageId,
+    pendingDeleteMessageText,
     selectConversation,
     selectedConversationUserId,
     setNewMessage,

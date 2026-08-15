@@ -1,7 +1,8 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import type { FC } from "react";
 import { useState } from "react";
 
+import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
 import { TaskBoardColumns } from "@/widgets/TaskBoardColumns";
 import { TaskBoardHeader } from "@/widgets/TaskBoardHeader";
 import {
@@ -38,9 +39,13 @@ export const TaskBoardWorkspace: FC = () => {
     message,
     onAudioRecorded,
     onBoardSelect,
+    onCloseDeleteMessageConfirm,
+    onConfirmDeleteMessage,
     onCreateTask,
     onMakeProjectGlobal,
     onOpenTask,
+    pendingDeleteMessageId,
+    pendingDeleteMessageText,
     projectId,
     selectedTaskId,
     sendMessage,
@@ -161,6 +166,28 @@ export const TaskBoardWorkspace: FC = () => {
           tasksByColumn={tasksByColumn}
         />
       )}
+
+      <AppModal
+        open={Boolean(pendingDeleteMessageId)}
+        onClose={onCloseDeleteMessageConfirm}
+        title="Delete message?"
+        footer={
+          <>
+            <Button variant="outlined" onClick={onCloseDeleteMessageConfirm}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="error" onClick={() => void onConfirmDeleteMessage()}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <Typography>
+          {pendingDeleteMessageText
+            ? `This message will be deleted: “${pendingDeleteMessageText}”.`
+            : "This message will be deleted permanently."}
+        </Typography>
+      </AppModal>
     </Box>
   );
 };

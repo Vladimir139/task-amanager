@@ -62,7 +62,7 @@ interface UseTaskBoardWorkspaceResult {
     isEditing?: boolean;
     isOwn?: boolean;
     isRead?: boolean;
-    onDelete?: () => Promise<void>;
+    onDelete?: () => void | Promise<void>;
     onEditCancel?: () => void;
     onEditChange?: (value: string) => void;
     onEditStart?: () => void;
@@ -92,9 +92,13 @@ interface UseTaskBoardWorkspaceResult {
   message: string;
   onAudioRecorded: (payload: RecordedAudioPayload) => Promise<void>;
   onBoardSelect: (boardId: string) => void;
+  onCloseDeleteMessageConfirm: () => void;
+  onConfirmDeleteMessage: () => Promise<void>;
   onCreateTask: (columnId: string) => void;
   onMakeProjectGlobal: () => Promise<void>;
   onOpenTask: (taskId: string) => void;
+  pendingDeleteMessageId: string | null;
+  pendingDeleteMessageText: string | null;
   projectId: string | null;
   sendMessage: () => Promise<void>;
   selectedTaskId: string | null;
@@ -120,6 +124,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const [message, setMessage] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageText, setEditingMessageText] = useState("");
+  const [pendingDeleteMessageId, setPendingDeleteMessageId] = useState<string | null>(null);
+  const [pendingDeleteMessageText, setPendingDeleteMessageText] = useState<string | null>(null);
   const [presenceByUserId, setPresenceByUserId] = useState<Record<string, boolean>>({});
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [createTaskColumnId, setCreateTaskColumnId] = useState<string | null>(null);
@@ -582,24 +588,9 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
           isEditing: editingMessageId === item._id,
           isOwn,
           isRead,
-          onDelete: async () => {
-            if (!conversationId) {
-              return;
-            }
-
-            try {
-              await deleteMessage({
-                conversationId,
-                messageId: item._id,
-              }).unwrap();
-
-              if (editingMessageId === item._id) {
-                setEditingMessageId(null);
-                setEditingMessageText("");
-              }
-            } catch (error) {
-              toast.error(getApiErrorMessage(error, "Unable to delete the message."));
-            }
+          onDelete: () => {
+            setPendingDeleteMessageId(item._id);
+            setPendingDeleteMessageText(item.text?.trim() ?? null);
           },
           onEditCancel: () => {
             setEditingMessageId(null);
@@ -643,14 +634,45 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   }, [
     boardView?.chatPreview?.messages,
     conversationDetails?.members,
-    conversationId,
     conversationMessages,
     currentUser?.id,
-    deleteMessage,
     editingMessageId,
     editingMessageText,
     memberMap,
     updateMessage,
+  ]);
+
+  const handleCloseDeleteMessageConfirm = useCallback((): void => {
+    setPendingDeleteMessageId(null);
+    setPendingDeleteMessageText(null);
+  }, []);
+
+  const handleConfirmDeleteMessage = useCallback(async (): Promise<void> => {
+    if (!conversationId || !pendingDeleteMessageId) {
+      return;
+    }
+
+    try {
+      await deleteMessage({
+        conversationId,
+        messageId: pendingDeleteMessageId,
+      }).unwrap();
+
+      if (editingMessageId === pendingDeleteMessageId) {
+        setEditingMessageId(null);
+        setEditingMessageText("");
+      }
+
+      handleCloseDeleteMessageConfirm();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to delete the message."));
+    }
+  }, [
+    conversationId,
+    deleteMessage,
+    editingMessageId,
+    handleCloseDeleteMessageConfirm,
+    pendingDeleteMessageId,
   ]);
 
   const canManageBoard = useMemo(() => {
@@ -798,9 +820,13 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     message,
     onAudioRecorded: handleAudioRecorded,
     onBoardSelect: handleBoardSelect,
+    onCloseDeleteMessageConfirm: handleCloseDeleteMessageConfirm,
+    onConfirmDeleteMessage: handleConfirmDeleteMessage,
     onCreateTask: handleCreateTask,
     onMakeProjectGlobal: handleMakeProjectGlobal,
     onOpenTask: handleOpenTask,
+    pendingDeleteMessageId,
+    pendingDeleteMessageText,
     projectId,
     sendMessage,
     selectedTaskId,
