@@ -31,8 +31,7 @@ function AudioMessage({ duration, waveform }: BoardAudioMessage) {
 }
 
 export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
-  const hasActions =
-    (message.canEdit ?? false) || (message.canDelete ?? false) || message.onToggleRead != null;
+  const hasActions = (message.canEdit ?? false) || (message.canDelete ?? false);
 
   return (
     <Box className={`${styles.messageRow} ${message.isOwn ? styles.ownMessageRow : ""}`}>
@@ -88,11 +87,6 @@ export const BoardMessageItem: FC<BoardMessageItemProps> = ({ message }) => {
             {message.canDelete && (
               <Button variant="text" size="small" color="error" onClick={message.onDelete}>
                 Delete
-              </Button>
-            )}
-            {message.onToggleRead && (
-              <Button variant="text" size="small" onClick={message.onToggleRead}>
-                {message.readActionLabel ?? "Toggle read"}
               </Button>
             )}
           </Box>

@@ -161,7 +161,7 @@ function BoardColumnSection({
             onClick={(event) => {
               onColumnMenuOpen(event, id);
             }}
-            disabled={!canManageBoard || isMutating || columnRecord.kind !== "custom"}
+            disabled={!canManageBoard || isMutating}
           >
             <MoreHoriz />
           </IconButton>
@@ -285,58 +285,60 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
 
   return (
     <>
-      <Box className={styles.board}>
-        {columns.map((column) => {
-          const columnRecord = columnRecords.find((item) => item._id === column.id);
+      <Box className={styles.boardScroller}>
+        <Box className={styles.board}>
+          {columns.map((column) => {
+            const columnRecord = columnRecords.find((item) => item._id === column.id);
 
-          if (!columnRecord) {
-            return null;
-          }
+            if (!columnRecord) {
+              return null;
+            }
 
-          return (
-            <BoardColumnSection
-              key={column.id}
-              {...column}
-              canManageBoard={canManageBoard}
-              columnRecord={columnRecord}
-              dragStateClassName={
-                activeColumnDropId === column.id ? styles.columnDropTarget : undefined
-              }
-              editingColor={editingColor}
-              editingTitle={editingTitle}
-              isColumnBeingEdited={isColumnBeingEdited(column.id)}
-              isMutating={isMutating}
-              isTaskDraggable={isTaskDraggable}
-              isTaskDropActive={(taskId, position) =>
-                activeTaskDropKey === `${column.id}:${taskId}:${position}`
-              }
-              onCancelColumnEdit={handleCancelColumnEdit}
-              onColumnDragEnd={handleColumnDragEnd}
-              onColumnDragOver={handleColumnDragOver}
-              onColumnDragStart={handleColumnDragStart}
-              onColumnDrop={(event, targetColumnId) => {
-                void handleColumnDrop(event, targetColumnId);
-              }}
-              onColumnMenuOpen={handleColumnMenuOpen}
-              onEditColorChange={handleEditColorChange}
-              onEditTitleChange={handleEditTitleChange}
-              onSaveColumnEdit={() => {
-                void handleSaveColumnEdit();
-              }}
-              onTaskDragEnd={handleTaskDragEnd}
-              onTaskDragOver={handleTaskDragOver}
-              onTaskDragStart={handleTaskDragStart}
-              onTaskDropOnColumn={(event, targetColumnId) => {
-                void handleTaskDropOnColumn(event, targetColumnId);
-              }}
-              onTaskDropOnTask={(event, targetColumnId, targetTaskId) => {
-                void handleTaskDropOnTask(event, targetColumnId, targetTaskId);
-              }}
-              onCreateTask={onCreateTask}
-              onOpenTask={onOpenTask}
-            />
-          );
-        })}
+            return (
+              <BoardColumnSection
+                key={column.id}
+                {...column}
+                canManageBoard={canManageBoard}
+                columnRecord={columnRecord}
+                dragStateClassName={
+                  activeColumnDropId === column.id ? styles.columnDropTarget : undefined
+                }
+                editingColor={editingColor}
+                editingTitle={editingTitle}
+                isColumnBeingEdited={isColumnBeingEdited(column.id)}
+                isMutating={isMutating}
+                isTaskDraggable={isTaskDraggable}
+                isTaskDropActive={(taskId, position) =>
+                  activeTaskDropKey === `${column.id}:${taskId}:${position}`
+                }
+                onCancelColumnEdit={handleCancelColumnEdit}
+                onColumnDragEnd={handleColumnDragEnd}
+                onColumnDragOver={handleColumnDragOver}
+                onColumnDragStart={handleColumnDragStart}
+                onColumnDrop={(event, targetColumnId) => {
+                  void handleColumnDrop(event, targetColumnId);
+                }}
+                onColumnMenuOpen={handleColumnMenuOpen}
+                onEditColorChange={handleEditColorChange}
+                onEditTitleChange={handleEditTitleChange}
+                onSaveColumnEdit={() => {
+                  void handleSaveColumnEdit();
+                }}
+                onTaskDragEnd={handleTaskDragEnd}
+                onTaskDragOver={handleTaskDragOver}
+                onTaskDragStart={handleTaskDragStart}
+                onTaskDropOnColumn={(event, targetColumnId) => {
+                  void handleTaskDropOnColumn(event, targetColumnId);
+                }}
+                onTaskDropOnTask={(event, targetColumnId, targetTaskId) => {
+                  void handleTaskDropOnTask(event, targetColumnId, targetTaskId);
+                }}
+                onCreateTask={onCreateTask}
+                onOpenTask={onOpenTask}
+              />
+            );
+          })}
+        </Box>
       </Box>
 
       <Menu
@@ -357,6 +359,7 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
           onClick={() => {
             handleColumnMenuAction("delete");
           }}
+          disabled={columnRecords.length <= 1}
         >
           Delete
         </MenuItem>

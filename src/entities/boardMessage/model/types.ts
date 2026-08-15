@@ -25,8 +25,6 @@ export interface BoardMessage {
   onEditChange?: (value: string) => void;
   onEditStart?: () => void;
   onEditSubmit?: () => void;
-  onToggleRead?: () => void;
-  readActionLabel?: string;
   sequence?: number;
   text?: string;
   audio?: BoardAudioMessage;

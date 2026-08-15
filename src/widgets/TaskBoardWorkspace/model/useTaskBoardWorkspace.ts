@@ -15,8 +15,6 @@ import { useGetConversationDetailsQuery } from "@/entities/conversation";
 import {
   useDeleteMessageMutation,
   useGetConversationMessagesQuery,
-  useMarkMessageReadMutation,
-  useMarkMessageUnreadMutation,
   useSendMessageMutation,
   useUpdateMessageMutation,
   useUploadAudioMessageMutation,
@@ -29,6 +27,7 @@ import {
 import { useSelectedTaskId } from "@/entities/task";
 import { selectAuthUser, useUpdateCurrentProjectMutation } from "@/entities/user";
 import { selectAccessToken } from "@/features/auth/model/selectors";
+import { useMarkConversationReadMutation } from "@/features/markConversationRead";
 import { baseApi } from "@/shared/api";
 import type { BoardColumnRecord, BoardRecord, TaskRecord } from "@/shared/api/types";
 import { getTasksRoute } from "@/shared/config/router";
@@ -68,8 +67,6 @@ interface UseTaskBoardWorkspaceResult {
     onEditChange?: (value: string) => void;
     onEditStart?: () => void;
     onEditSubmit?: () => Promise<void>;
-    onToggleRead?: () => Promise<void>;
-    readActionLabel?: string;
     sequence?: number;
     text?: string;
     time: string;
@@ -183,9 +180,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   const [sendBoardMessage, { isLoading: isSendingMessage }] = useSendMessageMutation();
   const [updateMessage] = useUpdateMessageMutation();
   const [deleteMessage] = useDeleteMessageMutation();
-  const [markMessageRead] = useMarkMessageReadMutation();
-  const [markMessageUnread] = useMarkMessageUnreadMutation();
   const [uploadAudioMessage] = useUploadAudioMessageMutation();
+  const [markConversationRead] = useMarkConversationReadMutation();
   const presenceSocket = useRealtimeSocket(
     "/presence",
     accessToken,
@@ -322,6 +318,29 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
       chatSocket.off("message.read", invalidateMessages);
     };
   }, [chatSocket, conversationId, dispatch]);
+
+  useEffect(() => {
+    const lastSequence = conversationMessages?.at(-1)?.sequence ?? 0;
+    const currentConversationMember = conversationDetails?.members.find(
+      (member) => member.userId === currentUser?.id,
+    );
+    const lastReadSequence = currentConversationMember?.lastReadSequence ?? 0;
+
+    if (!conversationId || lastSequence <= 0 || lastReadSequence >= lastSequence) {
+      return;
+    }
+
+    void markConversationRead({
+      conversationId,
+      sequence: lastSequence,
+    });
+  }, [
+    conversationDetails?.members,
+    conversationId,
+    conversationMessages,
+    currentUser?.id,
+    markConversationRead,
+  ]);
 
   useEffect(() => {
     if (!typingSocket || !conversationId) {
@@ -615,24 +634,6 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
               toast.error(getApiErrorMessage(error, "Unable to update the message."));
             }
           },
-          onToggleRead: async () => {
-            try {
-              if (isRead) {
-                await markMessageUnread({
-                  messageId: item._id,
-                  sequence: item.sequence,
-                }).unwrap();
-              } else {
-                await markMessageRead({
-                  messageId: item._id,
-                  sequence: item.sequence,
-                }).unwrap();
-              }
-            } catch (error) {
-              toast.error(getApiErrorMessage(error, "Unable to update the read status."));
-            }
-          },
-          readActionLabel: isRead ? "Mark unread" : "Mark read",
           sequence: item.sequence,
           text: item.text ?? undefined,
           time: formatTimeLabel(item.createdAt),
@@ -648,8 +649,6 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     deleteMessage,
     editingMessageId,
     editingMessageText,
-    markMessageRead,
-    markMessageUnread,
     memberMap,
     updateMessage,
   ]);

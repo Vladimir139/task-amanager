@@ -1,11 +1,16 @@
+.boardScroller {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
 .board {
   display: grid;
-  grid-auto-columns: minmax(260px, 1fr);
+  width: max-content;
+  min-width: 100%;
+  grid-auto-columns: minmax(280px, 320px);
   grid-auto-flow: column;
   align-items: start;
   gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
 }
 
 .boardColumn {

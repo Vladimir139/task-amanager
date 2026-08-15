@@ -81,6 +81,11 @@ const normalizeOptionalValue = (value: string): string | undefined => {
   return normalizedValue || undefined;
 };
 
+const getSortedColumns = (columnRecords: BoardColumnRecord[]): BoardColumnRecord[] =>
+  [...columnRecords].sort(
+    (firstColumn, secondColumn) => firstColumn.position - secondColumn.position,
+  );
+
 export const useTaskBoardColumns = ({
   boardId,
   canManageBoard,
@@ -111,8 +116,9 @@ export const useTaskBoardColumns = ({
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
 
   const isMutating = isMovingTask || isReorderingColumns || isUpdatingColumn || isDeletingColumn;
+  const sortedColumns = useMemo(() => getSortedColumns(columnRecords), [columnRecords]);
   const confirmDeleteColumn =
-    columnRecords.find((column) => column._id === confirmDeleteColumnId) ?? null;
+    sortedColumns.find((column) => column._id === confirmDeleteColumnId) ?? null;
 
   const isDeleteDisabled = useMemo(() => {
     if (!confirmDeleteColumn) {
@@ -147,7 +153,7 @@ export const useTaskBoardColumns = ({
   };
 
   const handleColumnMenuAction = (action: ColumnMenuAction): void => {
-    const selectedColumn = columnRecords.find((column) => column._id === menuColumnId);
+    const selectedColumn = sortedColumns.find((column) => column._id === menuColumnId);
 
     if (!selectedColumn) {
       handleColumnMenuClose();
@@ -162,7 +168,7 @@ export const useTaskBoardColumns = ({
 
     if (action === "delete") {
       const fallbackTargetColumnId =
-        columnRecords.find((column) => column._id !== selectedColumn._id)?._id ?? "";
+        sortedColumns.find((column) => column._id !== selectedColumn._id)?._id ?? "";
 
       setConfirmDeleteAnchor(menuAnchor);
       setConfirmDeleteColumnId(selectedColumn._id);
@@ -286,7 +292,7 @@ export const useTaskBoardColumns = ({
 
     const targetRect = event.currentTarget.getBoundingClientRect();
     const placeAfter = event.clientX > targetRect.left + targetRect.width / 2;
-    const reorderedColumns = [...columnRecords];
+    const reorderedColumns = [...sortedColumns];
     const draggedColumnIndex = reorderedColumns.findIndex(
       (column) => column._id === draggedColumnId,
     );
@@ -444,9 +450,12 @@ export const useTaskBoardColumns = ({
     const targetTasks = (tasksByColumn[targetColumnId] ?? []).filter(
       (task) => task._id !== draggedTask.taskId,
     );
-    const beforeTaskId = targetTasks[targetTasks.length - 1]?._id;
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const placeAtTop = event.clientY < targetRect.top + targetRect.height / 2;
+    const beforeTaskId = placeAtTop ? undefined : targetTasks[targetTasks.length - 1]?._id;
+    const afterTaskId = placeAtTop ? targetTasks[0]?._id : undefined;
 
-    await moveDraggedTask(targetColumnId, beforeTaskId, undefined);
+    await moveDraggedTask(targetColumnId, beforeTaskId, afterTaskId);
   };
 
   const handleTaskDropOnTask = async (
