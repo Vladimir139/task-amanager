@@ -10,6 +10,8 @@ export interface DeleteTaskPayload {
 
 const getTaskInvalidationTags = ({ boardId, projectId, taskId }: DeleteTaskPayload) => [
   "Dashboard" as const,
+  "ProjectStats" as const,
+  "Projects" as const,
   "Tasks" as const,
   { id: getBoardProjectTagId(projectId), type: "Board" as const },
   { id: getBoardTagId(boardId), type: "Board" as const },

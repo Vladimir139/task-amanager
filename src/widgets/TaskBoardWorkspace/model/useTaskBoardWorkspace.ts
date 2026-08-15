@@ -549,6 +549,7 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
         description: task.description || "No description yet",
         files: task.attachmentCount || undefined,
         id: task._id,
+        isCompleted: task.workflowState === "done",
         members: task.assigneeIds
           .map((assigneeId) => memberMap.get(assigneeId))
           .filter(Boolean)

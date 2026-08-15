@@ -42,9 +42,12 @@
 }
 
 .chatSection {
+  display: flex;
   min-height: 0;
   margin-top: 32px;
   flex: 1;
+  flex-direction: column;
+  overflow: hidden;
 
   > h2 {
     color: #21235f;

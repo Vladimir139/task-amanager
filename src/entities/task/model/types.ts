@@ -6,6 +6,8 @@ export interface Task {
   description: string;
   dueDate: string;
   id: string | number;
+  isCompleted?: boolean;
+  onToggleCompleted?: () => void;
   startDate: string;
   title: string;
   watcherCount: number;

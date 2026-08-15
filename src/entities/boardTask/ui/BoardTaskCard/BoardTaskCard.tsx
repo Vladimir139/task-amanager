@@ -1,4 +1,9 @@
-import { AttachFile, ChatBubbleOutlined, CheckCircleOutlined } from "@mui/icons-material";
+import {
+  AttachFile,
+  ChatBubbleOutlined,
+  CheckCircleOutlined,
+  RadioButtonUncheckedOutlined,
+} from "@mui/icons-material";
 import { AvatarGroup, Box, Paper, Typography } from "@mui/material";
 import type { FC } from "react";
 
@@ -17,9 +22,13 @@ const categoryClassNames: Record<TaskCategory, string> = {
 };
 
 export const BoardTaskCard: FC<BoardTaskCardProps> = ({ onClick, task }) => {
+  const isCompleted = task.isCompleted ?? false;
+
   return (
     <Paper
-      className={`${styles.taskCard} ${onClick ? styles.clickableCard : ""}`}
+      className={`${styles.taskCard} ${onClick ? styles.clickableCard : ""} ${
+        isCompleted ? styles.completedTaskCard : ""
+      }`}
       elevation={0}
       onClick={onClick}
       onKeyDown={(event) => {
@@ -39,9 +48,26 @@ export const BoardTaskCard: FC<BoardTaskCardProps> = ({ onClick, task }) => {
 
       {task.image && <Box component="img" src={task.image} alt="" className={styles.taskImage} />}
 
-      <Typography component="h3" className={styles.taskTitle}>
-        {task.title}
-      </Typography>
+      <Box className={styles.taskTitleRow}>
+        <button
+          type="button"
+          className={`${styles.completeToggleButton} ${
+            isCompleted ? styles.completedToggleButton : ""
+          }`}
+          onClick={(event) => {
+            event.stopPropagation();
+            task.onToggleCompleted?.();
+          }}
+          disabled={!task.onToggleCompleted}
+          aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
+        >
+          {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
+        </button>
+
+        <Typography component="h3" className={styles.taskTitle}>
+          {task.title}
+        </Typography>
+      </Box>
 
       <Typography className={styles.taskDescription}>{task.description}</Typography>
 

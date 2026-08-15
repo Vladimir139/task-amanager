@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import type { FC } from "react";
+import { type FC, useEffect, useMemo, useRef } from "react";
 
 import type { ChatMember } from "@/entities/chatMember";
 import { type ChatMessage, ChatMessageItem } from "@/entities/chatMessage";
@@ -26,6 +26,7 @@ interface ChatWindowProps {
   onUploadAudio: (payload: RecordedAudioPayload) => void;
   title: string;
   typingText?: string | null;
+  unreadCount?: number;
 }
 
 export const ChatWindow: FC<ChatWindowProps> = ({
@@ -45,9 +46,27 @@ export const ChatWindow: FC<ChatWindowProps> = ({
   onUploadAudio,
   title,
   typingText = null,
+  unreadCount = 0,
 }) => {
-  const firstMessage = messages[0];
-  const nextMessages = messages.slice(1);
+  const firstUnreadIndex = useMemo(() => {
+    if (unreadCount <= 0 || unreadCount >= messages.length) {
+      return unreadCount >= messages.length && messages.length > 0 ? 0 : -1;
+    }
+
+    return Math.max(messages.length - unreadCount, 0);
+  }, [messages.length, unreadCount]);
+  const firstUnreadRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (firstUnreadIndex < 0) {
+      return;
+    }
+
+    firstUnreadRef.current?.scrollIntoView({
+      block: "start",
+      behavior: "smooth",
+    });
+  }, [firstUnreadIndex, title]);
 
   useStatusToast({
     message: composerStatusMessage,
@@ -73,18 +92,17 @@ export const ChatWindow: FC<ChatWindowProps> = ({
           </Typography>
         )}
 
-        {firstMessage && <ChatMessageItem key={firstMessage.id} message={firstMessage} />}
-
-        {messages.length > 1 && (
-          <Box className={styles.dateDivider}>
-            <span />
-            <Typography>Conversation</Typography>
-            <span />
+        {messages.map((message, index) => (
+          <Box key={message.id}>
+            {index === firstUnreadIndex && (
+              <Box ref={firstUnreadRef} className={styles.unreadDivider}>
+                <span />
+                <Typography>Unread messages</Typography>
+                <span />
+              </Box>
+            )}
+            <ChatMessageItem message={message} />
           </Box>
-        )}
-
-        {nextMessages.map((message) => (
-          <ChatMessageItem key={message.id} message={message} />
         ))}
       </Box>
 

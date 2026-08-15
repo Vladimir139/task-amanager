@@ -8,9 +8,11 @@ export interface BoardTask {
   description: string;
   category: TaskCategory;
   date: string;
+  isCompleted?: boolean;
   image?: string;
   comments?: number;
   files?: number;
+  onToggleCompleted?: () => void;
   completed?: number;
   total?: number;
   members: BoardMember[];

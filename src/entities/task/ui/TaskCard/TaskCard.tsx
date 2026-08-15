@@ -1,7 +1,9 @@
 import {
   ChatBubbleOutlined,
+  CheckCircleOutlined,
   DescriptionOutlined,
   GroupsOutlined,
+  RadioButtonUncheckedOutlined,
   RemoveRedEyeOutlined,
 } from "@mui/icons-material";
 import { Box, LinearProgress, Paper, Typography } from "@mui/material";
@@ -16,9 +18,13 @@ export const TaskCard: FC<TaskCardProps> = ({ onOpen, task }) => {
   const progress = hasSubtasks
     ? Math.round((task.checklistCompleted / task.checklistTotal) * 100)
     : 0;
+  const isCompleted = task.isCompleted ?? false;
 
   return (
-    <Paper className={styles.taskCard} elevation={0}>
+    <Paper
+      className={`${styles.taskCard} ${isCompleted ? styles.completedTaskCard : ""}`}
+      elevation={0}
+    >
       <Box className={styles.taskTimeline}>
         <Box>
           <Typography className={styles.timelineLabel}>Start from</Typography>
@@ -32,7 +38,21 @@ export const TaskCard: FC<TaskCardProps> = ({ onOpen, task }) => {
       </Box>
 
       <Box className={styles.taskInformation}>
-        <Typography className={styles.taskTitle}>{task.title}</Typography>
+        <Box className={styles.taskTitleRow}>
+          <button
+            type="button"
+            className={`${styles.completeToggleButton} ${
+              isCompleted ? styles.completedToggleButton : ""
+            }`}
+            onClick={task.onToggleCompleted}
+            disabled={!task.onToggleCompleted}
+            aria-label={isCompleted ? `Mark ${task.title} as open` : `Mark ${task.title} as done`}
+          >
+            {isCompleted ? <CheckCircleOutlined /> : <RadioButtonUncheckedOutlined />}
+          </button>
+
+          <Typography className={styles.taskTitle}>{task.title}</Typography>
+        </Box>
 
         <Box className={styles.taskMeta}>
           <Box>

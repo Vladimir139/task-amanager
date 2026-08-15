@@ -48,6 +48,7 @@ export const MessagesWorkspace: FC = () => {
     statusTone,
     selectConversation,
     typingText,
+    unreadCount,
     setNewMessage,
     sharedFiles,
     submitMessage,
@@ -106,6 +107,7 @@ export const MessagesWorkspace: FC = () => {
         isSubmitting={isMutating}
         isLoading={isLoading}
         typingText={typingText}
+        unreadCount={unreadCount}
       />
 
       <ChatInformationSidebar

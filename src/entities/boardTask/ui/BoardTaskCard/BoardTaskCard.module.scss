@@ -3,10 +3,19 @@ $secondary-text: #7f8aa8;
 .taskCard {
   padding: 15px;
   border-radius: 12px !important;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    background 0.2s ease;
 }
 
 .clickableCard {
   cursor: pointer;
+}
+
+.completedTaskCard {
+  opacity: 0.74;
+  filter: saturate(0.8);
 }
 
 .taskCategory {
@@ -51,6 +60,36 @@ $secondary-text: #7f8aa8;
   font-size: 13px !important;
   font-weight: 700 !important;
   line-height: 1.45 !important;
+}
+
+.taskTitleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.completeToggleButton {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 11px;
+  padding: 0;
+  color: #98a2b3;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+
+  svg {
+    font-size: 19px;
+  }
+}
+
+.completedToggleButton {
+  color: #16a34a;
 }
 
 .taskDescription {

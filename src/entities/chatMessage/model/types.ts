@@ -20,6 +20,7 @@ export interface ChatMessage {
   id: string | number;
   author: string;
   avatar: string;
+  isUnread?: boolean;
   time: string;
   text?: string[];
   isOwn?: boolean;

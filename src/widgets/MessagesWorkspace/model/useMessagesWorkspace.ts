@@ -145,6 +145,7 @@ interface UseMessagesWorkspaceResult {
   statusTone: "error" | "success" | null;
   submitMessage: () => Promise<void>;
   typingText: string | null;
+  unreadCount: number;
 }
 
 export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
@@ -611,6 +612,7 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
         ? `${typingUsers[0]?.firstName ?? "Someone"} is typing...`
         : `${typingUsers.length} people are typing...`;
   const onlineCount = conversationUsers.filter((user) => getIsUserOnline(user)).length;
+  const unreadCount = selectedConversation?.unreadCount ?? 0;
   const isError = isConversationsError || isDetailsError || isMessagesError || isFilesError;
   const isManagingConversation =
     isAddingConversationMember || isRemovingConversationMember || isUpdatingConversation;
@@ -1167,5 +1169,6 @@ export const useMessagesWorkspace = (): UseMessagesWorkspaceResult => {
     statusTone,
     submitMessage,
     typingText,
+    unreadCount,
   };
 };

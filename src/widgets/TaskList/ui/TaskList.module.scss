@@ -9,6 +9,30 @@
   }
 }
 
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  > h2 {
+    margin-bottom: 0;
+    color: #21235f;
+    font-size: 23px;
+    font-weight: 700;
+  }
+}
+
+.showAllButton {
+  color: #5355ff;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .tasksList {
   display: flex;
   flex-direction: column;

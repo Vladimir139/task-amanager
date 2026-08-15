@@ -12,6 +12,15 @@ $primary-dark: #21235f;
   align-items: center;
   overflow: hidden;
   border-radius: 13px !important;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    background 0.2s ease;
+}
+
+.completedTaskCard {
+  opacity: 0.78;
+  filter: saturate(0.82);
 }
 
 .taskTimeline {
@@ -40,6 +49,35 @@ $primary-dark: #21235f;
 .taskInformation {
   min-width: 0;
   padding: 0 25px;
+}
+
+.taskTitleRow {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.completeToggleButton {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  color: #98a2b3;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+
+  svg {
+    font-size: 22px;
+  }
+}
+
+.completedToggleButton {
+  color: #16a34a;
 }
 
 .taskTitle {

@@ -7,6 +7,7 @@ import {
   useUpdateBoardColumnMutation,
 } from "@/features/boardColumns";
 import { useMoveTaskMutation } from "@/features/moveTask";
+import { useUpdateTaskMutation } from "@/features/updateTask";
 import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
 import { getApiErrorMessage } from "@/shared/lib/api";
 
@@ -58,6 +59,7 @@ interface UseTaskBoardColumnsResult {
     sourceColumnId: string,
     taskId: string,
   ) => void;
+  handleTaskToggleCompleted: (taskId: string, columnId: string) => Promise<void>;
   handleTaskDropOnColumn: (event: DragEvent<HTMLElement>, targetColumnId: string) => Promise<void>;
   handleTaskDropOnTask: (
     event: DragEvent<HTMLElement>,
@@ -99,6 +101,7 @@ export const useTaskBoardColumns = ({
   tasksByColumn,
 }: UseTaskBoardColumnsProps): UseTaskBoardColumnsResult => {
   const [moveTask, { isLoading: isMovingTask }] = useMoveTaskMutation();
+  const [updateTask, { isLoading: isUpdatingTask }] = useUpdateTaskMutation();
   const [reorderBoardColumns, { isLoading: isReorderingColumns }] =
     useReorderBoardColumnsMutation();
   const [updateBoardColumn, { isLoading: isUpdatingColumn }] = useUpdateBoardColumnMutation();
@@ -123,7 +126,8 @@ export const useTaskBoardColumns = ({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
 
-  const isMutating = isMovingTask || isReorderingColumns || isUpdatingColumn || isDeletingColumn;
+  const isMutating =
+    isMovingTask || isUpdatingTask || isReorderingColumns || isUpdatingColumn || isDeletingColumn;
   const sortedColumns = useMemo(() => getSortedColumns(columnRecords), [columnRecords]);
   const confirmDeleteColumn =
     sortedColumns.find((column) => column._id === confirmDeleteColumnId) ?? null;
@@ -411,6 +415,34 @@ export const useTaskBoardColumns = ({
     setActiveTaskDropKey(`${columnId}:${taskId}:${position}`);
   };
 
+  const handleTaskToggleCompleted = async (taskId: string, columnId: string): Promise<void> => {
+    const task = tasksByColumn[columnId]?.find((item) => item._id === taskId);
+
+    if (!task || !canManageTasks) {
+      return;
+    }
+
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      await updateTask({
+        boardId,
+        projectId,
+        taskId,
+        workflowState: task.workflowState === "done" ? "open" : "done",
+      }).unwrap();
+
+      setStatusMessage(
+        task.workflowState === "done" ? "Task moved back to active." : "Task marked as done.",
+      );
+      setStatusTone("success");
+    } catch (error) {
+      setStatusMessage(getApiErrorMessage(error, "Unable to update the task status."));
+      setStatusTone("error");
+    }
+  };
+
   const moveDraggedTask = async (
     targetColumnId: string,
     beforeTaskId?: string,
@@ -558,6 +590,7 @@ export const useTaskBoardColumns = ({
     handleTaskDragEnd,
     handleTaskDragOver,
     handleTaskDragStart,
+    handleTaskToggleCompleted,
     handleTaskDropOnColumn,
     handleTaskDropOnTask,
     isColumnBeingEdited: (columnId: string) => editingColumnId === columnId,

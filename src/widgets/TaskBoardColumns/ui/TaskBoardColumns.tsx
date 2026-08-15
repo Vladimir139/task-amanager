@@ -58,6 +58,7 @@ interface BoardColumnSectionProps extends BoardColumn {
   onTaskDragEnd: () => void;
   onTaskDragOver: (event: DragEvent<HTMLElement>, columnId: string, taskId?: string) => void;
   onTaskDragStart: (event: DragEvent<HTMLElement>, sourceColumnId: string, taskId: string) => void;
+  onTaskToggleCompleted: (taskId: string, columnId: string) => void;
   onTaskDropOnColumn: (event: DragEvent<HTMLElement>, targetColumnId: string) => void;
   onTaskDropOnTask: (
     event: DragEvent<HTMLElement>,
@@ -95,6 +96,7 @@ function BoardColumnSection({
   onTaskDragEnd,
   onTaskDragOver,
   onTaskDragStart,
+  onTaskToggleCompleted,
   onTaskDropOnColumn,
   onTaskDropOnTask,
   title,
@@ -230,7 +232,14 @@ function BoardColumnSection({
               }}
             >
               <BoardTaskCard
-                task={task}
+                task={{
+                  ...task,
+                  onToggleCompleted: canManageTasks
+                    ? () => {
+                        onTaskToggleCompleted(String(task.id), id);
+                      }
+                    : undefined,
+                }}
                 onClick={() => {
                   onOpenTask(String(task.id));
                 }}
@@ -314,6 +323,7 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
     handleTaskDragEnd,
     handleTaskDragOver,
     handleTaskDragStart,
+    handleTaskToggleCompleted,
     handleTaskDropOnColumn,
     handleTaskDropOnTask,
     isColumnBeingEdited,
@@ -386,6 +396,9 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
                 onTaskDragEnd={handleTaskDragEnd}
                 onTaskDragOver={handleTaskDragOver}
                 onTaskDragStart={handleTaskDragStart}
+                onTaskToggleCompleted={(taskId, columnId) => {
+                  void handleTaskToggleCompleted(taskId, columnId);
+                }}
                 onTaskDropOnColumn={(event, targetColumnId) => {
                   void handleTaskDropOnColumn(event, targetColumnId);
                 }}

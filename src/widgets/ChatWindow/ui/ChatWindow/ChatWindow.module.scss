@@ -114,6 +114,26 @@ $text: #7c87a3;
   }
 }
 
+.unreadDivider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 20px;
+
+  span {
+    height: 1px;
+    flex: 1;
+    background: rgb(83 85 255 / 20%);
+  }
+
+  p {
+    color: $primary;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
 .messageComposer {
   position: absolute;
   right: 35px;

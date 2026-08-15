@@ -1,6 +1,6 @@
 .boardScroller {
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding: 20px 0 28px;
 }
 
 .board {
@@ -16,9 +16,8 @@
 .boardColumn {
   position: relative;
   min-width: 0;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
 }
 
 .columnDropBefore,
@@ -48,12 +47,12 @@
 }
 
 .columnDropBefore::before {
-  top: -14px;
+  top: 10px;
   content: "Drop column before";
 }
 
 .columnDropAfter::after {
-  bottom: -14px;
+  bottom: 10px;
   content: "Drop column after";
 }
 
@@ -149,10 +148,9 @@
   min-height: 48px;
   place-items: center;
   border-radius: 12px;
-  transition:
-    background 0.2s ease,
-    outline-color 0.2s ease,
-    transform 0.2s ease;
+  transition: background 0.2s ease,
+  outline-color 0.2s ease,
+  transform 0.2s ease;
 }
 
 .columnTaskDropActive {
@@ -183,9 +181,8 @@
 .taskDropZone {
   position: relative;
   border-radius: 16px;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease,
+  box-shadow 0.2s ease;
 }
 
 .draggedTask {

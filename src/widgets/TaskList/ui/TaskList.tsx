@@ -1,9 +1,11 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useGetDashboardTasksQuery } from "@/entities/dashboard";
 import { type Task, TaskCard } from "@/entities/task";
+import { useUpdateTaskMutation } from "@/features/updateTask";
 import { getTasksRoute } from "@/shared/config/router";
 import { formatDateLabel } from "@/shared/lib/formatters";
 
@@ -24,7 +26,9 @@ const getTaskDescription = (description?: string | null, shortCode?: string | nu
 
 export const TaskList: FC = () => {
   const navigate = useNavigate();
+  const [showAll, setShowAll] = useState(false);
   const { data, isError, isLoading } = useGetDashboardTasksQuery();
+  const [updateTask] = useUpdateTaskMutation();
 
   const tasks =
     data?.map((task) => ({
@@ -36,6 +40,15 @@ export const TaskList: FC = () => {
         description: getTaskDescription(task.description, task.shortCode),
         dueDate: formatDateLabel(task.dueDate),
         id: task._id,
+        isCompleted: task.workflowState === "done",
+        onToggleCompleted: () => {
+          void updateTask({
+            boardId: task.boardId,
+            projectId: task.projectId,
+            taskId: task._id,
+            workflowState: task.workflowState === "done" ? "open" : "done",
+          });
+        },
         startDate: formatDateLabel(task.startDate),
         title: task.title,
         watcherCount: task.watcherIds.length,
@@ -45,10 +58,24 @@ export const TaskList: FC = () => {
           ? getTasksRoute(task.projectId, task.boardId, task._id)
           : null,
     })) ?? [];
+  const visibleTasks = showAll ? tasks : tasks.slice(0, 4);
 
   return (
     <section className={styles.tasksSection}>
-      <Typography component="h2">Assigned tasks</Typography>
+      <Box className={styles.headerRow}>
+        <Typography component="h2">Assigned tasks</Typography>
+        {tasks.length > 4 && (
+          <button
+            type="button"
+            className={styles.showAllButton}
+            onClick={() => {
+              setShowAll((currentState) => !currentState);
+            }}
+          >
+            {showAll ? "Show less" : "Show all"}
+          </button>
+        )}
+      </Box>
 
       {isError && <Typography>Unable to load assigned tasks.</Typography>}
       {isLoading && <Typography>Loading tasks...</Typography>}
@@ -57,7 +84,7 @@ export const TaskList: FC = () => {
       )}
 
       <Box className={styles.tasksList}>
-        {tasks.map((task) => (
+        {visibleTasks.map((task) => (
           <TaskCard
             key={task.card.id}
             task={task.card}
