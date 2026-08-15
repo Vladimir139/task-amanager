@@ -11,6 +11,7 @@ export type FileType =
   | "other";
 
 export interface RecentFile {
+  folderName?: string | null;
   id: string | number;
   isDeleting?: boolean;
   locationLabel?: string;

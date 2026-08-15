@@ -8,6 +8,7 @@ $orange: #ffb53d;
   display: grid;
   grid-template-columns:
     minmax(230px, 1.4fr)
+    minmax(140px, 0.9fr)
     minmax(90px, 0.8fr)
     minmax(150px, 1fr)
     minmax(155px, 1fr)
@@ -87,9 +88,16 @@ $orange: #ffb53d;
 }
 
 .fileSize,
-.fileModified {
+.fileModified,
+.fileFolder {
   color: $text;
   font-size: 13px !important;
+}
+
+.fileFolder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fileMembers {

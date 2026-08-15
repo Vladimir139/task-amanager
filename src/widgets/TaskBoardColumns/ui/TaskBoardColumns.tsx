@@ -23,6 +23,7 @@ import styles from "./TaskBoardColumns.module.scss";
 interface TaskBoardColumnsProps {
   boardId: string;
   canManageBoard: boolean;
+  canManageTasks: boolean;
   columnRecords: BoardColumnRecord[];
   columns: BoardColumn[];
   projectId: string;
@@ -33,9 +34,12 @@ interface TaskBoardColumnsProps {
 
 interface BoardColumnSectionProps extends BoardColumn {
   activeColumnDropId: string | null;
+  activeColumnTaskDropPosition: "top" | "bottom" | null;
   canManageBoard: boolean;
+  canManageTasks: boolean;
   columnRecord: BoardColumnRecord;
   dragStateClassName: string | undefined;
+  draggedTaskId: string | null;
   editingColor: string;
   editingTitle: string;
   isColumnBeingEdited: boolean;
@@ -66,9 +70,12 @@ interface BoardColumnSectionProps extends BoardColumn {
 
 function BoardColumnSection({
   activeColumnDropId,
+  activeColumnTaskDropPosition,
   canManageBoard,
+  canManageTasks,
   columnRecord,
   dragStateClassName,
+  draggedTaskId,
   editingColor,
   editingTitle,
   id,
@@ -175,6 +182,7 @@ function BoardColumnSection({
               onClick={() => {
                 onCreateTask(id);
               }}
+              disabled={!canManageTasks}
             >
               <Add />
             </IconButton>
@@ -202,7 +210,11 @@ function BoardColumnSection({
               key={task.id}
               className={`${styles.taskDropZone} ${
                 isTaskDropActive(String(task.id), "before") ? styles.taskDropBefore : ""
-              } ${isTaskDropActive(String(task.id), "after") ? styles.taskDropAfter : ""}`}
+              } ${isTaskDropActive(String(task.id), "after") ? styles.taskDropAfter : ""} ${
+                draggedTaskId === String(task.id) ? styles.draggedTask : ""
+              }`}
+              data-drop-after-label="Drop below"
+              data-drop-before-label="Drop above"
               draggable={isTaskDraggable(String(task.id), id)}
               onDragEnd={onTaskDragEnd}
               onDragOver={(event) => {
@@ -231,7 +243,17 @@ function BoardColumnSection({
 
         <Box
           className={`${styles.columnDropZone} ${
-            activeColumnDropId === id ? styles.columnTaskDropActive : ""
+            activeColumnDropId === id && activeColumnTaskDropPosition
+              ? styles.columnTaskDropActive
+              : ""
+          } ${
+            activeColumnTaskDropPosition === "top" && activeColumnDropId === id
+              ? styles.columnTaskDropTop
+              : ""
+          } ${
+            activeColumnTaskDropPosition === "bottom" && activeColumnDropId === id
+              ? styles.columnTaskDropBottom
+              : ""
           }`}
           onDragOver={(event) => {
             onTaskDragOver(event, id);
@@ -239,7 +261,15 @@ function BoardColumnSection({
           onDrop={(event) => {
             onTaskDropOnColumn(event, id);
           }}
-        />
+        >
+          {activeColumnDropId === id && activeColumnTaskDropPosition && (
+            <Typography className={styles.columnDropHint}>
+              {activeColumnTaskDropPosition === "top"
+                ? "Drop task at the top of this column"
+                : "Drop task at the bottom of this column"}
+            </Typography>
+          )}
+        </Box>
       </Box>
     </section>
   );
@@ -248,6 +278,7 @@ function BoardColumnSection({
 export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
   boardId,
   canManageBoard,
+  canManageTasks,
   columnRecords,
   columns,
   projectId,
@@ -257,12 +288,15 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
 }) => {
   const {
     activeColumnDropId,
+    activeColumnDropPosition,
+    activeColumnTaskDropPosition,
     activeTaskDropKey,
     confirmDeleteAnchor,
     confirmDeleteColumn,
     deleteTargetColumnId,
     editingColor,
     editingTitle,
+    draggedTaskId,
     handleCancelColumnEdit,
     handleColumnDeleteTargetChange,
     handleColumnDragEnd,
@@ -292,6 +326,7 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
   } = useTaskBoardColumns({
     boardId,
     canManageBoard,
+    canManageTasks,
     columnRecords,
     projectId,
     tasksByColumn,
@@ -315,11 +350,18 @@ export const TaskBoardColumns: FC<TaskBoardColumnsProps> = ({
                 key={column.id}
                 {...column}
                 activeColumnDropId={activeColumnDropId}
+                activeColumnTaskDropPosition={activeColumnTaskDropPosition}
                 canManageBoard={canManageBoard}
+                canManageTasks={canManageTasks}
                 columnRecord={columnRecord}
                 dragStateClassName={
-                  activeColumnDropId === column.id ? styles.columnDropTarget : undefined
+                  activeColumnDropId === column.id && activeColumnDropPosition === "before"
+                    ? styles.columnDropBefore
+                    : activeColumnDropId === column.id && activeColumnDropPosition === "after"
+                      ? styles.columnDropAfter
+                      : undefined
                 }
+                draggedTaskId={draggedTaskId}
                 editingColor={editingColor}
                 editingTitle={editingTitle}
                 isColumnBeingEdited={isColumnBeingEdited(column.id)}

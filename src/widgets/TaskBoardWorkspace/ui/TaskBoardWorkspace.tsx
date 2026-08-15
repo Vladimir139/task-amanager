@@ -26,6 +26,8 @@ export const TaskBoardWorkspace: FC = () => {
     boardMessages,
     boards,
     canManageBoard,
+    canManageTasks,
+    canWriteBoardChat,
     closeCreateTask,
     closeTask,
     createTaskColumnId,
@@ -103,6 +105,7 @@ export const TaskBoardWorkspace: FC = () => {
           <TaskBoardColumns
             boardId={activeBoardId}
             canManageBoard={canManageBoard}
+            canManageTasks={canManageTasks}
             columnRecords={boardColumnRecords}
             columns={boardColumns}
             projectId={projectId}
@@ -114,6 +117,7 @@ export const TaskBoardWorkspace: FC = () => {
       </div>
 
       <TaskBoardSidebar
+        canWrite={canWriteBoardChat}
         members={boardMembers.slice(0, 6)}
         membersCount={taskBoardMembersCount}
         messages={boardMessages}
@@ -134,6 +138,7 @@ export const TaskBoardWorkspace: FC = () => {
         <TaskBoardTaskDialog
           boardId={activeBoardId}
           canManageBoard={canManageBoard}
+          canManageTasks={canManageTasks}
           columns={boardColumnRecords}
           createColumnId={createTaskColumnId}
           memberOptions={memberOptions}

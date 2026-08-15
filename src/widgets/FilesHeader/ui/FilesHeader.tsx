@@ -10,13 +10,16 @@ import {
   useCreateFolderMutation,
   useSelectedFolder,
 } from "@/entities/folder";
-import { useActiveProject } from "@/entities/project";
+import { useActiveProject, useGetProjectMembersQuery } from "@/entities/project";
+import { selectAuthUser } from "@/entities/user";
 import { getApiErrorMessage } from "@/shared/lib/api";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
+import { useAppSelector } from "@/shared/libs/redux";
 
 import styles from "./FilesHeader.module.scss";
 
 export const FilesHeader: FC = () => {
+  const authUser = useAppSelector(selectAuthUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
@@ -28,10 +31,22 @@ export const FilesHeader: FC = () => {
   const { selectedFolder, selectedFolderId } = useSelectedFolder();
   const { activeProjectId, currentProjectTitle } = useActiveProject();
   const effectiveProjectId = selectedFolder?.projectId ?? activeProjectId ?? undefined;
+  const { data: projectMembers = [] } = useGetProjectMembersQuery(effectiveProjectId ?? "", {
+    skip: !effectiveProjectId,
+  });
+  const currentProjectRole =
+    projectMembers.find((member) => member.userId === authUser?.id)?.role ?? null;
+  const canWriteFiles = currentProjectRole !== "viewer";
 
   useStatusToast({ message: statusMessage, tone: statusTone });
 
   const handleCreateFolder = async (): Promise<void> => {
+    if (!canWriteFiles) {
+      setStatusMessage("You have view-only access to this project.");
+      setStatusTone("error");
+      return;
+    }
+
     const trimmedFolderName = folderName.trim();
 
     if (!trimmedFolderName) {
@@ -67,6 +82,13 @@ export const FilesHeader: FC = () => {
   };
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    if (!canWriteFiles) {
+      setStatusMessage("You have view-only access to this project.");
+      setStatusTone("error");
+      event.target.value = "";
+      return;
+    }
+
     const selectedFiles = Array.from(event.target.files ?? []);
 
     if (selectedFiles.length === 0) {
@@ -112,6 +134,12 @@ export const FilesHeader: FC = () => {
               ? `Current destination: ${currentProjectTitle ?? "Selected project"} root.`
               : "Current destination: workspace root."}
         </Typography>
+        {effectiveProjectId && !canWriteFiles && (
+          <Typography className={styles.contextText}>
+            You have view-only access to this project, file uploads and folder creation are
+            disabled.
+          </Typography>
+        )}
       </Box>
 
       <Box className={styles.pageActions}>
@@ -154,7 +182,7 @@ export const FilesHeader: FC = () => {
           onClick={() => {
             void handleCreateFolder();
           }}
-          disabled={isCreatingFolder}
+          disabled={isCreatingFolder || !canWriteFiles}
         >
           {isCreatingFolder ? "Creating..." : "Create Folder"}
         </Button>
@@ -172,7 +200,7 @@ export const FilesHeader: FC = () => {
           startIcon={<Link />}
           className={styles.uploadButton}
           onClick={handleUploadButtonClick}
-          disabled={isUploading}
+          disabled={isUploading || !canWriteFiles}
         >
           {isUploading ? "Uploading..." : selectedFolder ? "Upload Here" : "Upload"}
         </Button>

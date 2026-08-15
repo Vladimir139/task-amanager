@@ -78,6 +78,8 @@ interface UseTaskBoardWorkspaceResult {
   boardMembers: BoardMember[];
   boards: BoardRecord[];
   canManageBoard: boolean;
+  canManageTasks: boolean;
+  canWriteBoardChat: boolean;
   closeCreateTask: () => void;
   closeTask: () => void;
   createTaskColumnId: string | null;
@@ -696,12 +698,15 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     pendingDeleteMessageId,
   ]);
 
-  const canManageBoard = useMemo(() => {
-    const currentMemberRole =
-      boardView?.members.find((member) => member._id === currentUser?.id)?.memberRole ?? null;
+  const currentBoardRole = useMemo(
+    () => boardView?.members.find((member) => member._id === currentUser?.id)?.memberRole ?? null,
+    [boardView?.members, currentUser?.id],
+  );
 
-    return currentMemberRole === "owner" || currentMemberRole === "admin";
-  }, [boardView?.members, currentUser?.id]);
+  const canManageBoard = currentBoardRole === "owner" || currentBoardRole === "admin";
+  const canManageTasks =
+    currentBoardRole === "owner" || currentBoardRole === "admin" || currentBoardRole === "member";
+  const canWriteBoardChat = canManageTasks;
 
   const shouldShowMakeProjectGlobalAction = Boolean(projectId) && currentProjectId !== projectId;
 
@@ -748,6 +753,11 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   };
 
   const handleCreateTask = (columnId: string): void => {
+    if (!canManageTasks) {
+      toast.error("You have view-only access to this board.");
+      return;
+    }
+
     setCreateTaskColumnId(columnId);
     if (!projectId || !activeBoardId) {
       return;
@@ -762,6 +772,11 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
 
   const sendMessage = async (): Promise<void> => {
     const normalizedMessage = message.trim();
+
+    if (!canWriteBoardChat) {
+      toast.error("You have read-only access to this board chat.");
+      return;
+    }
 
     if (!normalizedMessage || !conversationId) {
       return;
@@ -778,6 +793,11 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
   };
 
   const handleAudioRecorded = async (payload: RecordedAudioPayload): Promise<void> => {
+    if (!canWriteBoardChat) {
+      toast.error("You have read-only access to this board chat.");
+      return;
+    }
+
     if (!conversationId) {
       return;
     }
@@ -827,6 +847,8 @@ export const useTaskBoardWorkspace = (): UseTaskBoardWorkspaceResult => {
     boardMembers,
     boards,
     canManageBoard,
+    canManageTasks,
+    canWriteBoardChat,
     closeCreateTask: handleCloseCreateTask,
     closeTask: handleCloseTask,
     createTaskColumnId,

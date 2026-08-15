@@ -1,4 +1,4 @@
-import { DeleteOutlined, OpenInNew } from "@mui/icons-material";
+import { DeleteOutlined, DownloadOutlined } from "@mui/icons-material";
 import { Avatar, AvatarGroup, Box, IconButton, Typography } from "@mui/material";
 import type { FC } from "react";
 
@@ -19,6 +19,8 @@ export const RecentFileRow: FC<RecentFileRowProps> = ({ file }) => {
         </Box>
       </Box>
 
+      <Typography className={styles.fileFolder}>{file.folderName ?? "—"}</Typography>
+
       <Typography className={styles.fileSize}>{file.size}</Typography>
 
       <Typography className={styles.fileModified}>{file.lastModified}</Typography>
@@ -33,13 +35,12 @@ export const RecentFileRow: FC<RecentFileRowProps> = ({ file }) => {
         {file.openUrl && (
           <IconButton
             className={styles.actionButton}
-            aria-label={`Open ${file.name}`}
+            aria-label={`Download ${file.name}`}
             component="a"
             href={file.openUrl}
-            target="_blank"
-            rel="noreferrer"
+            download
           >
-            <OpenInNew />
+            <DownloadOutlined />
           </IconButton>
         )}
 

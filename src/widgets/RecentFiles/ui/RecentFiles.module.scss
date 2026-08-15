@@ -29,6 +29,7 @@ $title: #262864;
   display: grid;
   grid-template-columns:
     minmax(230px, 1.4fr)
+    minmax(140px, 0.9fr)
     minmax(90px, 0.8fr)
     minmax(150px, 1fr)
     minmax(155px, 1fr)
@@ -52,6 +53,12 @@ $title: #262864;
     svg {
       font-size: 16px;
     }
+  }
+
+  > span {
+    color: #7d88a3;
+    font-size: 13px;
+    font-weight: 400;
   }
 }
 

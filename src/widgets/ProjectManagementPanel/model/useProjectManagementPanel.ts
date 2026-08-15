@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+  projectMemberRoleOptions,
   useGetProjectByIdQuery,
   useGetProjectInvitationsQuery,
   useGetProjectMembersQuery,
@@ -52,7 +53,9 @@ interface PendingInvitationItem {
 }
 
 interface UseProjectManagementPanelResult {
+  assignableRoleOptions: ReadonlyArray<{ label: string; value: EditableProjectRole }>;
   canManageProject: boolean;
+  currentUserRole: "owner" | "admin" | "member" | "viewer" | null;
   handleDeleteProject: () => Promise<void>;
   handleFieldChange: (
     field: keyof ProjectFormState,
@@ -126,6 +129,13 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
     return projectMembers?.find((member) => member.userId === authUser.id)?.role ?? null;
   }, [authUser?.id, projectMembers]);
   const canManageProject = currentUserRole === "owner" || currentUserRole === "admin";
+  const assignableRoleOptions = useMemo(
+    () =>
+      currentUserRole === "owner"
+        ? [...projectMemberRoleOptions]
+        : projectMemberRoleOptions.filter((option) => option.value !== "admin"),
+    [currentUserRole],
+  );
   const {
     data: pendingInvitations = [],
     isError: isInvitationsError,
@@ -359,7 +369,9 @@ export const useProjectManagementPanel = (): UseProjectManagementPanelResult => 
   };
 
   return {
+    assignableRoleOptions,
     canManageProject,
+    currentUserRole,
     handleDeleteProject,
     handleFieldChange,
     handleInvitationEmailChange,

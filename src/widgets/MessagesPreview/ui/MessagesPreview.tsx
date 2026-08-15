@@ -1,13 +1,17 @@
 import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useGetConversationsQuery } from "@/entities/conversation";
 import { MessageItem } from "@/entities/message";
 import { selectAuthUser } from "@/entities/user";
+import { selectAccessToken } from "@/features/auth/model/selectors";
+import { baseApi } from "@/shared/api";
 import { getMessagesRoute } from "@/shared/config/router";
 import { getInitials } from "@/shared/lib/formatters";
-import { useAppSelector } from "@/shared/libs/redux";
+import { useRealtimeSocket } from "@/shared/lib/realtime";
+import { useAppDispatch, useAppSelector } from "@/shared/libs/redux";
 
 import styles from "./MessagesPreview.module.scss";
 
@@ -25,9 +29,75 @@ const getConversationInitials = (title: string): string => {
 };
 
 export const MessagesPreview: FC = () => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const accessToken = useAppSelector(selectAccessToken);
   const currentUser = useAppSelector(selectAuthUser);
   const { data, isError, isLoading } = useGetConversationsQuery();
+  const chatSocket = useRealtimeSocket("/chat", accessToken, Boolean((data?.length ?? 0) > 0));
+
+  useEffect(() => {
+    if (!chatSocket || !data?.length) {
+      return;
+    }
+
+    const joinConversations = (): void => {
+      for (const conversation of data) {
+        chatSocket.emit("conversation.join", {
+          conversationId: conversation._id,
+        });
+      }
+    };
+
+    const invalidateConversationData = (conversationId?: string): void => {
+      if (!conversationId) {
+        dispatch(baseApi.util.invalidateTags(["Conversations"]));
+        return;
+      }
+
+      dispatch(
+        baseApi.util.invalidateTags([
+          "Conversations",
+          { id: conversationId, type: "Conversations" },
+          { id: conversationId, type: "ConversationMessages" },
+        ]),
+      );
+    };
+
+    const handleMessageCreated = ({ message }: { message?: { conversationId?: string } }): void => {
+      invalidateConversationData(message?.conversationId);
+    };
+
+    const handleMessageUpdated = ({ message }: { message?: { conversationId?: string } }): void => {
+      invalidateConversationData(message?.conversationId);
+    };
+
+    const handleMessageDeleted = (): void => {
+      dispatch(baseApi.util.invalidateTags(["Conversations"]));
+    };
+
+    const handleMessageRead = (): void => {
+      dispatch(baseApi.util.invalidateTags(["Conversations"]));
+    };
+
+    if (chatSocket.connected) {
+      joinConversations();
+    }
+
+    chatSocket.on("connect", joinConversations);
+    chatSocket.on("message.created", handleMessageCreated);
+    chatSocket.on("message.updated", handleMessageUpdated);
+    chatSocket.on("message.deleted", handleMessageDeleted);
+    chatSocket.on("message.read", handleMessageRead);
+
+    return () => {
+      chatSocket.off("connect", joinConversations);
+      chatSocket.off("message.created", handleMessageCreated);
+      chatSocket.off("message.updated", handleMessageUpdated);
+      chatSocket.off("message.deleted", handleMessageDeleted);
+      chatSocket.off("message.read", handleMessageRead);
+    };
+  }, [chatSocket, data, dispatch]);
 
   const unreadConversations = (data ?? []).filter(
     (conversation) => (conversation.unreadCount ?? 0) > 0,

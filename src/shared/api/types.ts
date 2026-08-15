@@ -297,7 +297,9 @@ export interface FileRecord {
   ownerId: string;
   uploadedBy: string;
   projectId?: string | null;
+  projectTitle?: string | null;
   folderId?: string | null;
+  folderName?: string | null;
   conversationId?: string | null;
   messageId?: string | null;
   originalName: string;

@@ -1,7 +1,6 @@
 import type { ChangeEvent, DragEvent, MouseEvent } from "react";
 import { useMemo, useState } from "react";
 
-import { selectAuthUser } from "@/entities/user";
 import {
   useDeleteBoardColumnMutation,
   useReorderBoardColumnsMutation,
@@ -10,26 +9,31 @@ import {
 import { useMoveTaskMutation } from "@/features/moveTask";
 import type { BoardColumnRecord, TaskRecord } from "@/shared/api/types";
 import { getApiErrorMessage } from "@/shared/lib/api";
-import { useAppSelector } from "@/shared/libs/redux";
 
 interface UseTaskBoardColumnsProps {
   boardId: string;
   canManageBoard: boolean;
+  canManageTasks: boolean;
   columnRecords: BoardColumnRecord[];
   projectId: string;
   tasksByColumn: Record<string, TaskRecord[]>;
 }
 
 type ColumnMenuAction = "edit" | "delete";
+type ColumnDropPosition = "before" | "after";
 type TaskDropPosition = "before" | "after";
+type ColumnTaskDropPosition = "top" | "bottom";
 
 interface UseTaskBoardColumnsResult {
   activeColumnDropId: string | null;
+  activeColumnDropPosition: ColumnDropPosition | null;
+  activeColumnTaskDropPosition: ColumnTaskDropPosition | null;
   activeTaskDropKey: string | null;
   confirmDeleteAnchor: HTMLElement | null;
   confirmDeleteColumn: BoardColumnRecord | null;
   deleteTargetColumnId: string;
   draggedColumnId: string | null;
+  draggedTaskId: string | null;
   editingColor: string;
   editingColumnId: string | null;
   editingTitle: string;
@@ -89,11 +93,11 @@ const getSortedColumns = (columnRecords: BoardColumnRecord[]): BoardColumnRecord
 export const useTaskBoardColumns = ({
   boardId,
   canManageBoard,
+  canManageTasks,
   columnRecords,
   projectId,
   tasksByColumn,
 }: UseTaskBoardColumnsProps): UseTaskBoardColumnsResult => {
-  const currentUser = useAppSelector(selectAuthUser);
   const [moveTask, { isLoading: isMovingTask }] = useMoveTaskMutation();
   const [reorderBoardColumns, { isLoading: isReorderingColumns }] =
     useReorderBoardColumnsMutation();
@@ -111,6 +115,10 @@ export const useTaskBoardColumns = ({
   const [draggedColumnId, setDraggedColumnId] = useState<string | null>(null);
   const [draggedTask, setDraggedTask] = useState<DraggedTaskState | null>(null);
   const [activeColumnDropId, setActiveColumnDropId] = useState<string | null>(null);
+  const [activeColumnDropPosition, setActiveColumnDropPosition] =
+    useState<ColumnDropPosition | null>(null);
+  const [activeColumnTaskDropPosition, setActiveColumnTaskDropPosition] =
+    useState<ColumnTaskDropPosition | null>(null);
   const [activeTaskDropKey, setActiveTaskDropKey] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<"error" | "success" | null>(null);
@@ -276,7 +284,11 @@ export const useTaskBoardColumns = ({
     }
 
     event.preventDefault();
+    const targetRect = event.currentTarget.getBoundingClientRect();
+    const placeAfter = event.clientX > targetRect.left + targetRect.width / 2;
     setActiveColumnDropId(targetColumnId);
+    setActiveColumnDropPosition(placeAfter ? "after" : "before");
+    setActiveColumnTaskDropPosition(null);
   };
 
   const handleColumnDrop = async (
@@ -289,6 +301,7 @@ export const useTaskBoardColumns = ({
 
     event.preventDefault();
     setActiveColumnDropId(null);
+    setActiveColumnDropPosition(null);
 
     const targetRect = event.currentTarget.getBoundingClientRect();
     const placeAfter = event.clientX > targetRect.left + targetRect.width / 2;
@@ -334,10 +347,11 @@ export const useTaskBoardColumns = ({
   const handleColumnDragEnd = (): void => {
     setDraggedColumnId(null);
     setActiveColumnDropId(null);
+    setActiveColumnDropPosition(null);
   };
 
   const isTaskDraggable = (taskId: string, columnId: string): boolean => {
-    if (isMutating) {
+    if (isMutating || !canManageTasks) {
       return false;
     }
 
@@ -347,7 +361,7 @@ export const useTaskBoardColumns = ({
       return false;
     }
 
-    return canManageBoard || task.reporterId === currentUser?.id;
+    return Boolean(task);
   };
 
   const handleTaskDragStart = (
@@ -378,7 +392,12 @@ export const useTaskBoardColumns = ({
     event.preventDefault();
 
     if (!taskId) {
+      const targetRect = event.currentTarget.getBoundingClientRect();
+      const position: ColumnTaskDropPosition =
+        event.clientY < targetRect.top + targetRect.height / 2 ? "top" : "bottom";
       setActiveColumnDropId(columnId);
+      setActiveColumnTaskDropPosition(position);
+      setActiveColumnDropPosition(null);
       setActiveTaskDropKey(null);
       return;
     }
@@ -388,6 +407,7 @@ export const useTaskBoardColumns = ({
       event.clientY < targetRect.top + targetRect.height / 2 ? "before" : "after";
 
     setActiveColumnDropId(null);
+    setActiveColumnTaskDropPosition(null);
     setActiveTaskDropKey(`${columnId}:${taskId}:${position}`);
   };
 
@@ -433,6 +453,8 @@ export const useTaskBoardColumns = ({
     } finally {
       setDraggedTask(null);
       setActiveColumnDropId(null);
+      setActiveColumnDropPosition(null);
+      setActiveColumnTaskDropPosition(null);
       setActiveTaskDropKey(null);
     }
   };
@@ -471,6 +493,8 @@ export const useTaskBoardColumns = ({
 
     if (draggedTask.taskId === targetTaskId && draggedTask.sourceColumnId === targetColumnId) {
       setDraggedTask(null);
+      setActiveColumnDropPosition(null);
+      setActiveColumnTaskDropPosition(null);
       setActiveTaskDropKey(null);
       return;
     }
@@ -499,16 +523,21 @@ export const useTaskBoardColumns = ({
   const handleTaskDragEnd = (): void => {
     setDraggedTask(null);
     setActiveColumnDropId(null);
+    setActiveColumnDropPosition(null);
+    setActiveColumnTaskDropPosition(null);
     setActiveTaskDropKey(null);
   };
 
   return {
     activeColumnDropId,
+    activeColumnDropPosition,
+    activeColumnTaskDropPosition,
     activeTaskDropKey,
     confirmDeleteAnchor,
     confirmDeleteColumn,
     deleteTargetColumnId,
     draggedColumnId,
+    draggedTaskId: draggedTask?.taskId ?? null,
     editingColor,
     editingColumnId,
     editingTitle,

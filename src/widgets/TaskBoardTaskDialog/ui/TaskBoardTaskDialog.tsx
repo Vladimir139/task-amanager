@@ -24,6 +24,7 @@ import styles from "./TaskBoardTaskDialog.module.scss";
 interface TaskBoardTaskDialogProps {
   boardId: string;
   canManageBoard: boolean;
+  canManageTasks: boolean;
   columns: BoardColumnRecord[];
   createColumnId: string | null;
   memberOptions: Array<{
@@ -42,6 +43,7 @@ interface TaskBoardTaskDialogProps {
 export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
   boardId,
   canManageBoard,
+  canManageTasks,
   columns,
   createColumnId,
   memberOptions,
@@ -54,6 +56,7 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
   const {
     attachmentCount,
     availableFiles,
+    canCommentOnTask,
     canManageTask,
     commentDraft,
     commentLoadError,
@@ -108,6 +111,7 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
   } = useTaskBoardTaskDialog({
     boardId,
     canManageBoard,
+    canManageTasks,
     columns,
     createColumnId,
     memberOptions,
@@ -583,6 +587,7 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                       onChange={handleCommentDraftChange}
                       multiline
                       minRows={3}
+                      disabled={!canCommentOnTask}
                       fullWidth
                     />
 
@@ -592,7 +597,7 @@ export const TaskBoardTaskDialog: FC<TaskBoardTaskDialogProps> = ({
                         onClick={() => {
                           void handleCreateComment();
                         }}
-                        disabled={isCommentMutating || !commentDraft.trim()}
+                        disabled={!canCommentOnTask || isCommentMutating || !commentDraft.trim()}
                       >
                         Add comment
                       </Button>

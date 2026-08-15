@@ -2,11 +2,7 @@ import { Alert, Avatar, Box, Button, Chip, MenuItem, TextField, Typography } fro
 import type { ChangeEvent, FC } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  projectColorOptions,
-  projectMemberRoleOptions,
-  projectStatusOptions,
-} from "@/entities/project";
+import { projectColorOptions, projectStatusOptions } from "@/entities/project";
 import { getProjectsRoute } from "@/shared/config/router";
 import { useStatusToast } from "@/shared/lib/toast/useStatusToast";
 import { AppModal } from "@/shared/ui/molecules/AppModal/AppModal";
@@ -17,7 +13,9 @@ import styles from "./ProjectManagementPanel.module.scss";
 export const ProjectManagementPanel: FC = () => {
   const navigate = useNavigate();
   const {
+    assignableRoleOptions,
     canManageProject,
+    currentUserRole,
     handleDeleteProject,
     handleFieldChange,
     handleInvitationEmailChange,
@@ -202,7 +200,7 @@ export const ProjectManagementPanel: FC = () => {
                     disabled={!canManageProject}
                     fullWidth
                   >
-                    {projectMemberRoleOptions.map((option) => (
+                    {assignableRoleOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
@@ -276,12 +274,19 @@ export const ProjectManagementPanel: FC = () => {
                               event.target.value as "admin" | "member" | "viewer",
                             );
                           }}
-                          disabled={!canManageProject || member.isOwner || isMutating}
+                          disabled={
+                            !canManageProject ||
+                            member.isOwner ||
+                            isMutating ||
+                            (currentUserRole !== "owner" && member.role === "admin")
+                          }
                         >
                           {member.isOwner ? (
                             <MenuItem value="owner">Owner</MenuItem>
+                          ) : member.role === "admin" && currentUserRole !== "owner" ? (
+                            <MenuItem value="admin">Admin</MenuItem>
                           ) : (
-                            projectMemberRoleOptions.map((option) => (
+                            assignableRoleOptions.map((option) => (
                               <MenuItem key={option.value} value={option.value}>
                                 {option.label}
                               </MenuItem>
@@ -298,7 +303,10 @@ export const ProjectManagementPanel: FC = () => {
                           disabled={
                             member.isCurrentUser
                               ? member.isOwner || isMutating
-                              : !canManageProject || member.isOwner || isMutating
+                              : !canManageProject ||
+                                member.isOwner ||
+                                isMutating ||
+                                (currentUserRole !== "owner" && member.role === "admin")
                           }
                         >
                           {member.isCurrentUser ? "Leave project" : "Remove"}

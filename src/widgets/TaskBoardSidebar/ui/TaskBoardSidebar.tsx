@@ -14,6 +14,7 @@ import {
 import styles from "./TaskBoardSidebar.module.scss";
 
 interface TaskBoardSidebarProps {
+  canWrite?: boolean;
   isError?: boolean;
   isSubmitting?: boolean;
   members: BoardMember[];
@@ -27,6 +28,7 @@ interface TaskBoardSidebarProps {
 }
 
 export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
+  canWrite = true,
   isError = false,
   isSubmitting = false,
   members,
@@ -91,14 +93,19 @@ export const TaskBoardSidebar: FC<TaskBoardSidebarProps> = ({
           value={message}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="write here..."
+          placeholder={canWrite ? "write here..." : "View-only board chat"}
           className={styles.messageInput}
+          disabled={!canWrite}
           fullWidth
         />
 
-        <VoiceRecorderButton disabled={isSubmitting} onRecorded={onAudioRecorded} />
+        <VoiceRecorderButton disabled={isSubmitting || !canWrite} onRecorded={onAudioRecorded} />
 
-        <IconButton aria-label="Send message" onClick={onMessageSubmit} disabled={isSubmitting}>
+        <IconButton
+          aria-label="Send message"
+          onClick={onMessageSubmit}
+          disabled={isSubmitting || !canWrite}
+        >
           <SendRounded />
         </IconButton>
       </Box>

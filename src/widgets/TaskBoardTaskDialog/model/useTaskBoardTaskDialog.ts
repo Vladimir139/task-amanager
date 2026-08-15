@@ -61,6 +61,7 @@ interface TaskCommentItem {
 interface UseTaskBoardTaskDialogProps {
   boardId: string;
   canManageBoard: boolean;
+  canManageTasks: boolean;
   columns: BoardColumnRecord[];
   createColumnId: string | null;
   memberOptions: MemberOption[];
@@ -74,6 +75,7 @@ interface UseTaskBoardTaskDialogProps {
 interface UseTaskBoardTaskDialogResult {
   attachmentCount: number;
   availableFiles: Array<{ id: string; label: string }>;
+  canCommentOnTask: boolean;
   canManageTask: boolean;
   commentDraft: string;
   commentLoadError: boolean;
@@ -213,6 +215,7 @@ const normalizeChecklistItems = (
 export const useTaskBoardTaskDialog = ({
   boardId,
   canManageBoard,
+  canManageTasks,
   columns,
   createColumnId,
   memberOptions,
@@ -321,15 +324,17 @@ export const useTaskBoardTaskDialog = ({
 
   const canManageTask = useMemo(() => {
     if (isCreateMode) {
-      return true;
+      return canManageTasks;
     }
 
     if (!task) {
       return false;
     }
 
-    return canManageBoard || task.reporterId === authUser?.id;
-  }, [authUser?.id, canManageBoard, isCreateMode, task]);
+    return canManageTasks;
+  }, [canManageTasks, isCreateMode, task]);
+
+  const canCommentOnTask = canManageTasks;
 
   const availableFiles = useMemo(() => {
     return recentFiles
@@ -826,6 +831,7 @@ export const useTaskBoardTaskDialog = ({
   return {
     attachmentCount,
     availableFiles,
+    canCommentOnTask,
     canManageTask,
     commentDraft,
     commentLoadError: isCommentsError,
