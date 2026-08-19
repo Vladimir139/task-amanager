@@ -65,7 +65,7 @@ const getConversationDisplay = (
   const resolvedName = conversation.title ?? (fallbackName || "Conversation");
 
   return {
-    avatar: conversation.avatarUrl ?? members[0]?.avatarUrl ?? "",
+    avatar: conversation.avatarUrl ?? "",
     name: resolvedName,
     subtitle: `${members.length} members`,
   };
